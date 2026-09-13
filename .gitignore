@@ -57,5 +57,13 @@ copy_images.py
 .DS_Store
 Thumbs.db
 
+FAER/
+FULL INFORMATION OF THIS PROJECT.txt
 
-brain_tumor_xai_paper.texdocs/12_research_paper.md
+
+
+docs/12_research_paper.md
+
+# Patient history database (contains sensitive data — never commit)
+data/patient_history.db
+data/*.db
