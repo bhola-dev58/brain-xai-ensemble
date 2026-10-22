@@ -461,11 +461,9 @@ Dimensional Resizing: MRI scans acquired from diverse clinical setups often vary
 Normalization and Rescaling: Pixel intensity values across clinical MRI scans fluctuate drastically due to differences in scanner magnetic field strengths (1.5T vs. 3.0T) and acquisition parameters. To stabilize neural network optimization, raw pixel intensities are normalized into floating-point tensors using standardized transformations:
 
 **Equation 3.1: Standard Min-Max Intensity Normalization**
-```text
-                  X(x, y) - X_min
-  X_norm(x, y) = ─────────────────────────────
-                  X_max - X_min + epsilon
-```
+$$
+X_{\text{norm}}(x, y) = \frac{X(x, y) - X_{\min}}{X_{\max} - X_{\min} + \epsilon}
+$$
 Where:
 - `X(x, y)`: Raw voxel intensity at coordinate `(x, y)`.
 - `X_min`, `X_max`: Minimum and maximum intensities within the intracranial brain region.
@@ -474,11 +472,9 @@ Where:
 To resolve class frequency imbalances across the dataset, balanced loss weights are dynamically computed for each category:
 
 **Equation 3.2: Inverse-Frequency Balanced Class Weighting**
-```text
-               N_total
-  W(c) = ───────────────────────
-          N_classes * N_samples(c)
-```
+$$
+W(c) = \frac{N_{\text{total}}}{N_{\text{classes}} \times N_{\text{samples}}(c)}
+$$
 Where `N_total` represents total training volume, `N_classes = 4`, and `N_samples(c)` represents the empirical support of class `c`.
 
 ## 3.3 The Expert Tri-Ensemble: Architectural Hybridization
@@ -491,53 +487,46 @@ The Tri-Ensemble framework leverages the distinctive mathematical strengths of t
 ConvNeXt modernizes classical convolutions by adopting Vision Transformer design principles while maintaining pure convolutional efficiency. It introduces large 7x7 depthwise separable kernels to capture wide-range cranial context:
 
 **Equation 3.3: Large 7x7 Depthwise Separable Convolution**
-```text
-           3       3
-  y(i, j) = ∑       ∑    K(m, n) · x(i + m, j + n)
-          m=-3    n=-3
-```
+$$
+y(i, j) = \sum_{m=-3}^{3} \sum_{n=-3}^{3} K(m, n) \cdot x(i + m, j + n)
+$$
 Where `K` represents the 7x7 spatial filter kernel applied independently across each feature channel, mirroring the receptive field of Swin Transformer self-attention.
 
 Within each ConvNeXt block, an inverted bottleneck expands channel dimensions 4-fold (`C → 4C`) before spatial down-projection, preserving critical textural features. Normalization is standardized using Layer Normalization across channels:
 
 **Equation 3.4: Layer Normalization (LN)**
-```text
-           x - μ
-  LN(x) = ────────────── · γ + β
-          √(σ² + ε)
-```
+$$
+\text{LN}(x) = \frac{x - \mu}{\sqrt{\sigma^2 + \epsilon}} \cdot \gamma + \beta
+$$
 Where `μ` and `σ²` are instance spatial mean and variance, and `γ`, `β` are learnable affine parameters. Non-linear gating is provided by Gaussian Error Linear Units (GELU):
 
 **Equation 3.5: Gaussian Error Linear Unit (GELU)**
-```text
-  GELU(x) = x · Φ(x) = x · P(X ≤ x)
-          ≈ 0.5 · x · [ 1 + tanh( √(2/π) · (x + 0.044715 · x³) ) ]
-```
+$$
+\text{GELU}(x) = x \cdot \Phi(x) = x \cdot P(X \le x) \approx 0.5 \cdot x \cdot \left(1 + \tanh\left(\sqrt{\frac{2}{\pi}} \cdot (x + 0.044715 \cdot x^3)\right)\right)
+$$
 
 #### 2. InceptionV3 (Secondary Backbone - 35% Weight)
 InceptionV3 incorporates multi-scale factorized convolutions. High-order 7x7 spatial convolutions are factorized into asymmetric 1x7 and 7x1 cascaded kernels:
 
 **Equation 3.6: Asymmetric Factorized Convolution**
-```text
-  Conv2D_asym(x) = [ K_{7 × 1} * [ K_{1 × 7} * x ] ]
-```
+$$
+\text{Conv2D}_{\text{asym}}(x) = K_{7 \times 1} * [ K_{1 \times 7} * x ]
+$$
 This asymmetric decomposition reduces operational complexity by 71.4% (from 49 to 14 multiplications per pixel) while capturing heterogeneous tumor dimensions.
 
 #### 3. DenseNet121 (Tertiary Backbone - 20% Weight)
 DenseNet enforces direct connectivity between all layers within each dense block:
 
 **Equation 3.7: Dense Feature Connectivity**
-```text
-  x_l = H_l( [ x_0, x_1, x_2, ..., x_{l-1} ] )
-```
+$$
+x_l = H_l( [ x_0, x_1, x_2, \dots, x_{l-1} ] )
+$$
 By concatenating preceding feature maps, the backpropagation loss gradient contains a direct identity path:
 
 **Equation 3.8: Additive Backpropagation Gradient Highway**
-```text
-  d(Loss)      d(Loss)         L-1    [ d(Loss)     d(x_k)  ]
-  ───────  =  ─────────   +     ∑     [ ───────  ·  ─────── ]
-   dx_l         dx_L           k=l    [  dx_k        dx_l   ]
-```
+$$
+\frac{\partial \mathcal{L}}{\partial x_l} = \frac{\partial \mathcal{L}}{\partial x_L} + \sum_{k=l}^{L-1} \left( \frac{\partial \mathcal{L}}{\partial x_k} \cdot \frac{\partial x_k}{\partial x_l} \right)
+$$
 This additive formulation eliminates vanishing gradients and maximizes fine-grained edge preservation for subtle meningioma margins.
 
 ## 3.4 Classification Module
@@ -545,29 +534,24 @@ This additive formulation eliminates vanishing gradients and maximizes fine-grai
 Following multi-backbone feature extraction, class posterior probabilities from all three networks are fused through calibrated soft voting. Optimal voting coefficients were obtained via Nelder-Mead simplex optimization on validation cross-entropy logits:
 
 **Equation 3.9: Nelder-Mead Calibrated Tri-Ensemble Soft Voting**
-```text
-  P_tri(y = c | x) = 0.45 · P_ConvNeXt(c | x) + 0.35 · P_Inception(c | x) + 0.20 · P_DenseNet(c | x)
-```
+$$
+P_{\text{tri}}(y = c \mid \mathbf{x}) = 0.45 \cdot P_{\text{ConvNeXt}}(c \mid \mathbf{x}) + 0.35 \cdot P_{\text{Inception}}(c \mid \mathbf{x}) + 0.20 \cdot P_{\text{DenseNet}}(c \mid \mathbf{x})
+$$
 Where `∑_{c=1}^4 P_tri(c | x) = 1.0`.
 
 The final clinical diagnostic prediction and confidence score are derived as:
 
 **Equation 3.10: Discrete Class Selection & Diagnostic Confidence**
-```text
-  c_predicted = argmax_{c ∈ {0,1,2,3}} [ P_tri(c | x) ]
-  Confidence  = max_{c}                [ P_tri(c | x) ] × 100%
-```
+$$
+\hat{c} = \arg\max_{c \in \{0,1,2,3\}} \left[ P_{\text{tri}}(c \mid \mathbf{x}) \right], \quad \text{Confidence} = \max_{c} \left[ P_{\text{tri}}(c \mid \mathbf{x}) \right] \times 100\%
+$$
 
 To alert clinicians when an MRI slice exhibits ambiguous anatomical features, diagnostic uncertainty is computed using normalized Shannon entropy:
 
 **Equation 3.11: Normalized Shannon Diagnostic Uncertainty**
-```text
-                   4
-                -  ∑  [ P_tri(c | x) · log2( P_tri(c | x) ) ]
-                  c=1
-  Uncertainty = ────────────────────────────────────────────── × 100%
-                                   log2(4)
-```
+$$
+\text{Uncertainty} = \frac{-\sum_{c=1}^{4} \left[ P_{\text{tri}}(c \mid \mathbf{x}) \cdot \log_2( P_{\text{tri}}(c \mid \mathbf{x}) ) \right]}{\log_2(4)} \times 100\%
+$$
 Where `Uncertainty ∈ [0.0%, 100.0%]`. A confident prediction with probability 0.99 yields uncertainty < 5%, whereas ambiguous predictions (e.g., 0.25 on all 4 classes) yield 100% uncertainty, triggering automated clinical review.
 
 ## 3.5 Explainability and Segmentation Module (Crucial for Clinical Trust)
@@ -575,11 +559,9 @@ Where `Uncertainty ∈ [0.0%, 100.0%]`. A confident prediction with probability 
 To eliminate the opaque black-box barrier inherent in deep neural networks, the CAD platform integrates visual explainability via Gradient-weighted Class Activation Mapping (Grad-CAM and Grad-CAM++):
 
 **Equation 3.12: Neuron Importance Weight via Global Average Pooling**
-```text
-              1      u   v   ∂( y^c )
-  α_k^c   =  ─── ·   ∑   ∑   ─────────────
-              Z     i=1 j=1   ∂( A_{i,j}^k )
-```
+$$
+\alpha_k^c = \frac{1}{Z} \sum_{i=1}^{u} \sum_{j=1}^{v} \frac{\partial y^c}{\partial A_{i, j}^k}
+$$
 Where:
 - `A^k`: Activation feature map of channel `k` from the terminal normalization or convolutional layer.
 - `Z = u × v`: Spatial grid resolution (height `u` × width `v`).
@@ -588,17 +570,16 @@ Where:
 The visual coarse saliency localization map is generated by computing a weighted combination followed by rectified non-linear filtering:
 
 **Equation 3.13: Rectified Visual Heatmap Formulation**
-```text
-  L_GradCAM^c = ReLU(  ∑  [ α_k^c · A^k ]  )
-                       k
-```
+$$
+L_{\text{Grad-CAM}}^c = \text{ReLU}\left( \sum_{k} \alpha_k^c \cdot A^k \right)
+$$
 
 To eliminate extraneous high-intensity cranial bone, scalp, and ocular artifacts from corrupting the radiological visualization, Brain-Mask Anatomical Gating is strictly enforced:
 
 **Equation 3.14: Brain-Mask Anatomical Saliency Gating**
-```text
-  HM_gated(x, y) = L_GradCAM^c(x, y) · Mask_brain(x, y)
-```
+$$
+\text{HM}_{\text{gated}}(x, y) = L_{\text{Grad-CAM}}^c(x, y) \cdot \text{Mask}_{\text{brain}}(x, y)
+$$
 Where `Mask_brain(x, y) ∈ {0, 1}` is extracted via largest convex intracranial contour isolation, ensuring 100% of diagnostic attributions remain confined within cerebral parenchyma.
 
 To transition from mere image classification to precise tumor segmentation and interpretability, the system integrates two advanced XAI frameworks,
@@ -649,37 +630,31 @@ Tumor-region boundary extraction is achieved through a multi-stage morphological
 2. **Adaptive Binarization:** Applying Otsu's optimal thresholding inside the ROI to maximize between-class variance:
 
 **Equation 3.15: Otsu Optimal Between-Class Variance**
-```text
-  t* = argmax_t [ σ_B²(t) ] = argmax_t [ ω_0(t) · ω_1(t) · ( μ_0(t) - μ_1(t) )² ]
-```
+$$
+t^* = \arg\max_t \left[ \sigma_B^2(t) \right] = \arg\max_t \left[ \omega_0(t) \cdot \omega_1(t) \cdot \left( \mu_0(t) - \mu_1(t) \right)^2 \right]
+$$
 Where `ω_0(t)`, `ω_1(t)` represent cumulative class probabilities, and `μ_0(t)`, `μ_1(t)` denote mean pixel intensities of background and tumor candidate pixels.
 
 3. **Morphological Filtering:** Applying morphological opening and closing with a 5x5 elliptical structuring element `B` to bridge necrotic core gaps and eliminate isolated noise:
 
 **Equation 3.16: Morphological Refinement Operators**
-```text
-  Morphological Opening:  M ○ B = ( M ⊖ B ) ⊕ B
-  Morphological Closing:  M ● B = ( M ⊕ B ) ⊖ B
-```
+$$
+\text{Opening: } M \circ B = (M \ominus B) \oplus B, \quad \text{Closing: } M \bullet B = (M \oplus B) \ominus B
+$$
 
 4. **Intracranial Burden Estimation:** Relative tumor mass is quantified as the percentage of intracranial volume occupied by the segmented lesion:
 
 **Equation 3.17: Relative Intracranial Tumor Burden Ratio**
-```text
-                ∑_{(x,y)} Mask_tumor(x, y)
-  ρ_tumor  =  ───────────────────────────── × 100%
-                ∑_{(x,y)} Mask_brain(x, y)
-```
+$$
+\rho_{\text{tumor}} = \frac{\sum_{(x, y)} \text{Mask}_{\text{tumor}}(x, y)}{\sum_{(x, y)} \text{Mask}_{\text{brain}}(x, y)} \times 100\%
+$$
 
 **Equation 3.18: Deterministic Clinical Severity Index Rules**
-```text
-  Severity(Confidence, ρ_tumor) = 
-  ⎧ High Tier:       if Confidence > 95%  AND  ρ_tumor > 5.0%
-  ⎪ Moderate Tier:   if Confidence > 80%  AND  ρ_tumor > 2.0%
-  ⎨ Low Tier:        if Confidence > 60%  AND  ρ_tumor ≤ 2.0%
-  ⎪ Borderline:      if 50% ≤ Confidence < 55%
-  ⎩ Uncertain:       if Confidence < 50%
-```
+$$
+\text{Severity}(\text{Conf}, \rho_{\text{tumor}}) = \begin{cases}
+\text{High Tier}, & \text{if Conf} > 95\% \text{ and } \rho_{\text{tumor}} > 5.0\% \\	ext{Moderate Tier}, & \text{if Conf} > 80\% \text{ and } \rho_{\text{tumor}} > 2.0\% \\	ext{Low Tier}, & \text{if Conf} > 60\% \text{ and } \rho_{\text{tumor}} \le 2.0\% \\	ext{Borderline}, & \text{if } 50\% \le \text{Conf} < 55\% \\	ext{Uncertain}, & \text{if Conf} < 50\%
+\end{cases}
+$$
 
 Anatomical localization is determined by mapping the peak coordinate `(x_max, y_max)` of `HM_gated` against intracranial anatomical boundaries to determine Cerebral Hemisphere (Left vs. Right) and Cerebral Lobe (Frontal, Parietal, or Occipital).
 
@@ -864,47 +839,35 @@ The performance of the brain tumor classification framework is evaluated using s
 Quantitative performance evaluation is conducted using standardized multi-class statistical and information-theoretic metrics:
 
 **Equation 5.1: Overall Multi-Class Accuracy**
-```text
-              ∑_{c=1}^C TP_c
-  Accuracy = ────────────────
-                 N_total
-```
+$$
+\text{Accuracy} = \frac{\sum_{c=1}^{C} \text{TP}_c}{N_{\text{total}}}
+$$
 Where `TP_c` denotes True Positives for diagnostic class `c`, and `N_total = 1,269` total validation scans.
 
 **Equation 5.2: Class-Specific Precision (Positive Predictive Value)**
-```text
-                 TP_c
-  Precision_c = ─────────────
-                 TP_c + FP_c
-```
+$$
+\text{Precision}_c = \frac{\text{TP}_c}{\text{TP}_c + \text{FP}_c}
+$$
 
 **Equation 5.3: Class-Specific Recall (Sensitivity / True Positive Rate)**
-```text
-              TP_c
-  Recall_c = ─────────────
-              TP_c + FN_c
-```
+$$
+\text{Recall}_c = \frac{\text{TP}_c}{\text{TP}_c + \text{FN}_c}
+$$
 
 **Equation 5.4: F1-Score (Harmonic Mean of Precision and Recall)**
-```text
-             2 · Precision_c · Recall_c           2 · TP_c
-  F1_c = ────────────────────────────────── = ──────────────────────────
-             Precision_c + Recall_c            2 · TP_c + FP_c + FN_c
-```
+$$
+\text{F1}_c = \frac{2 \cdot \text{Precision}_c \cdot \text{Recall}_c}{\text{Precision}_c + \text{Recall}_c} = \frac{2 \cdot \text{TP}_c}{2 \cdot \text{TP}_c + \text{FP}_c + \text{FN}_c}
+$$
 
 **Equation 5.5: Dice Similarity Coefficient (DSC)**
-```text
-           2 · | P ∩ G |                    2 · TP_seg
-  Dice = ───────────────── = ─────────────────────────────────────────
-             | P | + | G |     2 · TP_seg + FP_seg + FN_seg + epsilon
-```
+$$
+\text{Dice} = \frac{2 \cdot |P \cap G|}{|P| + |G|} = \frac{2 \cdot \text{TP}_{\text{seg}}}{2 \cdot \text{TP}_{\text{seg}} + \text{FP}_{\text{seg}} + \text{FN}_{\text{seg}} + \epsilon}
+$$
 
 **Equation 5.6: Intersection over Union (IoU / Jaccard Index)**
-```text
-          | P ∩ G |                       TP_seg
-  IoU = ───────────── = ─────────────────────────────────────────
-          | P ∪ G |       TP_seg + FP_seg + FN_seg + epsilon
-```
+$$
+\text{IoU} = \frac{|P \cap G|}{|P \cup G|} = \frac{\text{TP}_{\text{seg}}}{\text{TP}_{\text{seg}} + \text{FP}_{\text{seg}} + \text{FN}_{\text{seg}} + \epsilon}
+$$
 Where `P` represents the weakly supervised predicted tumor mask, `G` represents ground-truth expert contours, and `epsilon = 1e-7`.
 
 Macro-averaged precision, recall, and F1-score can be used to assess performance across classes while giving each class equal weight. The reported values should be calculated from the appropriate held-out evaluation set and must correspond to the model configuration being described.
