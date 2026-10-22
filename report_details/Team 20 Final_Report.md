@@ -652,7 +652,11 @@ $$
 **Equation 3.18: Deterministic Clinical Severity Index Rules**
 $$
 \text{Severity}(\text{Conf}, \rho_{\text{tumor}}) = \begin{cases}
-\text{High Tier}, & \text{if Conf} > 95\% \text{ and } \rho_{\text{tumor}} > 5.0\% \\	ext{Moderate Tier}, & \text{if Conf} > 80\% \text{ and } \rho_{\text{tumor}} > 2.0\% \\	ext{Low Tier}, & \text{if Conf} > 60\% \text{ and } \rho_{\text{tumor}} \le 2.0\% \\	ext{Borderline}, & \text{if } 50\% \le \text{Conf} < 55\% \\	ext{Uncertain}, & \text{if Conf} < 50\%
+\text{High Tier}, & \text{if Conf} > 95\% \text{ and } \rho_{\text{tumor}} > 5.0\% \\
+\text{Moderate Tier}, & \text{if Conf} > 80\% \text{ and } \rho_{\text{tumor}} > 2.0\% \\
+\text{Low Tier}, & \text{if Conf} > 60\% \text{ and } \rho_{\text{tumor}} \le 2.0\% \\
+\text{Borderline}, & \text{if } 50\% \le \text{Conf} < 55\% \\
+\text{Uncertain}, & \text{if Conf} < 50\%
 \end{cases}
 $$
 
