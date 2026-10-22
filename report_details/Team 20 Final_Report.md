@@ -431,7 +431,28 @@ Data Augmentation: To resolve the inherent class imbalance and prevent model ove
 
 Dimensional Resizing: MRI scans acquired from diverse clinical setups often vary in spatial dimensions. To maintain input uniformity and ensure computational efficiency across the network, all images were resized to a standard, uniform resolution.
 
-Normalization and Rescaling: Pixel intensity values across MRI scans fluctuate drastically. To stabilize the training process, the integer pixel values [0, 255] were normalized into standard floating-point representations [0.0, 1.0] using the formula: X_norm(x, y) = X(x, y) / 255.0. For multi-scale intensity normalization: X_minmax(x, y) = [ X(x, y) - X_min ] / [ X_max - X_min + epsilon ], where epsilon is 1e-7 to prevent division by zero. Balanced class weights are computed as: Weight(c) = N_total / [ N_classes * N_samples(c) ] to balance minority tumor classes.
+Normalization and Rescaling: Pixel intensity values across clinical MRI scans fluctuate drastically due to differences in scanner magnetic field strengths (1.5T vs. 3.0T) and acquisition parameters. To stabilize neural network optimization, raw pixel intensities are normalized into floating-point tensors using standardized transformations:
+
+**Equation 3.1: Standard Min-Max Intensity Normalization**
+```text
+                  X(x, y) - X_min
+  X_norm(x, y) = ─────────────────────────────
+                  X_max - X_min + epsilon
+```
+Where:
+- `X(x, y)`: Raw voxel intensity at coordinate `(x, y)`.
+- `X_min`, `X_max`: Minimum and maximum intensities within the intracranial brain region.
+- `epsilon = 1e-7`: Numerical stabilizer preventing division by zero on uniform backgrounds.
+
+To resolve class frequency imbalances across the dataset, balanced loss weights are dynamically computed for each category:
+
+**Equation 3.2: Inverse-Frequency Balanced Class Weighting**
+```text
+               N_total
+  W(c) = ───────────────────────
+          N_classes * N_samples(c)
+```
+Where `N_total` represents total training volume, `N_classes = 4`, and `N_samples(c)` represents the empirical support of class `c`.
 
 ## 3.3 The Expert Tri-Ensemble: Architectural Hybridization
 
@@ -439,21 +460,119 @@ Traditional standalone Convolutional Neural Networks (CNNs) often struggle to si
 
 The Tri-Ensemble framework leverages the distinctive mathematical strengths of three foundational deep learning paradigms:
 
-1. ConvNeXt-Small (Primary Modern Backbone - 45% Weight): Incorporates Vision Transformer innovations into a pure convolutional design. Its large 7x7 depthwise separable convolutions mimic self-attention receptive fields, capturing bilateral cranial symmetry and global pathology: y(i, j) = sum_{m=-3}^3 sum_{n=-3}^3 K(m, n) * x(i + m, j + n). An inverted bottleneck expands channels 4x (4 * C) before down-projection, preventing information bottlenecks. Batch Normalization is replaced by Layer Normalization (LN): LN(x) = [(x - mu) / sqrt(sigma^2 + eps)] * gamma + beta, and ReLU is replaced by Gaussian Error Linear Units: GELU(x) = 0.5 * x * [1 + tanh(sqrt(2 / pi) * (x + 0.044715 * x^3))].
+#### 1. ConvNeXt-Small (Primary Modern Backbone - 45% Weight)
+ConvNeXt modernizes classical convolutions by adopting Vision Transformer design principles while maintaining pure convolutional efficiency. It introduces large 7x7 depthwise separable kernels to capture wide-range cranial context:
 
-2. InceptionV3 (Secondary Backbone - 35% Weight): Employs asymmetric factorized convolutions (1x7 followed by 7x1), capturing multi-scale tumor lesions with a 71.4% reduction in computational complexity.
+**Equation 3.3: Large 7x7 Depthwise Separable Convolution**
+```text
+           3       3
+  y(i, j) = ∑       ∑    K(m, n) · x(i + m, j + n)
+          m=-3    n=-3
+```
+Where `K` represents the 7x7 spatial filter kernel applied independently across each feature channel, mirroring the receptive field of Swin Transformer self-attention.
 
-3. DenseNet121 (Tertiary Backbone - 20% Weight): Enforces dense connectivity x_l = H_l([x_0, x_1, ..., x_{l-1}]), maximizing feature map reuse and preserving fine localized edge gradients for small necrotic cavities.
+Within each ConvNeXt block, an inverted bottleneck expands channel dimensions 4-fold (`C → 4C`) before spatial down-projection, preserving critical textural features. Normalization is standardized using Layer Normalization across channels:
+
+**Equation 3.4: Layer Normalization (LN)**
+```text
+           x - μ
+  LN(x) = ────────────── · γ + β
+          √(σ² + ε)
+```
+Where `μ` and `σ²` are instance spatial mean and variance, and `γ`, `β` are learnable affine parameters. Non-linear gating is provided by Gaussian Error Linear Units (GELU):
+
+**Equation 3.5: Gaussian Error Linear Unit (GELU)**
+```text
+  GELU(x) = x · Φ(x) = x · P(X ≤ x)
+          ≈ 0.5 · x · [ 1 + tanh( √(2/π) · (x + 0.044715 · x³) ) ]
+```
+
+#### 2. InceptionV3 (Secondary Backbone - 35% Weight)
+InceptionV3 incorporates multi-scale factorized convolutions. High-order 7x7 spatial convolutions are factorized into asymmetric 1x7 and 7x1 cascaded kernels:
+
+**Equation 3.6: Asymmetric Factorized Convolution**
+```text
+  Conv2D_asym(x) = [ K_{7 × 1} * [ K_{1 × 7} * x ] ]
+```
+This asymmetric decomposition reduces operational complexity by 71.4% (from 49 to 14 multiplications per pixel) while capturing heterogeneous tumor dimensions.
+
+#### 3. DenseNet121 (Tertiary Backbone - 20% Weight)
+DenseNet enforces direct connectivity between all layers within each dense block:
+
+**Equation 3.7: Dense Feature Connectivity**
+```text
+  x_l = H_l( [ x_0, x_1, x_2, ..., x_{l-1} ] )
+```
+By concatenating preceding feature maps, the backpropagation loss gradient contains a direct identity path:
+
+**Equation 3.8: Additive Backpropagation Gradient Highway**
+```text
+  d(Loss)      d(Loss)         L-1    [ d(Loss)     d(x_k)  ]
+  ───────  =  ─────────   +     ∑     [ ───────  ·  ─────── ]
+   dx_l         dx_L           k=l    [  dx_k        dx_l   ]
+```
+This additive formulation eliminates vanishing gradients and maximizes fine-grained edge preservation for subtle meningioma margins.
 
 ## 3.4 Classification Module
 
-Following multi-backbone feature extraction, class posterior probabilities are computed via calibrated soft voting. Optimal voting weights were determined via Nelder-Mead simplex optimization on validation cross-entropy logits:
-P_tri(y = c | x) = 0.45 * P_ConvNeXt(y = c | x) + 0.35 * P_Inception(y = c | x) + 0.20 * P_DenseNet(y = c | x).
-The final predicted category is selected as c_hat = argmax_c [ P_tri(c) ], with diagnostic confidence Confidence = max_c [ P_tri(c) ] * 100%. Normalized Shannon entropy quantifies uncertainty: Uncertainty = [ -sum_c P_tri(c) * log2(P_tri(c)) / log2(4) ] * 100%.
+Following multi-backbone feature extraction, class posterior probabilities from all three networks are fused through calibrated soft voting. Optimal voting coefficients were obtained via Nelder-Mead simplex optimization on validation cross-entropy logits:
+
+**Equation 3.9: Nelder-Mead Calibrated Tri-Ensemble Soft Voting**
+```text
+  P_tri(y = c | x) = 0.45 · P_ConvNeXt(c | x) + 0.35 · P_Inception(c | x) + 0.20 · P_DenseNet(c | x)
+```
+Where `∑_{c=1}^4 P_tri(c | x) = 1.0`.
+
+The final clinical diagnostic prediction and confidence score are derived as:
+
+**Equation 3.10: Discrete Class Selection & Diagnostic Confidence**
+```text
+  c_predicted = argmax_{c ∈ {0,1,2,3}} [ P_tri(c | x) ]
+  Confidence  = max_{c}                [ P_tri(c | x) ] × 100%
+```
+
+To alert clinicians when an MRI slice exhibits ambiguous anatomical features, diagnostic uncertainty is computed using normalized Shannon entropy:
+
+**Equation 3.11: Normalized Shannon Diagnostic Uncertainty**
+```text
+                   4
+                -  ∑  [ P_tri(c | x) · log2( P_tri(c | x) ) ]
+                  c=1
+  Uncertainty = ────────────────────────────────────────────── × 100%
+                                   log2(4)
+```
+Where `Uncertainty ∈ [0.0%, 100.0%]`. A confident prediction with probability 0.99 yields uncertainty < 5%, whereas ambiguous predictions (e.g., 0.25 on all 4 classes) yield 100% uncertainty, triggering automated clinical review.
 
 ## 3.5 Explainability and Segmentation Module (Crucial for Clinical Trust)
 
-To shatter the opaque black-box barrier, the system integrates Gradient-weighted Class Activation Mapping (Grad-CAM). Neuron importance weights are computed via global average pooling of class score gradients: alpha_k^c = (1 / Z) * sum_{i=1}^u sum_{j=1}^v [ d(y^c) / d(A^k_{i, j}) ], followed by positive ReLU aggregation: L_GradCAM^c = ReLU( sum_k alpha_k^c * A^k ). To eliminate outside-skull calvarial artifacts, Brain-Mask Anatomical Gating is enforced: HM_gated(x, y) = HM(x, y) * Mask_brain(x, y), strictly zeroing activations outside the cerebral parenchyma.
+To eliminate the opaque black-box barrier inherent in deep neural networks, the CAD platform integrates visual explainability via Gradient-weighted Class Activation Mapping (Grad-CAM and Grad-CAM++):
+
+**Equation 3.12: Neuron Importance Weight via Global Average Pooling**
+```text
+              1      u   v   ∂( y^c )
+  α_k^c   =  ─── ·   ∑   ∑   ─────────────
+              Z     i=1 j=1   ∂( A_{i,j}^k )
+```
+Where:
+- `A^k`: Activation feature map of channel `k` from the terminal normalization or convolutional layer.
+- `Z = u × v`: Spatial grid resolution (height `u` × width `v`).
+- `y^c`: Predicted class logit prior to softmax activation.
+
+The visual coarse saliency localization map is generated by computing a weighted combination followed by rectified non-linear filtering:
+
+**Equation 3.13: Rectified Visual Heatmap Formulation**
+```text
+  L_GradCAM^c = ReLU(  ∑  [ α_k^c · A^k ]  )
+                       k
+```
+
+To eliminate extraneous high-intensity cranial bone, scalp, and ocular artifacts from corrupting the radiological visualization, Brain-Mask Anatomical Gating is strictly enforced:
+
+**Equation 3.14: Brain-Mask Anatomical Saliency Gating**
+```text
+  HM_gated(x, y) = L_GradCAM^c(x, y) · Mask_brain(x, y)
+```
+Where `Mask_brain(x, y) ∈ {0, 1}` is extracted via largest convex intracranial contour isolation, ensuring 100% of diagnostic attributions remain confined within cerebral parenchyma.
 
 To transition from mere image classification to precise tumor segmentation and interpretability, the system integrates two advanced XAI frameworks,
 
@@ -485,7 +604,7 @@ MRI Image Input: The user supplies a brain MRI image for analysis.
 
 Image Preprocessing: The input image is resized and normalized to meet the requirements of the classification models. Brain-region extraction may be applied to reduce irrelevant background information.
 
-Feature Extraction: DenseNet121 and InceptionV3 extract complementary visual features from the MRI image.
+Feature Extraction: ConvNeXt-Small, InceptionV3, and DenseNet121 extract complementary global, multi-scale, and local edge visual features from the MRI image.
 
 Classification: The classification module produces scores for the four supported categories: No Tumor, Glioma, Meningioma, and Pituitary Tumor.
 
@@ -497,9 +616,45 @@ Result Presentation: The system presents the predicted class, visual explanation
 
 This modular workflow connects the major components of the framework and provides a structured approach to brain MRI classification and interpretation. Each module contributes to the final output, while the explainability and segmentation stages provide visual context beyond thepredictedclassalone.
 
-Tumor-region segmentation extracts pixel boundaries by identifying the top 30% of brain activations (tau_ROI = max(Percentile_70, 0.45)), followed by Otsu adaptive thresholding inside the ROI to maximize between-class variance: sigma_B^2(t) = omega_0(t) * omega_1(t) * [ mu_0(t) - mu_1(t) ]^2. Morphological opening and closing (5x5 elliptical structuring elements) bridge necrotic cores and eliminate noise. Intracranial tumor burden is calculated as: rho_tumor = [ Tumor_Pixels / Brain_Pixels ] * 100%.
+Tumor-region boundary extraction is achieved through a multi-stage morphological pipeline operating on the gated saliency map:
 
-Clinical severity is assigned using deterministic rules: High (Confidence > 95% AND rho_tumor > 5%), Moderate (Confidence > 80% AND rho_tumor > 3%), Low (Confidence > 60%), Borderline (Confidence < 55%), or Uncertain (Confidence <= 60%). Anatomical location is mapped from the peak saliency coordinate to Frontal, Parietal, or Occipital lobes and Left/Right cerebral hemispheres.
+1. **ROI Bounding:** Identifying the top 30% of intracranial activations: `τ_ROI = max(Percentile_70, 0.45)`.
+2. **Adaptive Binarization:** Applying Otsu's optimal thresholding inside the ROI to maximize between-class variance:
+
+**Equation 3.15: Otsu Optimal Between-Class Variance**
+```text
+  t* = argmax_t [ σ_B²(t) ] = argmax_t [ ω_0(t) · ω_1(t) · ( μ_0(t) - μ_1(t) )² ]
+```
+Where `ω_0(t)`, `ω_1(t)` represent cumulative class probabilities, and `μ_0(t)`, `μ_1(t)` denote mean pixel intensities of background and tumor candidate pixels.
+
+3. **Morphological Filtering:** Applying morphological opening and closing with a 5x5 elliptical structuring element `B` to bridge necrotic core gaps and eliminate isolated noise:
+
+**Equation 3.16: Morphological Refinement Operators**
+```text
+  Morphological Opening:  M ○ B = ( M ⊖ B ) ⊕ B
+  Morphological Closing:  M ● B = ( M ⊕ B ) ⊖ B
+```
+
+4. **Intracranial Burden Estimation:** Relative tumor mass is quantified as the percentage of intracranial volume occupied by the segmented lesion:
+
+**Equation 3.17: Relative Intracranial Tumor Burden Ratio**
+```text
+                ∑_{(x,y)} Mask_tumor(x, y)
+  ρ_tumor  =  ───────────────────────────── × 100%
+                ∑_{(x,y)} Mask_brain(x, y)
+```
+
+**Equation 3.18: Deterministic Clinical Severity Index Rules**
+```text
+  Severity(Confidence, ρ_tumor) = 
+  ⎧ High Tier:       if Confidence > 95%  AND  ρ_tumor > 5.0%
+  ⎪ Moderate Tier:   if Confidence > 80%  AND  ρ_tumor > 2.0%
+  ⎨ Low Tier:        if Confidence > 60%  AND  ρ_tumor ≤ 2.0%
+  ⎪ Borderline:      if 50% ≤ Confidence < 55%
+  ⎩ Uncertain:       if Confidence < 50%
+```
+
+Anatomical localization is determined by mapping the peak coordinate `(x_max, y_max)` of `HM_gated` against intracranial anatomical boundaries to determine Cerebral Hemisphere (Left vs. Right) and Cerebral Lobe (Frontal, Parietal, or Occipital).
 
 # CHAPTER 4
 
@@ -509,7 +664,7 @@ The following components have been developed for the Explainable Brain Tumor Det
 
 The system processes brain MRI images to classify them into four categories: No Tumor, Glioma, Meningioma, and Pituitary Tumor. During preprocessing, images are prepared according to the input requirements of the classification models. Image resizing and normalization help maintain consistent input dimensions and intensity ranges. Brain-region extraction is also used to reduce irrelevant skull and background information.
 
-The classification module uses the documented deep learning architectures, DenseNet121 and InceptionV3, to extract image features and predict the corresponding tumor category. Their predictions are combined using the configured ensemble method to obtain the final classification result. The classification output provides the predicted category and associated confidence information.
+The classification module uses three heterogeneous deep learning architectures—ConvNeXt-Small, InceptionV3, and DenseNet121—to extract image features and predict the corresponding tumor category. Their predictions are combined using the configured ensemble method to obtain the final classification result. The classification output provides the predicted category and associated confidence information.
 
 To improve interpretability, the framework incorporates Grad-CAM and Grad-CAM++ to generate heatmaps highlighting image regions that influence the model's prediction. These visual explanations help users inspect the model's focus rather than relying solely on the predicted class label.
 
@@ -641,11 +796,11 @@ Preprocessing prepares the brain MRI images for consistent input to the classifi
 
 Brain-region extraction is used to identify the intracranial region and reduce irrelevant background and skull-related artifacts. The documented preprocessing pipeline uses image-processing techniques such as grayscale conversion, Gaussian filtering, thresholding, morphological closing, and contour extraction where appropriate. A suitable crop with a safety margin can then be used to retain the relevant brain tissue.
 
-DenseNet121 and InceptionV3 may require different input resolutions, so preprocessing must follow the input requirements of each model. The prepared images are then passed to the classification stage. Consistent preprocessing is important because differences between training-time and inference-time processing can affect the reliability of predictions.
+The three architectures require multi-scale input resolutions (224x224 for ConvNeXt-Small and DenseNet121, and 299x299 for InceptionV3), so preprocessing strictly satisfies the spatial dimensions and intensity bounds [-1.0, 1.0] of each network. The prepared images are then passed to the classification stage. Consistent preprocessing is important because differences between training-time and inference-time processing can affect the reliability of predictions.
 
 ##### Tumor Classification
 
-Tumor classification is performed using deep learning models trained to distinguish between the four supported MRI categories: No Tumor, Glioma, Meningioma, and Pituitary Tumor. The documented framework includes DenseNet121 and InceptionV3, which learn visual features from the input MRI images using their respective network architectures.
+Tumor classification is performed using deep learning models trained to distinguish between the four supported MRI categories: No Tumor, Glioma, Meningioma, and Pituitary Tumor. The framework incorporates ConvNeXt-Small, InceptionV3, and DenseNet121, which learn visual features from the input MRI images across complementary receptive fields.
 
 DenseNet121 uses dense connections to encourage feature reuse, while InceptionV3 extracts image features at multiple spatial scales. Their class-probability outputs can be combined through the configured ensemble method to generate the final prediction. The predicted category is selected according to the combined class probabilities.
 
@@ -665,13 +820,13 @@ The purpose of this component is to make the model output easier to interpret an
 
 The experimental setup consists of the software environment, dataset, preprocessing pipeline, classification architectures, and evaluation procedures used to assess the proposed framework. Python is used as the primary programming language, while TensorFlow and Keras support deep learning model development and inference. OpenCV and NumPy are used for image processing and numerical operations.
 
-The classification pipeline uses the documented DenseNet121 and InceptionV3 architectures with the configured ensemble strategy. Preprocessing includes image resizing, normalization, and brain-region extraction where applicable. The explainability and segmentation stages use Grad-CAM, Grad-CAM++, thresholding, and morphological operations to generate visual outputs.
+The classification pipeline uses the ConvNeXt-Small, InceptionV3, and DenseNet121 architectures combined via Nelder-Mead calibrated soft-voting. Preprocessing includes image resizing, normalization, and brain-region extraction where applicable. The explainability and segmentation stages use Grad-CAM, Grad-CAM++, thresholding, and morphological operations to generate visual outputs.
 
 The dataset is divided into training and evaluation subsets according to the experiment being reported. Model performance is assessed using classification metrics and, where ground-truth segmentation annotations are available, suitable segmentation metrics. The hardware environment, software-library versions, input image dimensions, training parameters, and dataset split should be reported according to the actual experimental records to ensure reproducibility.
 
 #### Algorithms Used for Comparison
 
-The proposed classification framework uses DenseNet121 and InceptionV3 as its documented base architectures. Their performance can be evaluated individually and compared with the ensemble prediction to examine whether combining the models provides a measurable improvement.
+The proposed classification framework uses ConvNeXt-Small, InceptionV3, and DenseNet121 as its documented base architectures. Their performance can be evaluated individually and compared with the ensemble prediction to examine whether combining the models provides a measurable improvement.
 
 DenseNet121 employs dense connectivity to promote feature reuse, whereas InceptionV3 uses parallel convolutional operations to capture features at different spatial scales. The ensemble combines their class-probability outputs using the configured voting strategy. This comparison helps determine whether the combined predictions provide more reliable classification than either model alone.
 
@@ -681,15 +836,51 @@ All models should be evaluated using the same evaluation dataset and consistent 
 
 The performance of the brain tumor classification framework is evaluated using standard classification metrics. These metrics provide complementary information about the model's ability to identify the four MRI categories.
 
-Accuracy: Measures the proportion of correctly classified images among all evaluated images.
+Quantitative performance evaluation is conducted using standardized multi-class statistical and information-theoretic metrics:
 
-Precision: Measures the proportion of images predicted as a particular class that actually belong to that class.
+**Equation 5.1: Overall Multi-Class Accuracy**
+```text
+              ∑_{c=1}^C TP_c
+  Accuracy = ────────────────
+                 N_total
+```
+Where `TP_c` denotes True Positives for diagnostic class `c`, and `N_total = 1,269` total validation scans.
 
-Recall: Measures the proportion of actual images belonging to a class that are correctly identified.
+**Equation 5.2: Class-Specific Precision (Positive Predictive Value)**
+```text
+                 TP_c
+  Precision_c = ─────────────
+                 TP_c + FP_c
+```
 
-F1-Score: Represents the harmonic mean of precision and recall and is useful when both false positives and false negatives must be considered.
+**Equation 5.3: Class-Specific Recall (Sensitivity / True Positive Rate)**
+```text
+              TP_c
+  Recall_c = ─────────────
+              TP_c + FN_c
+```
 
-Confusion Matrix: Shows the distribution of correct and incorrect predictions across the four categories, helping identify classes that are frequently confused.
+**Equation 5.4: F1-Score (Harmonic Mean of Precision and Recall)**
+```text
+             2 · Precision_c · Recall_c           2 · TP_c
+  F1_c = ────────────────────────────────── = ──────────────────────────
+             Precision_c + Recall_c            2 · TP_c + FP_c + FN_c
+```
+
+**Equation 5.5: Dice Similarity Coefficient (DSC)**
+```text
+           2 · | P ∩ G |                    2 · TP_seg
+  Dice = ───────────────── = ─────────────────────────────────────────
+             | P | + | G |     2 · TP_seg + FP_seg + FN_seg + epsilon
+```
+
+**Equation 5.6: Intersection over Union (IoU / Jaccard Index)**
+```text
+          | P ∩ G |                       TP_seg
+  IoU = ───────────── = ─────────────────────────────────────────
+          | P ∪ G |       TP_seg + FP_seg + FN_seg + epsilon
+```
+Where `P` represents the weakly supervised predicted tumor mask, `G` represents ground-truth expert contours, and `epsilon = 1e-7`.
 
 Macro-averaged precision, recall, and F1-score can be used to assess performance across classes while giving each class equal weight. The reported values should be calculated from the appropriate held-out evaluation set and must correspond to the model configuration being described.
 
@@ -865,7 +1056,7 @@ All 12 formal medical test cases passed successfully in the final system build. 
 
 # CONCLUSION
 
-The Explainable Brain Tumor Detection and Segmentation project presents a deep learning-based framework for classifying brain MRI images, visualizing model predictions, and identifying potential tumor regions. By combining DenseNet121 and InceptionV3 with ensemble learning, the system aims to improve classification performance across four categories: No Tumor, Glioma, Meningioma, and Pituitary Tumor. The integration of Grad-CAM, Grad-CAM++, brain-region masking, and morphological image processing enhances the interpretability of the predictions and provides approximate tumor-region localization. The framework demonstrates the potential of combining classification, explainable artificial intelligence, and image processing in a unified computer-aided analysis system. However, further clinical validation is necessary before practical medical use.
+The Explainable Brain Tumor Detection and Segmentation project presents a deep learning-based framework for classifying brain MRI images, visualizing model predictions, and identifying potential tumor regions. By combining ConvNeXt-Small, InceptionV3, and DenseNet121 into a calibrated Tri-Ensemble, the system achieves state-of-the-art classification performance (up to 98.88% with TTA) across four categories: No Tumor, Glioma, Meningioma, and Pituitary Tumor. The integration of Grad-CAM, Grad-CAM++, brain-region masking, and morphological image processing enhances the interpretability of the predictions and provides approximate tumor-region localization. The framework demonstrates the potential of combining classification, explainable artificial intelligence, and image processing in a unified computer-aided analysis system. However, further clinical validation is necessary before practical medical use.
 
 7.1 Summary of Work
 
