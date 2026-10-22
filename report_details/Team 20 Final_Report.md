@@ -1,5 +1,5 @@
 
-## VISVESVARAYA TECHNOLOGICAL UNIVERSITY
+# VISVESVARAYA TECHNOLOGICAL UNIVERSITY
 
 Jnana Sangama, Belgaum-590018
 
@@ -91,87 +91,118 @@ We also thank all the faculty members of the Department of Computer Science and 
 
 Finally, we express our heartfelt gratitude to our parents and friends for their constant motivation, understanding, and moral support, which helped us complete this project successfully.
 
-### TABLE OF CONTENTS
+### Table of Contents
 
-Page No.
+- [Front Matter](#visvesvaraya-technological-university)
+  - [Certificate](#certificate)
+  - [Declaration](#declaration)
+  - [Abstract](#abstract)
+  - [Acknowledgement](#acknowledgement)
+  - [List of Figures](#list-of-figures)
+  - [List of Tables](#list-of-tables)
+  - [List of Abbreviations](#list-of-abbreviations)
+- [Chapter 1: Introduction](#chapter-1-introduction)
+  - [1.1 Neuro-Oncological Disease Burden](#1-neuro-oncological-disease-burden)
+  - [1.2 Project Relevance and Technological Superiority](#technological-superiority-through-heterogeneous-tri-ensemble)
+  - [1.3 Project Objectives](#objectives)
+  - [1.4 Scope and Limitations](#scope)
+  - [1.5 Chapter-Wise Summary](#chapter-wise-summary)
+- [Chapter 2: Literature Survey](#chapter-2-literature-survey)
+  - [2.1 Survey of Existing Works](#21-traditional-machine-learning-approaches)
+  - [2.2 Literature Comparison Tables](#table-21-comparison-of-existing-literature-on-brain-tumor-detection--xai-part-1)
+  - [2.3 Key Observations and Research Gaps](#24-key-observations-from-literature)
+- [Chapter 3: Proposed Architecture and Design](#chapter-3-proposed-architecture-and-design)
+  - [3.1 System Architecture](#31-system-architecture)
+  - [3.2 Input Data and Preprocessing](#32-input-data-and-preprocessing)
+  - [3.3 The Expert Tri-Ensemble Architecture](#33-the-expert-tri-ensemble-architectural-hybridization)
+  - [3.4 Classification Module & Soft Voting](#34-classification-module)
+  - [3.5 Explainability & Anatomical Gating](#35-explainability-and-segmentation-module-crucial-for-clinical-trust)
+  - [3.6 Tumor-Region Morphological Segmentation](#36-tumor-region-segmentation)
+  - [3.7 Severity Estimation & Anatomical Localization](#37-severity-estimation-and-anatomical-localization)
+  - [3.8 Overall System Workflow](#38-overall-system-workflow)
+- [Chapter 4: Implementation](#chapter-4-implementation)
+  - [4.1 Multi-Scale Preprocessing & Pipelines](#41-multi-scale-preprocessing)
+  - [4.2 Diagnostic Algorithm Specification](#algorithm)
+  - [4.3 Core Python Source Modules](#def-extract_brain_regionimg)
+- [Chapter 5: Results and Discussion](#chapter-5-results-and-discussion)
+  - [5.1 Benchmark Results & Visual Studio Interface](#results)
+  - [5.2 Quantitative Performance Evaluation](#performance-evaluation)
+  - [5.3 Detailed Per-Class Classification Report](#table-52-detailed-per-class-classification-report-across-1269-validation-scans)
+  - [5.4 Morphological Segmentation Benchmark](#table-53-quantitative-morphological-segmentation-evaluation-metrics-on-ground-truth-masks)
+- [Chapter 6: Software Testing and Quality Assurance](#chapter-6-software-testing-and-quality-assurance)
+  - [6.1 Quality Assurance Architecture](#chapter-6-software-testing-and-quality-assurance)
+  - [6.2 Formal Medical Test Cases (TC-01 to TC-12)](#test-case-development)
+  - [6.3 Usability Testing & Evaluator Feedback](#user-feedback)
+- [Chapter 7: Conclusion and Future Scope](#chapter-7-conclusion-and-future-scope)
+  - [7.1 Summary of Work](#71-summary-of-work)
+  - [7.2 Key Contributions](#72-key-contributions)
+  - [7.3 Clinical Utility and Impact](#73-utility-and-impact)
+  - [7.4 Scope for Future Work](#scope-for-future-work)
+- [References](#references)
+- [Appendix](#appendix)
 
-### LIST OF FIGURES
+### List of Figures
 
-**Figure No.        Figure Name                                                        Page No.**
+| Figure No. | Figure Description | Target Section |
+|---|---|---|
+| **Fig 3.1** | System Architecture of the Explainable CAD Framework | Section 3.1 |
+| **Fig 3.2** | Comparison of Original, Resized, and Intensity-Normalized Scans | Section 3.2 |
+| **Fig 4.1** | Multi-Stage Diagnostic and Morphological Segmentation Pipeline | Section 4.1 |
+| **Fig 5.1** | Interactive Clinical Diagnostic Studio Dashboard | Section 5.1 |
+| **Fig 5.2** | Standalone Backbones vs. Tri-Ensemble Classification Comparison | Section 5.1 |
+| **Fig 5.3** | 4x4 Confusion Matrix across Validation Dataset (1,269 Scans) | Section 5.1 |
+| **Fig 5.4** | Brain-Gated Grad-CAM and Grad-CAM++ Multi-Focal Heatmaps | Section 5.1 |
+| **Fig 5.5** | Weakly-Supervised Morphological Tumor Segmentation Overlay | Section 5.1 |
+| **Fig 5.6** | Training and Validation Convergence Curves (DenseNet & Inception) | Section 5.2 |
+| **Fig 6.1** | Evaluator Ratings on User Interface Clarity and Dashboard Intuition | Section 6.3 |
+| **Fig 6.2** | Evaluator Agreement with Visual Tumor Localization Quality | Section 6.3 |
+| **Fig 6.3** | Key Evaluator Feedback and Implemented Architectural Refinements | Section 6.3 |
+| **Fig 6.4** | Evaluator Ratings on Recommending CAD System for Clinical Workflows | Section 6.3 |
+| **Fig 6.5** | System Reliability Metrics Demonstrating 0% Error Encounters | Section 6.3 |
+| **Fig 6.6** | Evaluator Ratings on Ease of Use and Workflow Navigation | Section 6.3 |
+| **Fig 6.7** | User Feedback on Diagnostic Processing Speed and Response Latency | Section 6.3 |
 
-**Fig 3.1           System Architecture of the Explainable CAD Framework              13
-Fig 3.2           Comparison of Original, Resized, and Intensity-Normalized Scans   14
-Fig 4.1           Multi-Stage Diagnostic and Morphological Segmentation Pipeline     18
-Fig 5.1           Interactive Clinical Diagnostic Studio Dashboard                  25
-Fig 5.2           Standalone Backbones vs. Tri-Ensemble Classification Comparison    26
-Fig 5.3           4x4 Confusion Matrix across Validation Dataset (1,269 Scans)       27
-Fig 5.4           Brain-Gated Grad-CAM and Grad-CAM++ Multi-Focal Heatmaps           28
-Fig 5.5           Weakly-Supervised Morphological Tumor Segmentation Overlay         29
-Fig 5.6           Training and Validation Convergence Curves (DenseNet & Inception) 30
-Fig 6.1           Evaluator Ratings on User Interface Clarity and Dashboard Intuition 32
-Fig 6.2           Evaluator Agreement with Visual Tumor Localization Quality         33
-Fig 6.3           Key Evaluator Feedback and Implemented Architectural Refinements   33
-Fig 6.4           Evaluator Ratings on Recommending CAD System for Clinical Workflows 34
-Fig 6.5           System Reliability Metrics Demonstrating 0% Error Encounters       34
-Fig 6.6           Evaluator Ratings on Ease of Use and Workflow Navigation           35
-Fig 6.7           User Feedback on Diagnostic Processing Speed and Response Latency  35**
+### List of Tables
 
-### LIST OF TABLES
+| Table No. | Table Description | Target Section |
+|---|---|---|
+| **Table 2.1** | Comparison of Existing Literature on Brain Tumor Detection & XAI (Part 1) | Section 2.2 |
+| **Table 2.2** | Comparison of Existing Literature on Brain Tumor Detection & XAI (Part 2) | Section 2.2 |
+| **Table 5.1** | Performance Comparison of CNN Backbones, Tri-Ensemble, and TTA Pipelines | Section 5.2 |
+| **Table 5.2** | Detailed Per-Class Classification Report (1,269 Validation Scans) | Section 5.2 |
+| **Table 5.3** | Quantitative Morphological Segmentation Evaluation Metrics | Section 5.3 |
+| **Table 6.1** | Comprehensive Medical Test Cases and Quality Assurance Outcomes | Section 6.2 |
 
-**Table No.         Table Name                                                         Page No.**
+### List of Abbreviations
 
-**Table 2.1         Comparison of Existing Literature on Brain Tumor Detection (Part 1)  6
-Table 2.2         Comparison of Existing Literature on Brain Tumor Detection (Part 2)  7
-Table 5.1         Performance Comparison of CNN Backbones, Tri-Ensemble, and TTA     26
-Table 5.2         Detailed Per-Class Classification Report (1,269 Validation Scans)   27
-Table 5.3         Quantitative Morphological Segmentation Evaluation Metrics          28
-Table 6.1         Comprehensive Medical Test Cases and Quality Assurance Outcomes     32**
+| Abbreviation | Expanded Medical & Technical Term |
+|---|---|
+| **AI** | Artificial Intelligence |
+| **CAD** | Computer-Aided Diagnosis |
+| **CE-MRI** | Contrast-Enhanced Magnetic Resonance Imaging |
+| **CNN** | Convolutional Neural Network |
+| **ConvNeXt** | Convolutional Neural Network for the 2020s (Modern Pure CNN Backbone) |
+| **DICOM** | Digital Imaging and Communications in Medicine |
+| **DSC** | Dice Similarity Coefficient |
+| **FN** | False Negative |
+| **FP** | False Positive |
+| **GAP** | Global Average Pooling |
+| **GELU** | Gaussian Error Linear Unit |
+| **Grad-CAM** | Gradient-weighted Class Activation Mapping |
+| **IoU** | Intersection over Union (Jaccard Index) |
+| **LIME** | Local Interpretable Model-agnostic Explanations |
+| **LN** | Layer Normalization |
+| **MRI** | Magnetic Resonance Imaging |
+| **PACS** | Picture Archiving and Communication System |
+| **ReLU** | Rectified Linear Unit |
+| **ROI** | Region of Interest |
+| **TN** | True Negative |
+| **TP** | True Positive |
+| **TTA** | Test-Time Augmentation |
+| **WHO** | World Health Organization |
+| **XAI** | Explainable Artificial Intelligence |
 
-6
-
-### LIST OF ABBREVIATIONS
-
-AI          Artificial Intelligence
-CAD         Computer-Aided Diagnosis
-CE-MRI      Contrast-Enhanced Magnetic Resonance Imaging
-CNN         Convolutional Neural Network
-ConvNeXt    Convolutional Neural Network for the 2020s (Modern CNN Backbone)
-DICOM       Digital Imaging and Communications in Medicine
-DSC         Dice Similarity Coefficient
-FN          False Negative
-FP          False Positive
-GAP         Global Average Pooling
-GELU        Gaussian Error Linear Unit
-Grad-CAM    Gradient-weighted Class Activation Mapping
-IoU         Intersection over Union (Jaccard Index)
-LIME        Local Interpretable Model-agnostic Explanations
-LN          Layer Normalization
-MRI         Magnetic Resonance Imaging
-PACS        Picture Archiving and Communication System
-ReLU        Rectified Linear Unit
-ROI         Region of Interest
-TN          True Negative
-TP          True Positive
-TTA         Test-Time Augmentation
-WHO         World Health Organization
-XAI         Explainable Artificial Intelligence
-
-| Col 1 | Col 2 |
-| --- | --- |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
-
-# CHAPTER 1
-
-# INTRODUCTION
+# Chapter 1: Introduction
 
 1. Neuro-Oncological Disease Burden
 Brain and central nervous system (CNS) tumors constitute one of the most fatal and biologically aggressive forms of human malignancies. The regulation of cognitive function, motor control, respiration, and sensory processing within the intracranial vault means that even histologically benign neoplasms can induce catastrophic neurological deficits through mass effect and elevated intracranial pressure.
@@ -309,9 +340,7 @@ In Chapter 6, the testing methodology is discussed. Test cases are designed to v
 
 In Chapter 7, the report concludes by summarizing the project objectives, methodology, and findings. It discusses the contributions and limitations of combining deep learning, explainable AI, and morphological segmentation. Finally, it outlines possible future enhancements, including three-dimensional MRI analysis, multi-modal imaging, and the development of more advanced tumor-segmentation models.
 
-# CHAPTER 2
-
-# LITERATURE SURVEY
+# Chapter 2: Literature Survey
 
 The automated detection, classification, and segmentation of brain tumors using Magnetic Resonance Imaging (MRI) has witnessed a massive paradigm shift from traditional computer vision techniques to advanced deep learning frameworks. Accurate and early diagnosis of neuro-oncological conditions—such as gliomas, meningiomas, and pituitary tumors—is critical for patient survival. However, the complex structure of brain tissues and varying tumor morphologies make manual interpretation by radiologists highly subjective and prone to errors. This literature survey critically evaluates existing methodologies, ranging from traditional machine learning to state-of-the-art hybrid deep learning architectures and Explainable AI (XAI) frameworks, highlighting their contributions and identifying prevailing research gaps.
 
@@ -401,9 +430,7 @@ Computational Efficiency
 
 There is a strong need for resource-efficient detection architectures. Many current solutions require substantial processing power and memory, making them impractical for real-time deployment on low-power, edge, or embedded devices.
 
-# CHAPTER 3
-
-# PROPOSED ARCHITECTURE AND DESIGN
+# Chapter 3: Proposed Architecture and Design
 
 ## 3.1 System Architecture
 
@@ -656,9 +683,7 @@ Where `ω_0(t)`, `ω_1(t)` represent cumulative class probabilities, and `μ_0(t
 
 Anatomical localization is determined by mapping the peak coordinate `(x_max, y_max)` of `HM_gated` against intracranial anatomical boundaries to determine Cerebral Hemisphere (Left vs. Right) and Cerebral Lobe (Frontal, Parietal, or Occipital).
 
-# CHAPTER 4
-
-# IMPLEMENTATION
+# Chapter 4: Implementation
 
 The following components have been developed for the Explainable Brain Tumor Detection and Segmentation project.
 
@@ -886,9 +911,7 @@ Macro-averaged precision, recall, and F1-score can be used to assess performance
 
 For tumor-region segmentation, metrics such as the Dice coefficient and Intersection over Union (IoU) may be reported if reference segmentation masks are available and the corresponding evaluation has been performed. Classification performance and segmentation performance should be reported separately because they measure different aspects of the system.
 
-# CHAPTER 5
-
-# RESULTS AND DISCUSSION
+# Chapter 5: Results and Discussion
 
 This chapter presents the comprehensive experimental evaluation of the Explainable Brain Tumor Detection and Segmentation framework. The proposed system is rigorously evaluated across 1,269 independent validation MRI scans from the benchmark multi-class dataset, comparing standalone CNN architectures against the proposed Tri-Ensemble and Test-Time Augmentation (TTA) pipelines. Detailed per-class metrics, 4x4 confusion matrices, quantitative segmentation overlap scores (Dice and IoU), and visual Explainable AI (XAI) overlays are analyzed.
 
@@ -966,9 +989,7 @@ As established in Table 5.2, the system demonstrates remarkable diagnostic sensi
 
 As established in Table 5.1, the proposed Tri-Ensemble achieves 98.20% accuracy on the clean validation set, and with 10-Pass Test-Time Augmentation (TTA) reaches a peak benchmark of 98.88%. Per-class breakdown confirms exceptional clinical safety: 98.97% recall for malignant gliomas (192/194 correct), 98.66% recall for pituitary tumors (294/298 correct), 93.31% recall for meningiomas (278/299 correct), and 99.33% precision for healthy brain scans (448/451 correct), eliminating false-positive trauma for healthy patients.
 
-# CHAPTER 6
-
-# TESTING
+# Chapter 6: Software Testing and Quality Assurance
 
 This chapter describes the systematic verification and quality assurance methodology used to ensure the algorithmic robustness, clinical correctness, and software safety of the Explainable Brain Tumor CAD framework. A 3-Tier Testing Architecture—comprising isolated unit tests, end-to-end integration tests, and full-stack system verification—was executed. Additionally, user feedback was collected from academic peers and medical imaging specialists to evaluate usability and radiological clarity.
 
@@ -1052,9 +1073,7 @@ All evaluators reported excellent response speeds, with diagnosis and PDF report
 
 All 12 formal medical test cases passed successfully in the final system build. Unit, integration, and load testing confirmed that the Explainable Brain Tumor CAD framework is stable, robust against edge-case anomalies, and well-received by clinical evaluators.
 
-# CHAPTER 7
-
-# CONCLUSION
+# Chapter 7: Conclusion and Future Scope
 
 The Explainable Brain Tumor Detection and Segmentation project presents a deep learning-based framework for classifying brain MRI images, visualizing model predictions, and identifying potential tumor regions. By combining ConvNeXt-Small, InceptionV3, and DenseNet121 into a calibrated Tri-Ensemble, the system achieves state-of-the-art classification performance (up to 98.88% with TTA) across four categories: No Tumor, Glioma, Meningioma, and Pituitary Tumor. The integration of Grad-CAM, Grad-CAM++, brain-region masking, and morphological image processing enhances the interpretability of the predictions and provides approximate tumor-region localization. The framework demonstrates the potential of combining classification, explainable artificial intelligence, and image processing in a unified computer-aided analysis system. However, further clinical validation is necessary before practical medical use.
 
