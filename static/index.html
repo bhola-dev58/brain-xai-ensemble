@@ -97,23 +97,23 @@
           </div>
 
           <!-- Quick Sample Picker -->
-          <div class="sample-picker-title">Sample Benchmark Cases</div>
+          <div class="sample-picker-title">Sample Benchmark Cases (All 4 Classes)</div>
           <div class="sample-grid">
-            <button class="sample-btn" data-sample="/samples/Tr-me_0025.jpg" data-label="Meningioma 1">
-              <span class="tag">Meningioma</span>
-              <strong>Case ME-025</strong>
+            <button class="sample-btn" data-sample="/samples/sample_glioma.jpg" data-label="Glioma Benchmark">
+              <span class="tag" style="color: var(--status-danger);">Glioma</span>
+              <strong>High Grade</strong>
             </button>
-            <button class="sample-btn" data-sample="/samples/Tr-me_0070.jpg" data-label="Meningioma 2">
-              <span class="tag">Meningioma</span>
-              <strong>Case ME-070</strong>
+            <button class="sample-btn" data-sample="/samples/sample_meningioma.jpg" data-label="Meningioma Benchmark">
+              <span class="tag" style="color: var(--status-warning);">Meningioma</span>
+              <strong>Extra-Axial</strong>
             </button>
-            <button class="sample-btn" data-sample="/samples/Tr-pi_0050.jpg" data-label="Pituitary">
-              <span class="tag">Pituitary</span>
-              <strong>Case PI-050</strong>
+            <button class="sample-btn" data-sample="/samples/sample_pituitary.jpg" data-label="Pituitary Benchmark">
+              <span class="tag" style="color: var(--accent-cyan);">Pituitary</span>
+              <strong>Macroadenoma</strong>
             </button>
-            <button class="sample-btn" data-sample="/samples/Tr-me_0080.jpg" data-label="Parasellar">
-              <span class="tag">Meningioma</span>
-              <strong>Case ME-080</strong>
+            <button class="sample-btn" data-sample="/samples/sample_healthy.jpg" data-label="Healthy Control Benchmark">
+              <span class="tag" style="color: var(--status-success);">No Tumor</span>
+              <strong>Healthy Brain</strong>
             </button>
           </div>
 
@@ -134,8 +134,8 @@
             <div class="toolbar-controls">
               <div class="slider-group">
                 <span>Overlay Blend:</span>
-                <input type="range" id="opacity-slider" min="0" max="100" value="65">
-                <span id="opacity-label">65%</span>
+                <input type="range" id="opacity-slider" min="0" max="100" value="100">
+                <span id="opacity-label">100%</span>
               </div>
             </div>
           </div>
@@ -163,7 +163,8 @@
                 <span class="tag">Jet Saliency</span>
               </div>
               <div class="panel-canvas-wrap">
-                <img id="img-gradcam" alt="Grad-CAM" style="display: none;">
+                <img id="img-underlay-gradcam" class="underlay-mri" alt="Base Scan" style="display: none;">
+                <img id="img-gradcam" class="overlay-heatmap" alt="Grad-CAM" style="display: none;">
                 <div class="panel-placeholder" id="ph-gradcam">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 10"></polyline></svg>
                   <span>Heatmap Computed on Inference</span>
@@ -178,7 +179,8 @@
                 <span class="tag">Multi-Focal</span>
               </div>
               <div class="panel-canvas-wrap">
-                <img id="img-gradcam-pp" alt="Grad-CAM++" style="display: none;">
+                <img id="img-underlay-gradcam-pp" class="underlay-mri" alt="Base Scan" style="display: none;">
+                <img id="img-gradcam-pp" class="overlay-heatmap" alt="Grad-CAM++" style="display: none;">
                 <div class="panel-placeholder" id="ph-gradcam-pp">
                   <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                   <span>Sub-Regional Resolution</span>
@@ -193,7 +195,8 @@
                 <span class="tag">Delineation</span>
               </div>
               <div class="panel-canvas-wrap">
-                <img id="img-segmentation" alt="Segmentation" style="display: none;">
+                <img id="img-underlay-seg" class="underlay-mri" alt="Base Scan" style="display: none;">
+                <img id="img-segmentation" class="overlay-heatmap" alt="Segmentation" style="display: none;">
                 <div class="panel-placeholder" id="ph-seg">
                   <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                   <span>Weakly-Supervised Mask</span>

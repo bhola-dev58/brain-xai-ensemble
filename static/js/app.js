@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const imgGradcamPP = document.getElementById('img-gradcam-pp');
   const imgSegmentation = document.getElementById('img-segmentation');
 
+  const imgUnderlayGradcam = document.getElementById('img-underlay-gradcam');
+  const imgUnderlayGradcamPP = document.getElementById('img-underlay-gradcam-pp');
+  const imgUnderlaySeg = document.getElementById('img-underlay-seg');
+
   const phRaw = document.getElementById('ph-raw');
   const phGradcam = document.getElementById('ph-gradcam');
   const phGradcamPP = document.getElementById('ph-gradcam-pp');
@@ -111,12 +115,26 @@ document.addEventListener('DOMContentLoaded', () => {
     dropzoneFilename.textContent = file.name;
     btnAnalyze.disabled = false;
 
-    // Preview Raw Scan
+    // Preview Raw Scan & Underlays
     const reader = new FileReader();
     reader.onload = (e) => {
-      imgRaw.src = e.target.result;
+      const scanDataUrl = e.target.result;
+      imgRaw.src = scanDataUrl;
       imgRaw.style.display = 'block';
       phRaw.style.display = 'none';
+
+      if (imgUnderlayGradcam) {
+        imgUnderlayGradcam.src = scanDataUrl;
+        imgUnderlayGradcam.style.display = 'block';
+      }
+      if (imgUnderlayGradcamPP) {
+        imgUnderlayGradcamPP.src = scanDataUrl;
+        imgUnderlayGradcamPP.style.display = 'block';
+      }
+      if (imgUnderlaySeg) {
+        imgUnderlaySeg.src = scanDataUrl;
+        imgUnderlaySeg.style.display = 'block';
+      }
     };
     reader.readAsDataURL(file);
 
