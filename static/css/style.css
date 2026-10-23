@@ -293,9 +293,9 @@ body::before {
 }
 
 .sidebar-pacs {
-  width: 285px;
-  min-width: 285px;
-  max-width: 285px;
+  width: 290px;
+  min-width: 290px;
+  max-width: 290px;
   background: var(--bg-surface);
   border-right: 1px solid var(--border-subtle);
   display: flex;
@@ -308,9 +308,9 @@ body::before {
 }
 
 .sidebar-pacs.collapsed {
-  width: 62px;
-  min-width: 62px;
-  max-width: 62px;
+  width: 68px;
+  min-width: 68px;
+  max-width: 68px;
 }
 
 .sidebar-header {
@@ -324,19 +324,19 @@ body::before {
   gap: 0.5rem;
 }
 
-.sidebar-title-wrap {
+.sidebar-title {
   display: flex;
   align-items: center;
   gap: 0.65rem;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: clamp(0.82rem, 1vw, 0.88rem);
   color: var(--text-primary);
   letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
 }
 
-.sidebar-title-wrap svg {
+.sidebar-title svg {
   width: 18px;
   height: 18px;
   stroke: var(--accent-orange);
@@ -379,7 +379,12 @@ body::before {
   transform: rotate(180deg);
 }
 
-.sidebar-pacs.collapsed .sidebar-title-wrap span.title {
+.sidebar-pacs.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 1rem 0.5rem;
+}
+
+.sidebar-pacs.collapsed .sidebar-title {
   display: none;
 }
 
@@ -387,10 +392,10 @@ body::before {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1.15rem 0.85rem;
+  padding: 1.15rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 1.35rem;
+  gap: 1.25rem;
 }
 
 .sidebar-section {
@@ -410,7 +415,7 @@ body::before {
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  font-size: 0.74rem;
+  font-size: clamp(0.7rem, 0.8vw, 0.74rem);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -419,20 +424,16 @@ body::before {
 }
 
 .section-title svg {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   stroke: var(--teal-medical);
   fill: none;
   stroke-width: 2;
   flex-shrink: 0;
 }
 
-.sidebar-pacs.collapsed .sidebar-text,
-.sidebar-pacs.collapsed .preset-grid,
-.sidebar-pacs.collapsed .setting-row,
-.sidebar-pacs.collapsed .toggle-control-item,
-.sidebar-pacs.collapsed .sidebar-meta-box,
-.sidebar-pacs.collapsed .btn-restore-defaults span {
+/* Collapsed Visibility Controls */
+.sidebar-pacs.collapsed .sidebar-text {
   display: none !important;
 }
 
@@ -441,12 +442,7 @@ body::before {
   padding: 0.4rem 0;
 }
 
-.sidebar-pacs.collapsed .btn-restore-defaults {
-  padding: 0.65rem 0;
-  justify-content: center;
-}
-
-/* Preset Grid & Pills */
+/* Preset Grid & Pills (Expanded vs Collapsed Icon Dock) */
 .preset-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -454,8 +450,11 @@ body::before {
 }
 
 .preset-pill {
-  padding: 0.48rem 0.55rem;
-  font-size: 0.73rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.52rem 0.65rem;
+  font-size: clamp(0.7rem, 0.85vw, 0.74rem);
   font-weight: 600;
   font-family: var(--font-main);
   color: var(--text-secondary);
@@ -463,11 +462,20 @@ body::before {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  text-align: center;
+  text-align: left;
   transition: var(--transition-fast);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.preset-pill svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  flex-shrink: 0;
 }
 
 .preset-pill:hover {
@@ -484,27 +492,63 @@ body::before {
   font-weight: 700;
 }
 
+/* Collapsed Preset Dock */
+.sidebar-pacs.collapsed .preset-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar-pacs.collapsed .preset-pill {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+  border-radius: var(--radius-md);
+}
+
+.sidebar-pacs.collapsed .preset-pill svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* Saliency & Setting Rows */
 .setting-row {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.45rem;
+}
+
+.setting-icon-header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.setting-icon-header svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--teal-medical);
+  stroke-width: 2;
+  fill: none;
+  flex-shrink: 0;
 }
 
 .setting-label {
-  font-size: 0.76rem;
+  font-size: clamp(0.72rem, 0.85vw, 0.76rem);
   font-weight: 600;
   color: var(--text-secondary);
 }
 
 .setting-select {
   width: 100%;
-  padding: 0.5rem 0.7rem;
+  padding: 0.52rem 0.7rem;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 0.76rem;
+  font-size: clamp(0.72rem, 0.85vw, 0.76rem);
   font-family: var(--font-main);
   font-weight: 500;
   cursor: pointer;
@@ -521,7 +565,8 @@ body::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.76rem;
+  flex: 1;
+  font-size: clamp(0.72rem, 0.85vw, 0.76rem);
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -544,17 +589,47 @@ body::before {
   cursor: pointer;
 }
 
-/* Protocol Toggle Controls */
+/* Collapsed Saliency Controls */
+.sidebar-pacs.collapsed .setting-row {
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.4rem;
+}
+
+.sidebar-pacs.collapsed .setting-icon-header {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.sidebar-pacs.collapsed .setting-icon-header:hover {
+  border-color: var(--accent-orange);
+  color: var(--accent-orange);
+  background: var(--bg-card-hover);
+}
+
+.sidebar-pacs.collapsed .setting-icon-header svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Protocol Toggle Controls (Expanded vs Collapsed Icon Dock) */
 .toggle-control-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.65rem;
   padding: 0.55rem 0.65rem;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   transition: var(--transition-fast);
+  cursor: pointer;
 }
 
 .toggle-control-item:hover {
@@ -562,27 +637,105 @@ body::before {
   background: var(--bg-card-hover);
 }
 
+.toggle-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.toggle-icon-wrap svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--text-secondary);
+  fill: none;
+  stroke-width: 2;
+  transition: var(--transition-fast);
+}
+
+.status-indicator-dot {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--text-muted);
+  border: 1px solid var(--bg-card);
+  transition: var(--transition-fast);
+}
+
+.status-indicator-dot.active {
+  background-color: var(--status-success);
+  box-shadow: 0 0 6px var(--status-success);
+}
+
 .toggle-meta {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  flex: 1;
   min-width: 0;
 }
 
 .toggle-title {
-  font-size: 0.76rem;
+  font-size: clamp(0.72rem, 0.85vw, 0.76rem);
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.2;
 }
 
 .toggle-caption {
-  font-size: 0.66rem;
+  font-size: clamp(0.62rem, 0.75vw, 0.66rem);
   color: var(--text-muted);
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Collapsed Protocol Controls */
+.sidebar-pacs.collapsed .toggle-control-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: none;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-pacs.collapsed .toggle-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.sidebar-pacs.collapsed .toggle-icon-wrap:hover {
+  border-color: var(--teal-medical);
+  background: var(--bg-card-hover);
+}
+
+.sidebar-pacs.collapsed .toggle-icon-wrap svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sidebar-pacs.collapsed .status-indicator-dot {
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
 }
 
 /* Switch Toggle Component */
@@ -635,42 +788,28 @@ body::before {
   transform: translateX(16px);
 }
 
-/* Telemetry & Reset Controls */
-.sidebar-meta-box {
+/* Telemetry & Specifications List */
+.spec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 0.65rem 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.73rem;
+  font-size: clamp(0.7rem, 0.8vw, 0.74rem);
 }
 
-.meta-row {
+.spec-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   color: var(--text-secondary);
 }
 
-.meta-row strong {
+.spec-item strong {
   color: var(--text-primary);
   font-family: var(--font-mono);
-}
-
-.meta-row .highlight {
-  color: var(--teal-medical);
-}
-
-.badge-online {
-  color: var(--status-success);
-  background: rgba(34, 197, 94, 0.12);
-  padding: 0.15rem 0.5rem;
-  border-radius: var(--radius-full);
-  font-weight: 700;
-  font-size: 0.68rem;
-  border: 1px solid rgba(34, 197, 94, 0.25);
 }
 
 .btn-restore-defaults {
@@ -684,7 +823,7 @@ body::before {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  font-size: 0.73rem;
+  font-size: clamp(0.7rem, 0.8vw, 0.73rem);
   font-weight: 600;
   font-family: var(--font-main);
   cursor: pointer;
@@ -699,12 +838,26 @@ body::before {
 }
 
 .btn-restore-defaults svg {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   stroke: currentColor;
   fill: none;
   stroke-width: 2;
   flex-shrink: 0;
+}
+
+/* Collapsed Restore Button */
+.sidebar-pacs.collapsed .btn-restore-defaults {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  margin: 0 auto;
+}
+
+.sidebar-pacs.collapsed .btn-restore-defaults svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* Viewport Filter Presets */

@@ -73,36 +73,60 @@
             <span class="sidebar-text">Radiological Window Presets</span>
           </div>
           <div class="preset-grid">
-            <button class="preset-pill active" data-preset="default" title="Standard CE-MRI (Normal Window)">Standard CE-MRI</button>
-            <button class="preset-pill" data-preset="brain" title="Brain Parenchyma (Enhanced soft tissue contrast)">Parenchyma</button>
-            <button class="preset-pill" data-preset="high-contrast" title="High Contrast Tumor Boundary">High Contrast</button>
-            <button class="preset-pill" data-preset="bone" title="Calvarial Bone Window">Calvarial Bone</button>
-            <button class="preset-pill" data-preset="invert" title="Invert Monochrome Grayscale">Invert Grayscale</button>
-            <button class="preset-pill" data-preset="angio" title="Vascular Flow & Contrast">Vascular Flow</button>
+            <button class="preset-pill active" data-preset="default" title="Standard CE-MRI (Normal Window)">
+              <svg viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <span class="preset-text">Standard CE-MRI</span>
+            </button>
+            <button class="preset-pill" data-preset="brain" title="Brain Parenchyma (Enhanced soft tissue contrast)">
+              <svg viewBox="0 0 24 24"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-5.04z"></path><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-5.04z"></path></svg>
+              <span class="preset-text">Parenchyma</span>
+            </button>
+            <button class="preset-pill" data-preset="high-contrast" title="High Contrast Tumor Boundary">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 0 20z"></path></svg>
+              <span class="preset-text">High Contrast</span>
+            </button>
+            <button class="preset-pill" data-preset="bone" title="Calvarial Bone Window">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              <span class="preset-text">Calvarial Bone</span>
+            </button>
+            <button class="preset-pill" data-preset="invert" title="Invert Monochrome Grayscale">
+              <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+              <span class="preset-text">Invert Grayscale</span>
+            </button>
+            <button class="preset-pill" data-preset="angio" title="Vascular Flow & Contrast">
+              <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+              <span class="preset-text">Vascular Flow</span>
+            </button>
           </div>
         </div>
 
         <!-- Section 2: Explainability & Heatmap Calibration -->
         <div class="sidebar-section">
           <div class="section-title">
-            <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <svg viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"></path></svg>
             <span class="sidebar-text">XAI Saliency Tuning</span>
           </div>
-          <div class="setting-row">
-            <label for="select-colormap" class="setting-label">Colormap Scheme</label>
-            <select id="select-colormap" class="setting-select">
+          <div class="setting-row" title="Colormap Scheme">
+            <div class="setting-icon-header">
+              <svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>
+              <label for="select-colormap" class="setting-label sidebar-text">Colormap Scheme</label>
+            </div>
+            <select id="select-colormap" class="setting-select sidebar-text">
               <option value="jet">Jet Rainbow (Clinical Standard)</option>
               <option value="turbo">Turbo (Perceptual Range)</option>
               <option value="inferno">Inferno / Thermal Glow</option>
               <option value="viridis">Viridis (Colorblind-Safe)</option>
             </select>
           </div>
-          <div class="setting-row">
-            <div class="setting-label-split">
-              <label for="slider-saliency-cutoff">Saliency ROI Cutoff</label>
-              <span class="range-val" id="val-saliency-cutoff">Top 30%</span>
+          <div class="setting-row" title="Saliency Cutoff Threshold">
+            <div class="setting-icon-header">
+              <svg viewBox="0 0 24 24"><line x1="21" y1="4" x2="14" y2="4"></line><line x1="10" y1="4" x2="3" y2="4"></line><line x1="21" y1="12" x2="12" y2="12"></line><line x1="8" y1="12" x2="3" y2="12"></line><line x1="21" y1="20" x2="16" y2="20"></line><line x1="12" y1="20" x2="3" y2="20"></line><line x1="14" y1="2" x2="14" y2="6"></line><line x1="8" y1="10" x2="8" y2="14"></line><line x1="16" y1="18" x2="16" y2="22"></line></svg>
+              <div class="setting-label-split sidebar-text">
+                <label for="slider-saliency-cutoff">Saliency ROI Cutoff</label>
+                <span class="range-val" id="val-saliency-cutoff">Top 30%</span>
+              </div>
             </div>
-            <input type="range" id="slider-saliency-cutoff" min="10" max="60" value="30" class="custom-range">
+            <input type="range" id="slider-saliency-cutoff" min="10" max="60" value="30" class="custom-range sidebar-text">
           </div>
         </div>
 
@@ -113,45 +137,61 @@
             <span class="sidebar-text">Clinical Protocols</span>
           </div>
 
-          <div class="toggle-control-item">
-            <div class="toggle-meta">
+          <div class="toggle-control-item" data-toggle="toggle-tta" title="5-Pass TTA Augmentation: Geometric rot/flip ensemble boost">
+            <div class="toggle-icon-wrap">
+              <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><polyline points="21 3 21 8 16 8"></polyline></svg>
+              <span class="status-indicator-dot active" id="dot-tta"></span>
+            </div>
+            <div class="toggle-meta sidebar-text">
               <span class="toggle-title">5-Pass TTA Augmentation</span>
               <span class="toggle-caption">Geometric rot/flip ensemble boost</span>
             </div>
-            <label class="switch-toggle">
+            <label class="switch-toggle sidebar-text">
               <input type="checkbox" id="toggle-tta" checked>
               <span class="switch-slider"></span>
             </label>
           </div>
 
-          <div class="toggle-control-item">
-            <div class="toggle-meta">
+          <div class="toggle-control-item" data-toggle="toggle-gating" title="Brain-Mask Calvarial Gating: Suppress extra-cranial calvarium">
+            <div class="toggle-icon-wrap">
+              <svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path></svg>
+              <span class="status-indicator-dot active" id="dot-gating"></span>
+            </div>
+            <div class="toggle-meta sidebar-text">
               <span class="toggle-title">Brain-Mask Calvarial Gating</span>
               <span class="toggle-caption">Suppress extra-cranial calvarium</span>
             </div>
-            <label class="switch-toggle">
+            <label class="switch-toggle sidebar-text">
               <input type="checkbox" id="toggle-gating" checked>
               <span class="switch-slider"></span>
             </label>
           </div>
 
-          <div class="toggle-control-item">
-            <div class="toggle-meta">
+          <div class="toggle-control-item" data-toggle="toggle-phi" title="Anonymize Patient PHI: HIPAA / GDPR de-identification">
+            <div class="toggle-icon-wrap">
+              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <span class="status-indicator-dot" id="dot-phi"></span>
+            </div>
+            <div class="toggle-meta sidebar-text">
               <span class="toggle-title">Anonymize Patient PHI</span>
               <span class="toggle-caption">HIPAA / GDPR de-identification</span>
             </div>
-            <label class="switch-toggle">
+            <label class="switch-toggle sidebar-text">
               <input type="checkbox" id="toggle-phi">
               <span class="switch-slider"></span>
             </label>
           </div>
 
-          <div class="toggle-control-item">
-            <div class="toggle-meta">
+          <div class="toggle-control-item" data-toggle="toggle-crosshair" title="Precision Crosshair: Quad-view inspection cursor">
+            <div class="toggle-icon-wrap">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+              <span class="status-indicator-dot active" id="dot-crosshair"></span>
+            </div>
+            <div class="toggle-meta sidebar-text">
               <span class="toggle-title">Precision Crosshair</span>
               <span class="toggle-caption">Quad-view inspection cursor</span>
             </div>
-            <label class="switch-toggle">
+            <label class="switch-toggle sidebar-text">
               <input type="checkbox" id="toggle-crosshair" checked>
               <span class="switch-slider"></span>
             </label>
@@ -161,10 +201,10 @@
         <!-- Section 4: Specifications & Actions -->
         <div class="sidebar-section sidebar-meta-section">
           <div class="section-title">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></svg>
             <span class="sidebar-text">Workstation Telemetry</span>
           </div>
-          <div class="spec-list">
+          <div class="spec-list sidebar-text">
             <div class="spec-item">
               <span>Pipeline:</span>
               <strong>Tri-Ensemble v3.0</strong>
@@ -183,7 +223,7 @@
             </div>
           </div>
 
-          <button class="btn-restore-defaults" id="btn-restore-defaults" title="Reset all settings to default">
+          <button class="btn-restore-defaults" id="btn-restore-defaults" title="Reset all PACS settings to default baseline">
             <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
             <span class="sidebar-text">Restore PACS Defaults</span>
           </button>

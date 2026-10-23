@@ -410,6 +410,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleTta = document.getElementById('toggle-tta');
   const toggleGating = document.getElementById('toggle-gating');
   const btnRestoreDefaults = document.getElementById('btn-restore-defaults');
+  const toggleControlItems = document.querySelectorAll('.toggle-control-item');
+  const dotTta = document.getElementById('dot-tta');
+  const dotGating = document.getElementById('dot-gating');
+  const dotPhi = document.getElementById('dot-phi');
+  const dotCrosshair = document.getElementById('dot-crosshair');
 
   function toggleSidebar() {
     if (!pacsSidebar) return;
@@ -427,15 +432,6 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarCollapseBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleSidebar();
-    });
-  }
-
-  // Allow clicking on collapsed sidebar header or body to expand
-  if (pacsSidebar) {
-    pacsSidebar.addEventListener('click', (e) => {
-      if (pacsSidebar.classList.contains('collapsed')) {
-        toggleSidebar();
-      }
     });
   }
 
@@ -492,6 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wrap.classList.remove('crosshair-active');
       }
     });
+    updateIndicatorDots();
   }
 
   if (toggleCrosshair) {
@@ -507,12 +504,59 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         document.body.classList.remove('phi-anonymized');
       }
+      updateIndicatorDots();
+    });
+  }
+
+  // Status Indicator Dots for Collapsed Icon Dock
+  function updateIndicatorDots() {
+    if (dotTta && toggleTta) dotTta.classList.toggle('active', toggleTta.checked);
+    if (dotGating && toggleGating) dotGating.classList.toggle('active', toggleGating.checked);
+    if (dotPhi && togglePhi) dotPhi.classList.toggle('active', togglePhi.checked);
+    if (dotCrosshair && toggleCrosshair) dotCrosshair.classList.toggle('active', toggleCrosshair.checked);
+  }
+
+  // Click on protocol item directly toggles checkbox even in collapsed state
+  toggleControlItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (e.target.tagName && e.target.tagName.toLowerCase() !== 'input') {
+        const input = item.querySelector('input[type="checkbox"]');
+        if (input) {
+          input.checked = !input.checked;
+          input.dispatchEvent(new Event('change'));
+        }
+      }
+      updateIndicatorDots();
+    });
+  });
+
+  [toggleTta, toggleGating, togglePhi, toggleCrosshair].forEach(cb => {
+    if (cb) {
+      cb.addEventListener('change', updateIndicatorDots);
+    }
+  });
+
+  // Colormap cycle in collapsed mode
+  const colormapRow = document.querySelector('.setting-row[title="Colormap Scheme"]');
+  if (colormapRow) {
+    colormapRow.addEventListener('click', (e) => {
+      if (pacsSidebar && pacsSidebar.classList.contains('collapsed')) {
+        e.stopPropagation();
+        if (selectColormap) {
+          const opts = Array.from(selectColormap.options);
+          const nextIdx = (selectColormap.selectedIndex + 1) % opts.length;
+          selectColormap.selectedIndex = nextIdx;
+          selectColormap.dispatchEvent(new Event('change'));
+        }
+      }
     });
   }
 
   // Restore Default PACS Profile
   if (btnRestoreDefaults) {
-    btnRestoreDefaults.addEventListener('click', () => {
+    btnRestoreDefaults.addEventListener('click', (e) => {
+      e.stopPropagation();
       // 1. Reset Presets
       presetPills.forEach(p => {
         if (p.getAttribute('data-preset') === 'default') {
@@ -541,6 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleCrosshair.checked = true;
         syncCrosshairState();
       }
+      updateIndicatorDots();
 
       // Visual feedback
       btnRestoreDefaults.style.color = 'var(--status-success)';
