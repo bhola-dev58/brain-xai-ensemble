@@ -395,4 +395,158 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tbody.insertBefore(tr, tbody.firstChild);
   }
+
+  // ── 10. PACS Sidebar & Workstation Controls ──────────────────────────────
+  const pacsSidebar = document.getElementById('pacs-sidebar');
+  const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+  const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
+  const presetPills = document.querySelectorAll('.preset-pill');
+  const canvasWraps = document.querySelectorAll('.panel-canvas-wrap');
+  const toggleCrosshair = document.getElementById('toggle-crosshair');
+  const togglePhi = document.getElementById('toggle-phi');
+  const sliderSaliencyCutoff = document.getElementById('slider-saliency-cutoff');
+  const valSaliencyCutoff = document.getElementById('val-saliency-cutoff');
+  const selectColormap = document.getElementById('select-colormap');
+  const toggleTta = document.getElementById('toggle-tta');
+  const toggleGating = document.getElementById('toggle-gating');
+  const btnRestoreDefaults = document.getElementById('btn-restore-defaults');
+
+  function toggleSidebar() {
+    if (!pacsSidebar) return;
+    pacsSidebar.classList.toggle('collapsed');
+  }
+
+  if (sidebarToggleBtn) {
+    sidebarToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSidebar();
+    });
+  }
+
+  if (sidebarCollapseBtn) {
+    sidebarCollapseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSidebar();
+    });
+  }
+
+  // Allow clicking on collapsed sidebar header or body to expand
+  if (pacsSidebar) {
+    pacsSidebar.addEventListener('click', (e) => {
+      if (pacsSidebar.classList.contains('collapsed')) {
+        toggleSidebar();
+      }
+    });
+  }
+
+  // Keyboard shortcut Ctrl+B or Cmd+B to toggle sidebar
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      toggleSidebar();
+    }
+  });
+
+  // Radiological Window Presets
+  const filterClasses = [
+    'preset-filter-default',
+    'preset-filter-brain',
+    'preset-filter-high-contrast',
+    'preset-filter-bone',
+    'preset-filter-invert',
+    'preset-filter-angio'
+  ];
+
+  function applyPresetFilter(presetKey) {
+    canvasWraps.forEach(wrap => {
+      filterClasses.forEach(cls => wrap.classList.remove(cls));
+      wrap.classList.add(`preset-filter-${presetKey}`);
+    });
+  }
+
+  presetPills.forEach(pill => {
+    pill.addEventListener('click', (e) => {
+      e.stopPropagation();
+      presetPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const presetKey = pill.getAttribute('data-preset') || 'default';
+      applyPresetFilter(presetKey);
+    });
+  });
+
+  // Saliency Cutoff Slider
+  if (sliderSaliencyCutoff && valSaliencyCutoff) {
+    sliderSaliencyCutoff.addEventListener('input', (e) => {
+      valSaliencyCutoff.textContent = `Top ${e.target.value}%`;
+    });
+  }
+
+  // Precision Crosshair
+  function syncCrosshairState() {
+    if (!toggleCrosshair) return;
+    const isChecked = toggleCrosshair.checked;
+    canvasWraps.forEach(wrap => {
+      if (isChecked) {
+        wrap.classList.add('crosshair-active');
+      } else {
+        wrap.classList.remove('crosshair-active');
+      }
+    });
+  }
+
+  if (toggleCrosshair) {
+    toggleCrosshair.addEventListener('change', syncCrosshairState);
+    syncCrosshairState(); // Initialize
+  }
+
+  // Anonymize Patient PHI
+  if (togglePhi) {
+    togglePhi.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        document.body.classList.add('phi-anonymized');
+      } else {
+        document.body.classList.remove('phi-anonymized');
+      }
+    });
+  }
+
+  // Restore Default PACS Profile
+  if (btnRestoreDefaults) {
+    btnRestoreDefaults.addEventListener('click', () => {
+      // 1. Reset Presets
+      presetPills.forEach(p => {
+        if (p.getAttribute('data-preset') === 'default') {
+          p.classList.add('active');
+        } else {
+          p.classList.remove('active');
+        }
+      });
+      applyPresetFilter('default');
+
+      // 2. Reset Colormap & Cutoff
+      if (selectColormap) selectColormap.value = 'jet';
+      if (sliderSaliencyCutoff) {
+        sliderSaliencyCutoff.value = 30;
+        if (valSaliencyCutoff) valSaliencyCutoff.textContent = 'Top 30%';
+      }
+
+      // 3. Reset Protocol Toggles
+      if (toggleTta) toggleTta.checked = true;
+      if (toggleGating) toggleGating.checked = true;
+      if (togglePhi) {
+        togglePhi.checked = false;
+        document.body.classList.remove('phi-anonymized');
+      }
+      if (toggleCrosshair) {
+        toggleCrosshair.checked = true;
+        syncCrosshairState();
+      }
+
+      // Visual feedback
+      btnRestoreDefaults.style.color = 'var(--status-success)';
+      setTimeout(() => {
+        btnRestoreDefaults.style.color = '';
+      }, 1000);
+    });
+  }
 });

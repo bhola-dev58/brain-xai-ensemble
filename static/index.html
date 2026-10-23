@@ -16,6 +16,13 @@
   <header class="app-header">
     <div class="header-inner">
       <div class="brand-section">
+        <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" title="Toggle PACS Settings Sidebar (Ctrl+B)" aria-label="Toggle Sidebar">
+          <svg viewBox="0 0 24 24">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
         <div class="brand-badge">
           <!-- Brain / Medical Cross SVG -->
           <svg viewBox="0 0 24 24">
@@ -42,28 +49,172 @@
   </header>
 
   <!-- =========================================================================
-       2. Navigation Tabs
+       2. Workstation Container: Collapsible Sidebar + Main Stage
        ========================================================================= -->
-  <div class="nav-tabs-wrapper">
-    <nav class="nav-tabs" role="tablist">
-      <button class="tab-btn active" data-tab="tab-diagnostics" role="tab" aria-selected="true">
-        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-        Diagnostic Studio
-      </button>
-      <button class="tab-btn" data-tab="tab-analytics" role="tab" aria-selected="false">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-        Tri-Ensemble Analytics
-      </button>
-      <button class="tab-btn" data-tab="tab-report" role="tab" aria-selected="false">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        Clinical Report Export (PDF)
-      </button>
-      <button class="tab-btn" data-tab="tab-history" role="tab" aria-selected="false">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        Patient Case History
-      </button>
-    </nav>
-  </div>
+  <div class="workstation-layout" id="workstation-layout">
+
+    <!-- Collapsible Left PACS Settings Sidebar -->
+    <aside class="sidebar-pacs" id="pacs-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span class="sidebar-text">PACS Controls</span>
+        </div>
+        <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" title="Collapse / Expand Sidebar">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+      </div>
+
+      <div class="sidebar-scroll-area">
+        <!-- Section 1: PACS Radiology Presets (Window / Contrast) -->
+        <div class="sidebar-section">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m4.93 4.93 4.24 4.24"></path><path d="m14.83 9.17 4.24-4.24"></path><path d="m14.83 14.83 4.24 4.24"></path><path d="m9.17 14.83-4.24 4.24"></path></svg>
+            <span class="sidebar-text">Radiological Window Presets</span>
+          </div>
+          <div class="preset-grid">
+            <button class="preset-pill active" data-preset="default" title="Standard CE-MRI (Normal Window)">Standard CE-MRI</button>
+            <button class="preset-pill" data-preset="brain" title="Brain Parenchyma (Enhanced soft tissue contrast)">Parenchyma</button>
+            <button class="preset-pill" data-preset="high-contrast" title="High Contrast Tumor Boundary">High Contrast</button>
+            <button class="preset-pill" data-preset="bone" title="Calvarial Bone Window">Calvarial Bone</button>
+            <button class="preset-pill" data-preset="invert" title="Invert Monochrome Grayscale">Invert Grayscale</button>
+            <button class="preset-pill" data-preset="angio" title="Vascular Flow & Contrast">Vascular Flow</button>
+          </div>
+        </div>
+
+        <!-- Section 2: Explainability & Heatmap Calibration -->
+        <div class="sidebar-section">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <span class="sidebar-text">XAI Saliency Tuning</span>
+          </div>
+          <div class="setting-row">
+            <label for="select-colormap" class="setting-label">Colormap Scheme</label>
+            <select id="select-colormap" class="setting-select">
+              <option value="jet">Jet Rainbow (Clinical Standard)</option>
+              <option value="turbo">Turbo (Perceptual Range)</option>
+              <option value="inferno">Inferno / Thermal Glow</option>
+              <option value="viridis">Viridis (Colorblind-Safe)</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label-split">
+              <label for="slider-saliency-cutoff">Saliency ROI Cutoff</label>
+              <span class="range-val" id="val-saliency-cutoff">Top 30%</span>
+            </div>
+            <input type="range" id="slider-saliency-cutoff" min="10" max="60" value="30" class="custom-range">
+          </div>
+        </div>
+
+        <!-- Section 3: Diagnostic Engine Protocol Toggles -->
+        <div class="sidebar-section">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span class="sidebar-text">Clinical Protocols</span>
+          </div>
+
+          <div class="toggle-control-item">
+            <div class="toggle-meta">
+              <span class="toggle-title">5-Pass TTA Augmentation</span>
+              <span class="toggle-caption">Geometric rot/flip ensemble boost</span>
+            </div>
+            <label class="switch-toggle">
+              <input type="checkbox" id="toggle-tta" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-control-item">
+            <div class="toggle-meta">
+              <span class="toggle-title">Brain-Mask Calvarial Gating</span>
+              <span class="toggle-caption">Suppress extra-cranial calvarium</span>
+            </div>
+            <label class="switch-toggle">
+              <input type="checkbox" id="toggle-gating" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-control-item">
+            <div class="toggle-meta">
+              <span class="toggle-title">Anonymize Patient PHI</span>
+              <span class="toggle-caption">HIPAA / GDPR de-identification</span>
+            </div>
+            <label class="switch-toggle">
+              <input type="checkbox" id="toggle-phi">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-control-item">
+            <div class="toggle-meta">
+              <span class="toggle-title">Precision Crosshair</span>
+              <span class="toggle-caption">Quad-view inspection cursor</span>
+            </div>
+            <label class="switch-toggle">
+              <input type="checkbox" id="toggle-crosshair" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Section 4: Specifications & Actions -->
+        <div class="sidebar-section sidebar-meta-section">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span class="sidebar-text">Workstation Telemetry</span>
+          </div>
+          <div class="spec-list">
+            <div class="spec-item">
+              <span>Pipeline:</span>
+              <strong>Tri-Ensemble v3.0</strong>
+            </div>
+            <div class="spec-item">
+              <span>Hardware:</span>
+              <strong>CPU (AVX2/FMA)</strong>
+            </div>
+            <div class="spec-item">
+              <span>Resolution:</span>
+              <strong>224x224 / 299x299</strong>
+            </div>
+            <div class="spec-item">
+              <span>Compliance:</span>
+              <strong>DICOM Part 10</strong>
+            </div>
+          </div>
+
+          <button class="btn-restore-defaults" id="btn-restore-defaults" title="Reset all settings to default">
+            <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+            <span class="sidebar-text">Restore PACS Defaults</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Workstation Main Stage -->
+    <div class="workstation-main" id="workstation-main">
+
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs-wrapper">
+        <nav class="nav-tabs" role="tablist">
+          <button class="tab-btn active" data-tab="tab-diagnostics" role="tab" aria-selected="true">
+            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            Diagnostic Studio
+          </button>
+          <button class="tab-btn" data-tab="tab-analytics" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            Tri-Ensemble Analytics
+          </button>
+          <button class="tab-btn" data-tab="tab-report" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Clinical Report Export (PDF)
+          </button>
+          <button class="tab-btn" data-tab="tab-history" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Patient Case History
+          </button>
+        </nav>
+      </div>
 
   <!-- =========================================================================
        3. Main Content Panes
@@ -386,7 +537,7 @@
               <label for="rep-patient-name">Patient Full Name</label>
               <input type="text" id="rep-patient-name" value="Anonymous Patient" required>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-row-dual">
               <div class="form-group">
                 <label for="rep-patient-age">Age (Years)</label>
                 <input type="number" id="rep-patient-age" value="52" min="1" max="120" required>
