@@ -211,3 +211,13 @@ async def generate_report(
         media_type="application/pdf"
     )
 
+
+# ------------------------------------------------------------------ #
+# Mount Static Frontend (UI/UX Pro Max Workstation)
+# ------------------------------------------------------------------ #
+from fastapi.staticfiles import StaticFiles
+
+_STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+if os.path.exists(_STATIC_DIR):
+    app.mount("/", StaticFiles(directory=_STATIC_DIR, html=True), name="static")
+

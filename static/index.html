@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroScan XAI — Clinical Radiology Workstation</title>
+  <meta name="description" content="Explainable Brain Tumor CAD Tri-Ensemble System (ConvNeXt-Small, InceptionV3, DenseNet121) with Brain-Gated Grad-CAM and Morphological Segmentation.">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF7A00'><path d='M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 17.93V15h-2v4.93A8 8 0 0 1 4.07 13H9v-2H4.07A8 8 0 0 1 11 4.07V9h2V4.07A8 8 0 0 1 19.93 11H15v2h4.93A8 8 0 0 1 13 19.93z'/></svg>">
+</head>
+<body>
+
+  <!-- =========================================================================
+       1. Top Clinical Telemetry Header
+       ========================================================================= -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-section">
+        <div class="brand-badge">
+          <!-- Brain / Medical Cross SVG -->
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>NEUROSCAN <span>XAI</span></h1>
+          <div class="brand-subtitle">Clinical Radiology CAD Workstation</div>
+        </div>
+      </div>
+
+      <div class="telemetry-bar">
+        <div class="telemetry-chip">
+          <div class="pulse-dot" id="system-status-dot"></div>
+          <span id="system-status-text">Tri-Ensemble Engine Online</span>
+        </div>
+        <div class="telemetry-chip">
+          <span>Ensemble:</span>
+          <strong>ConvNeXt (45%) · Inception (35%) · DenseNet (20%)</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       2. Navigation Tabs
+       ========================================================================= -->
+  <div class="nav-tabs-wrapper">
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="tab-diagnostics" role="tab" aria-selected="true">
+        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        Diagnostic Studio
+      </button>
+      <button class="tab-btn" data-tab="tab-analytics" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        Tri-Ensemble Analytics
+      </button>
+      <button class="tab-btn" data-tab="tab-report" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Clinical Report Export (PDF)
+      </button>
+      <button class="tab-btn" data-tab="tab-history" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Patient Case History
+      </button>
+    </nav>
+  </div>
+
+  <!-- =========================================================================
+       3. Main Content Panes
+       ========================================================================= -->
+  <main class="main-content">
+
+    <!-- ───────────────────────────────────────────────────────────────────────
+         TAB 1: Diagnostic Studio
+         ─────────────────────────────────────────────────────────────────────── -->
+    <section id="tab-diagnostics" class="tab-panel active">
+      <div class="diagnostic-grid">
+
+        <!-- Column A: Input & Controls -->
+        <div class="studio-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Axial MRI Input
+            </div>
+            <span class="card-badge">T1c / CE-MRI</span>
+          </div>
+
+          <!-- Drag and Drop Box -->
+          <div class="dropzone" id="mri-dropzone">
+            <input type="file" id="mri-file-input" accept="image/jpeg,image/png,image/webp">
+            <div class="dropzone-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            </div>
+            <div class="dropzone-text" id="dropzone-filename">Drop Brain MRI Slice Here</div>
+            <div class="dropzone-subtext">Supports DICOM-derived JPEG or PNG</div>
+          </div>
+
+          <!-- Quick Sample Picker -->
+          <div class="sample-picker-title">Sample Benchmark Cases</div>
+          <div class="sample-grid">
+            <button class="sample-btn" data-sample="/samples/Tr-me_0025.jpg" data-label="Meningioma 1">
+              <span class="tag">Meningioma</span>
+              <strong>Case ME-025</strong>
+            </button>
+            <button class="sample-btn" data-sample="/samples/Tr-me_0070.jpg" data-label="Meningioma 2">
+              <span class="tag">Meningioma</span>
+              <strong>Case ME-070</strong>
+            </button>
+            <button class="sample-btn" data-sample="/samples/Tr-pi_0050.jpg" data-label="Pituitary">
+              <span class="tag">Pituitary</span>
+              <strong>Case PI-050</strong>
+            </button>
+            <button class="sample-btn" data-sample="/samples/Tr-me_0080.jpg" data-label="Parasellar">
+              <span class="tag">Meningioma</span>
+              <strong>Case ME-080</strong>
+            </button>
+          </div>
+
+          <!-- Analyze Action Button -->
+          <button class="btn-primary" id="btn-analyze" disabled>
+            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span>Run Tri-Ensemble XAI</span>
+          </button>
+        </div>
+
+        <!-- Column B: PACS Quad-View Display -->
+        <div class="studio-card viewport-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              Radiology Quad-View Saliency Viewport
+            </div>
+            <div class="toolbar-controls">
+              <div class="slider-group">
+                <span>Overlay Blend:</span>
+                <input type="range" id="opacity-slider" min="0" max="100" value="65">
+                <span id="opacity-label">65%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="quad-grid">
+            <!-- Panel 1: Original MRI -->
+            <div class="viewport-panel">
+              <div class="panel-header">
+                <span>Panel A: Raw Axial Scan</span>
+                <span class="tag">CE-MRI</span>
+              </div>
+              <div class="panel-canvas-wrap">
+                <img id="img-raw" alt="Raw Scan" style="display: none;">
+                <div class="panel-placeholder" id="ph-raw">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  <span>Awaiting Scan Input</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 2: Brain-Gated Grad-CAM -->
+            <div class="viewport-panel">
+              <div class="panel-header">
+                <span>Panel B: Brain-Gated Grad-CAM</span>
+                <span class="tag">Jet Saliency</span>
+              </div>
+              <div class="panel-canvas-wrap">
+                <img id="img-gradcam" alt="Grad-CAM" style="display: none;">
+                <div class="panel-placeholder" id="ph-gradcam">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 10"></polyline></svg>
+                  <span>Heatmap Computed on Inference</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 3: Multi-Focal Grad-CAM++ -->
+            <div class="viewport-panel">
+              <div class="panel-header">
+                <span>Panel C: Grad-CAM++ Higher-Order</span>
+                <span class="tag">Multi-Focal</span>
+              </div>
+              <div class="panel-canvas-wrap">
+                <img id="img-gradcam-pp" alt="Grad-CAM++" style="display: none;">
+                <div class="panel-placeholder" id="ph-gradcam-pp">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  <span>Sub-Regional Resolution</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 4: Weakly-Supervised Morphological Segmentation -->
+            <div class="viewport-panel">
+              <div class="panel-header">
+                <span>Panel D: Morphological Contour</span>
+                <span class="tag">Delineation</span>
+              </div>
+              <div class="panel-canvas-wrap">
+                <img id="img-segmentation" alt="Segmentation" style="display: none;">
+                <div class="panel-placeholder" id="ph-seg">
+                  <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                  <span>Weakly-Supervised Mask</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column C: Findings & Diagnostic Biomarkers -->
+        <div class="studio-card findings-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+              Clinical Findings
+            </div>
+            <span class="card-badge" id="latency-badge">Latency: -- ms</span>
+          </div>
+
+          <!-- Predicted Classification Card -->
+          <div class="diagnosis-badge-wrap">
+            <div class="diag-status-pill status-healthy" id="tumor-status-pill">
+              <span id="tumor-status-text">System Ready</span>
+            </div>
+            <div class="diag-classification" id="diag-class-name">--</div>
+          </div>
+
+          <!-- Quantitative Biomarkers Stack -->
+          <div class="metrics-stack">
+            <!-- Metric 1: Diagnostic Confidence -->
+            <div class="metric-tile">
+              <span class="metric-label">Confidence</span>
+              <div class="metric-val highlight-orange" id="metric-confidence">-- %</div>
+              <div class="progress-track">
+                <div class="progress-fill" id="bar-confidence" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <!-- Metric 2: Uncertainty Entropy -->
+            <div class="metric-tile">
+              <span class="metric-label">Shannon Entropy</span>
+              <div class="metric-val highlight-teal" id="metric-entropy">-- %</div>
+              <div class="progress-track">
+                <div class="progress-fill" id="bar-entropy" style="width: 0%; background: var(--accent-teal);"></div>
+              </div>
+            </div>
+
+            <!-- Metric 3: Tumor Tissue Burden -->
+            <div class="metric-tile">
+              <span class="metric-label">Intracranial Area</span>
+              <div class="metric-val highlight-cyan" id="metric-area">-- %</div>
+              <div class="progress-track">
+                <div class="progress-fill" id="bar-area" style="width: 0%; background: var(--accent-cyan);"></div>
+              </div>
+            </div>
+
+            <!-- Metric 4: Severity Grading -->
+            <div class="metric-tile">
+              <span class="metric-label">Severity Grade</span>
+              <div class="metric-val" id="metric-severity">--</div>
+            </div>
+          </div>
+
+          <!-- Anatomical Localization -->
+          <div class="metric-tile" style="margin-top: 0.25rem;">
+            <span class="metric-label">Estimated Anatomical Location</span>
+            <div class="metric-val" id="metric-location" style="font-size: 1rem; margin-top: 0.35rem;">Awaiting scan analysis...</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ───────────────────────────────────────────────────────────────────────
+         TAB 2: Tri-Ensemble Analytics
+         ─────────────────────────────────────────────────────────────────────── -->
+    <section id="tab-analytics" class="tab-panel">
+      <div class="analytics-grid">
+        <!-- Class Posterior Distribution -->
+        <div class="studio-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+              Multi-Class Posterior Probability Distribution
+            </div>
+            <span class="card-badge">Calibrated Softmax</span>
+          </div>
+
+          <div class="prob-bars-list">
+            <div class="prob-item">
+              <div class="prob-header">
+                <span>Glioma Tumor</span>
+                <span class="pct" id="prob-glioma">0.00%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="fill-glioma" style="width: 0%; background: #EF4444;"></div>
+              </div>
+            </div>
+
+            <div class="prob-item">
+              <div class="prob-header">
+                <span>Meningioma Tumor</span>
+                <span class="pct" id="prob-meningioma">0.00%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="fill-meningioma" style="width: 0%; background: #F59E0B;"></div>
+              </div>
+            </div>
+
+            <div class="prob-item">
+              <div class="prob-header">
+                <span>Pituitary Tumor</span>
+                <span class="pct" id="prob-pituitary">0.00%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="fill-pituitary" style="width: 0%; background: #06B6D4;"></div>
+              </div>
+            </div>
+
+            <div class="prob-item">
+              <div class="prob-header">
+                <span>Healthy Normal (No Tumor)</span>
+                <span class="pct" id="prob-notumor">0.00%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="fill-notumor" style="width: 0%; background: #22C55E;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ensemble Architectural Breakdown -->
+        <div class="studio-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M16.5 9.4 7.55 4.24a1.78 1.78 0 0 0-2.5 1.55v12.42a1.78 1.78 0 0 0 2.5 1.55L16.5 14.6a1.78 1.78 0 0 0 0-3.2z"></path></svg>
+              Heterogeneous Tri-Ensemble Architecture
+            </div>
+            <span class="card-badge">Weighted Voting</span>
+          </div>
+
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+            The framework integrates three state-of-the-art architectures using balanced soft-voting to mitigate individual model bias and capture both fine cellular edges and macro anatomical context.
+          </p>
+
+          <div class="weights-card-grid">
+            <div class="weight-card">
+              <h4>ConvNeXt-Small</h4>
+              <div class="weight-pct">45%</div>
+              <div class="role">7x7 Depthwise Macro Spatial Context</div>
+            </div>
+            <div class="weight-card">
+              <h4>InceptionV3</h4>
+              <div class="weight-pct">35%</div>
+              <div class="role">Multi-Scale Asymmetric Inception Grids</div>
+            </div>
+            <div class="weight-card">
+              <h4>DenseNet121</h4>
+              <div class="weight-pct">20%</div>
+              <div class="role">Direct Feature Reuse & Compact Textures</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────────────────────────────────────────────────────
+         TAB 3: Clinical Report Export
+         ─────────────────────────────────────────────────────────────────────── -->
+    <section id="tab-report" class="tab-panel">
+      <div class="report-form-grid">
+        <div class="studio-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              Patient & Clinical Intake
+            </div>
+            <span class="card-badge">Hospital Triage Form</span>
+          </div>
+
+          <form id="report-form">
+            <div class="form-group">
+              <label for="rep-patient-id">Patient Medical Record Number (MRN / ID)</label>
+              <input type="text" id="rep-patient-id" value="PT-2026-9812" required>
+            </div>
+            <div class="form-group">
+              <label for="rep-patient-name">Patient Full Name</label>
+              <input type="text" id="rep-patient-name" value="Anonymous Patient" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="rep-patient-age">Age (Years)</label>
+                <input type="number" id="rep-patient-age" value="52" min="1" max="120" required>
+              </div>
+              <div class="form-group">
+                <label for="rep-patient-gender">Biological Sex</label>
+                <select id="rep-patient-gender">
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other / Unspecified</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="rep-clinician">Referring Radiologist / Oncologist</label>
+              <input type="text" id="rep-clinician" value="Dr. A. Gupta, MD (Radiology)">
+            </div>
+
+            <button type="button" class="btn-primary" id="btn-generate-pdf">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Generate Hospital-Grade PDF Report
+            </button>
+          </form>
+        </div>
+
+        <!-- PDF Preview Card -->
+        <div class="studio-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 3rem 2rem;">
+          <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(255, 122, 0, 0.1); border: 1px solid var(--accent-orange); display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
+            <svg viewBox="0 0 24 24" style="width: 36px; height: 36px; stroke: var(--accent-orange); fill: none; stroke-width: 2;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          </div>
+          <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Clinical Diagnostic PDF Generation</h3>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); max-width: 420px; line-height: 1.6; margin-bottom: 1.5rem;">
+            Exports high-resolution patient metadata, axial MRI scans, Grad-CAM saliency heatmaps, segmented tumor coordinates, and medical disclaimer for clinical case conferences.
+          </p>
+          <div id="pdf-download-wrap" style="display: none;">
+            <a id="pdf-download-link" class="btn-primary" href="#" download style="text-decoration: none; display: inline-flex;">
+              Download Generated PDF
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────────────────────────────────────────────────────
+         TAB 4: Patient Case History
+         ─────────────────────────────────────────────────────────────────────── -->
+    <section id="tab-history" class="tab-panel">
+      <div class="studio-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Recent Triage Diagnostic Scans
+          </div>
+          <span class="card-badge" id="history-count">4 Scans Logged</span>
+        </div>
+
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Patient ID</th>
+                <th>Diagnosis Classification</th>
+                <th>Confidence</th>
+                <th>Uncertainty</th>
+                <th>Severity Status</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body">
+              <tr>
+                <td>Just Now</td>
+                <td>PT-8942</td>
+                <td>Meningioma Tumor</td>
+                <td><strong style="color: var(--accent-orange);">98.42%</strong></td>
+                <td>3.15%</td>
+                <td><span class="diag-status-pill status-tumor" style="font-size: 0.68rem; margin: 0;">High Risk</span></td>
+              </tr>
+              <tr>
+                <td>10 mins ago</td>
+                <td>PT-8941</td>
+                <td>Pituitary Tumor</td>
+                <td><strong style="color: var(--accent-orange);">99.10%</strong></td>
+                <td>1.82%</td>
+                <td><span class="diag-status-pill status-tumor" style="font-size: 0.68rem; margin: 0;">Moderate</span></td>
+              </tr>
+              <tr>
+                <td>1 hour ago</td>
+                <td>PT-8940</td>
+                <td>Normal Brain (Healthy)</td>
+                <td><strong style="color: var(--status-success);">99.88%</strong></td>
+                <td>0.45%</td>
+                <td><span class="diag-status-pill status-healthy" style="font-size: 0.68rem; margin: 0;">Benign</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

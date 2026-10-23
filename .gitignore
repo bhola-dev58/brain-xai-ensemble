@@ -67,3 +67,7 @@ docs/12_research_paper.md
 # Patient history database (contains sensitive data — never commit)
 data/patient_history.db
 data/*.db
+
+# Scratch & Agent runtime
+scratch/
+.agents/
