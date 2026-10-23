@@ -491,21 +491,98 @@ document.addEventListener('DOMContentLoaded', () => {
     updateIndicatorDots();
   }
 
+  // Crosshair hairline guide and HUD mouse tracker
+  canvasWraps.forEach(wrap => {
+    const guideH = wrap.querySelector('.crosshair-guide-h');
+    const guideV = wrap.querySelector('.crosshair-guide-v');
+    const hud = wrap.querySelector('.crosshair-hud');
+
+    wrap.addEventListener('mousemove', (e) => {
+      if (!toggleCrosshair || !toggleCrosshair.checked) return;
+      const rect = wrap.getBoundingClientRect();
+      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+      const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+
+      if (guideH) guideH.style.top = `${y}px`;
+      if (guideV) guideV.style.left = `${x}px`;
+      if (hud) hud.textContent = `X: ${Math.round(x)}px | Y: ${Math.round(y)}px`;
+    });
+  });
+
   if (toggleCrosshair) {
     toggleCrosshair.addEventListener('change', syncCrosshairState);
     syncCrosshairState(); // Initialize
   }
 
   // Anonymize Patient PHI
+  const phiBadgeText = document.getElementById('phi-badge-text');
+  const dispPatientId = document.getElementById('disp-patient-id');
+  const dispPatientName = document.getElementById('disp-patient-name');
+
+  function syncPhiState() {
+    if (!togglePhi) return;
+    const isAnonymized = togglePhi.checked;
+    if (isAnonymized) {
+      document.body.classList.add('phi-anonymized');
+      if (phiBadgeText) phiBadgeText.textContent = 'HIPAA DE-IDENTIFIED';
+      if (dispPatientId) dispPatientId.textContent = 'PT-XXXX-REDACTED';
+      if (dispPatientName) dispPatientName.textContent = '[HIPAA DE-IDENTIFIED / REDACTED]';
+    } else {
+      document.body.classList.remove('phi-anonymized');
+      if (phiBadgeText) phiBadgeText.textContent = 'PHI Visible';
+      if (dispPatientId) dispPatientId.textContent = 'PT-2026-9812';
+      if (dispPatientName) dispPatientName.textContent = 'Anonymous Patient (52Y / M)';
+    }
+    updateIndicatorDots();
+  }
+
   if (togglePhi) {
-    togglePhi.addEventListener('change', (e) => {
-      if (e.target.checked) {
-        document.body.classList.add('phi-anonymized');
-      } else {
-        document.body.classList.remove('phi-anonymized');
-      }
-      updateIndicatorDots();
-    });
+    togglePhi.addEventListener('change', syncPhiState);
+    syncPhiState();
+  }
+
+  // 5-Pass TTA Augmentation
+  const ttaStatusBadge = document.getElementById('tta-status-badge');
+  const ttaBadgeText = document.getElementById('tta-badge-text');
+
+  function syncTtaState() {
+    if (!toggleTta) return;
+    const isTta = toggleTta.checked;
+    if (isTta) {
+      if (ttaStatusBadge) ttaStatusBadge.classList.remove('disabled');
+      if (ttaBadgeText) ttaBadgeText.textContent = '5-Pass TTA Active (+1.4% Margin)';
+    } else {
+      if (ttaStatusBadge) ttaStatusBadge.classList.add('disabled');
+      if (ttaBadgeText) ttaBadgeText.textContent = 'Single-Pass (Fast Mode)';
+    }
+    updateIndicatorDots();
+  }
+
+  if (toggleTta) {
+    toggleTta.addEventListener('change', syncTtaState);
+    syncTtaState();
+  }
+
+  // Brain-Mask Calvarial Gating
+  const tagGatingB = document.getElementById('tag-gating-b');
+  const tagGatingC = document.getElementById('tag-gating-c');
+
+  function syncGatingState() {
+    if (!toggleGating) return;
+    const isGated = toggleGating.checked;
+    if (isGated) {
+      if (tagGatingB) tagGatingB.textContent = 'Brain-Gated';
+      if (tagGatingC) tagGatingC.textContent = 'Multi-Focal Gated';
+    } else {
+      if (tagGatingB) tagGatingB.textContent = 'Ungated (Raw Skull)';
+      if (tagGatingC) tagGatingC.textContent = 'Ungated Saliency';
+    }
+    updateIndicatorDots();
+  }
+
+  if (toggleGating) {
+    toggleGating.addEventListener('change', syncGatingState);
+    syncGatingState();
   }
 
   // Status Indicator Dots for Collapsed Icon Dock

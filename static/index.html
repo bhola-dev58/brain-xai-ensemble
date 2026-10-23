@@ -242,6 +242,36 @@
          TAB 1: Diagnostic Studio
          ─────────────────────────────────────────────────────────────────────── -->
     <section id="tab-diagnostics" class="tab-panel active">
+      <!-- Patient Case Intake Context Bar -->
+      <div class="patient-context-bar" id="patient-context-bar">
+        <div class="patient-context-left">
+          <div class="context-item">
+            <span class="context-label">Case MRN:</span>
+            <strong class="context-val phi-sensitive" id="disp-patient-id">PT-2026-9812</strong>
+          </div>
+          <div class="context-divider"></div>
+          <div class="context-item">
+            <span class="context-label">Patient:</span>
+            <strong class="context-val phi-sensitive" id="disp-patient-name">Anonymous Patient (52Y / M)</strong>
+          </div>
+          <div class="context-divider"></div>
+          <div class="context-item">
+            <span class="context-label">Referring:</span>
+            <span class="context-val phi-sensitive" id="disp-patient-ref">Dr. A. Gupta, MD</span>
+          </div>
+        </div>
+        <div class="patient-context-right">
+          <span class="phi-shield-badge" id="phi-status-badge">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span id="phi-badge-text">PHI Visible</span>
+          </span>
+          <span class="tta-protocol-chip" id="tta-status-badge">
+            <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><polyline points="21 3 21 8 16 8"></polyline></svg>
+            <span id="tta-badge-text">5-Pass TTA Active</span>
+          </span>
+        </div>
+      </div>
+
       <div class="diagnostic-grid">
 
         <!-- Column A: Input & Controls -->
@@ -268,19 +298,19 @@
           <div class="sample-picker-title">Sample Benchmark Cases (All 4 Classes)</div>
           <div class="sample-grid">
             <button class="sample-btn" data-sample="/samples/sample_glioma.jpg" data-label="Glioma Benchmark">
-              <span class="tag" style="color: var(--status-danger);">Glioma</span>
+              <span class="tag tag-danger">Glioma</span>
               <strong>High Grade</strong>
             </button>
             <button class="sample-btn" data-sample="/samples/sample_meningioma.jpg" data-label="Meningioma Benchmark">
-              <span class="tag" style="color: var(--status-warning);">Meningioma</span>
+              <span class="tag tag-warning">Meningioma</span>
               <strong>Extra-Axial</strong>
             </button>
             <button class="sample-btn" data-sample="/samples/sample_pituitary.jpg" data-label="Pituitary Benchmark">
-              <span class="tag" style="color: var(--accent-cyan);">Pituitary</span>
+              <span class="tag tag-cyan">Pituitary</span>
               <strong>Macroadenoma</strong>
             </button>
             <button class="sample-btn" data-sample="/samples/sample_healthy.jpg" data-label="Healthy Control Benchmark">
-              <span class="tag" style="color: var(--status-success);">No Tumor</span>
+              <span class="tag tag-success">No Tumor</span>
               <strong>Healthy Brain</strong>
             </button>
           </div>
@@ -315,12 +345,15 @@
                 <span>Panel A: Raw Axial Scan</span>
                 <span class="tag">CE-MRI</span>
               </div>
-              <div class="panel-canvas-wrap">
-                <img id="img-raw" alt="Raw Scan" style="display: none;">
+              <div class="panel-canvas-wrap crosshair-active" id="wrap-raw">
+                <img id="img-raw" alt="Raw Scan" class="hidden-init">
                 <div class="panel-placeholder" id="ph-raw">
                   <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                   <span>Awaiting Scan Input</span>
                 </div>
+                <div class="crosshair-guide-h"></div>
+                <div class="crosshair-guide-v"></div>
+                <div class="crosshair-hud">X: --, Y: --</div>
               </div>
             </div>
 
@@ -328,15 +361,18 @@
             <div class="viewport-panel">
               <div class="panel-header">
                 <span>Panel B: Brain-Gated Grad-CAM</span>
-                <span class="tag">Jet Saliency</span>
+                <span class="tag" id="tag-gating-b">Brain-Gated</span>
               </div>
-              <div class="panel-canvas-wrap">
-                <img id="img-underlay-gradcam" class="underlay-mri" alt="Base Scan" style="display: none;">
-                <img id="img-gradcam" class="overlay-heatmap" alt="Grad-CAM" style="display: none;">
+              <div class="panel-canvas-wrap crosshair-active" id="wrap-gradcam">
+                <img id="img-underlay-gradcam" class="underlay-mri hidden-init" alt="Base Scan">
+                <img id="img-gradcam" class="overlay-heatmap hidden-init" alt="Grad-CAM">
                 <div class="panel-placeholder" id="ph-gradcam">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 10"></polyline></svg>
                   <span>Heatmap Computed on Inference</span>
                 </div>
+                <div class="crosshair-guide-h"></div>
+                <div class="crosshair-guide-v"></div>
+                <div class="crosshair-hud">X: --, Y: --</div>
               </div>
             </div>
 
@@ -344,15 +380,18 @@
             <div class="viewport-panel">
               <div class="panel-header">
                 <span>Panel C: Grad-CAM++ Higher-Order</span>
-                <span class="tag">Multi-Focal</span>
+                <span class="tag" id="tag-gating-c">Multi-Focal Gated</span>
               </div>
-              <div class="panel-canvas-wrap">
-                <img id="img-underlay-gradcam-pp" class="underlay-mri" alt="Base Scan" style="display: none;">
-                <img id="img-gradcam-pp" class="overlay-heatmap" alt="Grad-CAM++" style="display: none;">
+              <div class="panel-canvas-wrap crosshair-active" id="wrap-gradcam-pp">
+                <img id="img-underlay-gradcam-pp" class="underlay-mri hidden-init" alt="Base Scan">
+                <img id="img-gradcam-pp" class="overlay-heatmap hidden-init" alt="Grad-CAM++">
                 <div class="panel-placeholder" id="ph-gradcam-pp">
                   <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                   <span>Sub-Regional Resolution</span>
                 </div>
+                <div class="crosshair-guide-h"></div>
+                <div class="crosshair-guide-v"></div>
+                <div class="crosshair-hud">X: --, Y: --</div>
               </div>
             </div>
 
@@ -362,13 +401,16 @@
                 <span>Panel D: Morphological Contour</span>
                 <span class="tag">Delineation</span>
               </div>
-              <div class="panel-canvas-wrap">
-                <img id="img-underlay-seg" class="underlay-mri" alt="Base Scan" style="display: none;">
-                <img id="img-segmentation" class="overlay-heatmap" alt="Segmentation" style="display: none;">
+              <div class="panel-canvas-wrap crosshair-active" id="wrap-seg">
+                <img id="img-underlay-seg" class="underlay-mri hidden-init" alt="Base Scan">
+                <img id="img-segmentation" class="overlay-heatmap hidden-init" alt="Segmentation">
                 <div class="panel-placeholder" id="ph-seg">
                   <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                   <span>Weakly-Supervised Mask</span>
                 </div>
+                <div class="crosshair-guide-h"></div>
+                <div class="crosshair-guide-v"></div>
+                <div class="crosshair-hud">X: --, Y: --</div>
               </div>
             </div>
           </div>

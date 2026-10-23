@@ -888,6 +888,178 @@ body.phi-anonymized #rep-patient-name {
   gap: 1rem;
 }
 
+/* Patient Case Intake Context Bar */
+.patient-context-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1.25rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.patient-context-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.context-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+}
+
+.context-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.context-val {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  transition: filter var(--transition-fast);
+}
+
+.context-divider {
+  width: 1px;
+  height: 14px;
+  background: var(--border-subtle);
+}
+
+.patient-context-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.phi-shield-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(107, 114, 128, 0.15);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  transition: all var(--transition-fast);
+}
+
+.phi-shield-badge svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+}
+
+body.phi-anonymized .phi-shield-badge {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--status-success);
+  border-color: rgba(34, 197, 94, 0.35);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+}
+
+body.phi-anonymized .phi-sensitive {
+  filter: blur(5px);
+  user-select: none;
+  pointer-events: none;
+}
+
+.tta-protocol-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(20, 184, 166, 0.15);
+  color: var(--teal-medical);
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  transition: all var(--transition-fast);
+}
+
+.tta-protocol-chip.disabled {
+  background: rgba(107, 114, 128, 0.12);
+  color: var(--text-muted);
+  border-color: var(--border-subtle);
+}
+
+.tta-protocol-chip svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+}
+
+.hidden-init {
+  display: none;
+}
+
+.tag-danger { color: var(--status-danger); }
+.tag-warning { color: var(--status-warning); }
+.tag-cyan { color: var(--accent-cyan); }
+.tag-success { color: var(--status-success); }
+
+/* Precision Crosshairs in Viewports */
+.crosshair-guide-h,
+.crosshair-guide-v {
+  position: absolute;
+  pointer-events: none;
+  display: none;
+  z-index: 25;
+}
+
+.crosshair-guide-h {
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(20, 184, 166, 0.85);
+  box-shadow: 0 0 4px rgba(20, 184, 166, 0.6);
+}
+
+.crosshair-guide-v {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(20, 184, 166, 0.85);
+  box-shadow: 0 0 4px rgba(20, 184, 166, 0.6);
+}
+
+.crosshair-hud {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(8, 11, 15, 0.85);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--teal-medical);
+  pointer-events: none;
+  display: none;
+  z-index: 30;
+}
+
+.panel-canvas-wrap.crosshair-active:hover .crosshair-guide-h,
+.panel-canvas-wrap.crosshair-active:hover .crosshair-guide-v,
+.panel-canvas-wrap.crosshair-active:hover .crosshair-hud {
+  display: block;
+}
+
 /* --------------------------------------------------------------------------
    5. Navigation Tabs
    -------------------------------------------------------------------------- */
