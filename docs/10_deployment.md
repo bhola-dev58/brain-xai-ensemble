@@ -124,57 +124,78 @@ Expected: `33 passed`
 
 ---
 
-## Option 2: Docker Container
+## Option 2: Docker Container & Docker Compose (Production Ready)
 
-### Build the Image
+The production Docker container packages the full PACS Clinical Workstation frontend (`static/`), FastAPI REST API (`src/api.py`), and pre-trained ensemble models.
 
+### Quick Start with Docker Compose
+
+```bash
+docker compose up -d --build
+```
+- Access PACS Clinical Workstation: `http://localhost:8000`
+- Access Swagger OpenAPI Documentation: `http://localhost:8000/docs`
+- Healthcheck Endpoint: `http://localhost:8000/api/health`
+
+To stop:
+```bash
+docker compose down
+```
+
+---
+
+### Manual Docker Build and Run
+
+#### 1. Build the Docker Image
 ```bash
 docker build -t brain-tumor-xai .
 ```
 
-This builds a `python:3.12-slim` based container with:
-- System libraries: `libgl1`, `libglib2.0-0` (OpenCV runtime dependencies)
-- Python packages from `requirements.txt`
-- App source code and model files
-- Port 7860 exposed
-
-### Run the Container
-
+#### 2. Run the Container
 ```bash
-docker run -p 7860:7860 brain-tumor-xai
+docker run -d -p 8000:8000 --name brain-tumor-xai brain-tumor-xai
 ```
 
-Then open `http://localhost:7860` in your browser.
+Open `http://localhost:8000` in your web browser.
 
-### Environment Variables (Built Into Dockerfile)
+#### Environment Variables Configured in Dockerfile
 
 | Variable | Value | Purpose |
 |---|---|---|
-| `CUDA_VISIBLE_DEVICES` | `-1` | Forces CPU-only inference — disables GPU |
+| `PORT` | `8000` | Port for Uvicorn ASGI server (overridden automatically by cloud hosts) |
+| `CUDA_VISIBLE_DEVICES` | `-1` | Forces CPU-only inference — disables GPU requirements |
 | `TF_CPP_MIN_LOG_LEVEL` | `3` | Suppresses TensorFlow C++ verbose logs |
 | `PYTHONUNBUFFERED` | `1` | Ensures real-time stdout logging in containers |
 
-### What Is Excluded From Docker Image
+---
 
-The `.dockerignore` file excludes:
+## Option 3: Free Cloud Deployment via Hugging Face Spaces
 
-```
-venv/
-brain-tumor-2d-dataset/
-__pycache__/
-*.pyc
-.git/
-.pytest_cache/
-tests/
-```
+Hugging Face Spaces provides free hosting with public HTTPS URLs on CPU instances (16GB RAM):
 
-This keeps the image lean — no training dataset, no virtual environment, no test files.
+1. Go to [Hugging Face Spaces](https://huggingface.co/spaces) and click **Create new Space**.
+2. Set Space Name (e.g., `brain-tumor-xai`).
+3. Select **Docker** as the Space SDK (Blank template).
+4. Connect your GitHub repository `bhola-dev58/brain-xai-ensemble` or push your code to the Space's Git remote:
+   ```bash
+   git remote add space https://huggingface.co/spaces/<YOUR-USERNAME>/brain-tumor-xai
+   git push space main
+   ```
+5. Hugging Face detects `Dockerfile` and `README.md` (`app_port: 8000`) and automatically builds and launches the live workstation.
 
 ---
 
-## Option 3: Running Both Dashboard + API Simultaneously
+## Option 4: Cloud Deployment via Render / Railway / Koyeb
 
-Both services can run at the same time in separate terminals:
+### Render.com
+1. Fork or push your code to GitHub.
+2. Sign in to [Render](https://render.com) and click **New +** -> **Blueprint** or **Web Service**.
+3. Select the repository `brain-xai-ensemble`.
+4. Render automatically reads `render.yaml`, builds the Dockerfile, and assigns a live public URL (e.g. `https://brain-tumor-xai.onrender.com`).
+
+---
+
+## Option 5: Running Local Development Services
 
 **Terminal 1 — Gradio Dashboard:**
 ```bash

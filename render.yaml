@@ -1,0 +1,22 @@
+# ============================================================
+#  BrainTumorXAI — Render Blueprint Specification
+#  Deploys Docker container on Render Web Service
+# ============================================================
+
+services:
+  - type: web
+    name: brain-tumor-xai
+    runtime: docker
+    plan: standard
+    region: oregon
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: CUDA_VISIBLE_DEVICES
+        value: -1
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: 3
+      - key: PYTHONUNBUFFERED
+        value: 1

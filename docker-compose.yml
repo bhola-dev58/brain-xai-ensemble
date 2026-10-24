@@ -1,0 +1,29 @@
+# ============================================================
+#  BrainTumorXAI — Docker Compose Configuration
+#  PACS Clinical Workstation + Tri-Ensemble REST API
+# ============================================================
+
+services:
+  brain-tumor-xai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: brain-tumor-xai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - CUDA_VISIBLE_DEVICES=-1
+      - TF_CPP_MIN_LOG_LEVEL=3
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/api/health\")'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 4G

@@ -32,6 +32,9 @@ Base paper/
 IEEE pattern of research paper/
 already collected info/
 research paper bases for the model conNext /
+paper made  before ConvNeXtSmall /
+report_details/
+*.pdf
 
 # Generated Runtime Files & Reports
 reports
