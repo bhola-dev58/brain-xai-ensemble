@@ -19,14 +19,14 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import uvicorn
+from src.config import HOST, PORT
 
 if __name__ == "__main__":
-    print("Starting BrainTumorXAI REST API server...")
-    print("Docs: http://localhost:8000/docs")
+    print(f"Starting BrainTumorXAI REST API server on {HOST}:{PORT}...")
     uvicorn.run(
         "src.api:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=False,         # Disable hot-reload in production
-        log_level="info",
+        host=HOST,
+        port=PORT,
+        reload=False,
+        log_level=os.getenv("LOG_LEVEL", "info").lower(),
     )

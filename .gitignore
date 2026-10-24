@@ -43,6 +43,9 @@ reports/
 .vscode/
 .idea/
 .pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
 
 # OS-generated files
 .DS_Store

@@ -1,51 +1,60 @@
 # ============================================================
-#  BrainTumorXAI — Dockerfile
-#  CPU-only inference (no CUDA required)
-#  Runs Gradio dashboard on port 7860
+#  BrainTumorXAI — Production Hardened Dockerfile
 #  Base: python:3.12-slim (matches host runtime, required by numpy>=2.3)
+#  Security: Runs as unprivileged non-root user (appuser:appgroup)
+#  Workstation: FastAPI PACS + Tri-Ensemble REST API on port 8000
 # ============================================================
 
 FROM python:3.12-slim
 
-# System-level dependencies required by OpenCV
+# System-level dependencies required by OpenCV and headless imaging
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libgl1 \
         libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Working directory inside the container
+# Create unprivileged application user and group
+RUN groupadd -r appgroup && useradd -r -g appgroup -d /app -s /sbin/nologin appuser
+
+# Set working directory
 WORKDIR /app
 
-# Copy dependency manifest first (layer-caching optimization)
+# Copy dependency manifest first for layer caching optimization
 COPY requirements.txt .
 
-# Install Python dependencies (no cache to keep image lean)
+# Install Python dependencies (no pip cache to keep container lean)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application source code and assets
+# Copy application source code, assets, scripts, and baseline test images
 COPY src/ ./src/
 COPY static/ ./static/
 COPY scripts/ ./scripts/
 COPY test_images/ ./test_images/
 COPY app.py .
 
-# Ensure runtime directories exist
-RUN mkdir -p models data reports
+# Ensure storage directories exist with appropriate non-root ownership
+RUN mkdir -p models data reports/temp && \
+    chown -R appuser:appgroup /app
 
-# Copy models if present in the build context (e.g. local builds)
-COPY [m]odels* ./models/
+# Declare persistent storage mount points (SQLite db, reports, trained models)
+VOLUME ["/app/data", "/app/reports", "/app/models"]
 
-# Initialize baseline models if directory is empty (ensures cloud builds without git models succeed)
-RUN python scripts/init_models.py
+# Switch to non-root user for process isolation
+USER appuser
 
-# Expose default HTTP port (8000 for FastAPI + PACS workstation; supports cloud $PORT overrides)
+# Expose HTTP port (8000 default; overridden via $PORT in cloud environments)
 EXPOSE 8000
 
-# Force CPU-only execution inside container and disable output buffering
-ENV CUDA_VISIBLE_DEVICES=-1
-ENV TF_CPP_MIN_LOG_LEVEL=3
-ENV PYTHONUNBUFFERED=1
-ENV PORT=8000
+# Runtime Environment Variables
+ENV CUDA_VISIBLE_DEVICES=-1 \
+    TF_CPP_MIN_LOG_LEVEL=3 \
+    PYTHONUNBUFFERED=1 \
+    HOST=0.0.0.0 \
+    PORT=8000
 
-# Launch Uvicorn serving FastAPI (mounts static PACS UI at / and REST API at /api/*)
-CMD ["sh", "-c", "uvicorn src.api:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Container liveness and model-readiness healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD python -c 'import urllib.request, sys; sys.exit(0 if urllib.request.urlopen("http://localhost:8000/api/health").getcode() == 200 else 1)'
+
+# Launch Uvicorn ASGI server binding to configured HOST and PORT
+CMD ["sh", "-c", "uvicorn src.api:app --host ${HOST:-0.0.0.0} --port ${PORT:-8000}"]

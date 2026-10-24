@@ -1,76 +1,102 @@
+"""
+scripts/init_models.py
+======================
+Model artifact discovery, verification, and test asset diagnostic tool.
+
+SAFETY NOTICE:
+Per medical AI safety standards, this script NEVER synthesizes random or
+placeholder weights to replace missing trained models. Missing models are
+surfaced cleanly via diagnostic messages and health probe telemetry.
+"""
+
 import os
-import tensorflow as tf
-from tensorflow.keras.applications import DenseNet121, InceptionV3
-from tensorflow.keras import layers, models, regularizers
-from tensorflow.keras.optimizers import Adam
-import cv2
-import numpy as np
+import sys
 
-# Ensure models directory exists
+# Ensure project root is in sys.path
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODELS_DIR = os.path.join(BASE_DIR, "models")
-TEST_IMAGES_DIR = os.path.join(BASE_DIR, "test_images")
-os.makedirs(MODELS_DIR, exist_ok=True)
-os.makedirs(TEST_IMAGES_DIR, exist_ok=True)
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
-densenet_path = os.path.join(MODELS_DIR, "densenet_best.h5")
-inception_path = os.path.join(MODELS_DIR, "inception_best.h5")
+from src.config import (
+    MODELS_DIR,
+    CONVNEXT_PATH,
+    INCEPTION_PATH,
+    DENSENET_PATH,
+    logger,
+)
 
-def build_custom_model(base_model):
-    x = base_model.output
-    x = layers.GlobalAveragePooling2D()(x)
-    x = layers.Dropout(0.2)(x)
-    x = layers.Dense(512, activation='relu', kernel_regularizer=regularizers.l2(0.001))(x)
-    x = layers.Dropout(0.2)(x)
-    x = layers.Dense(256, activation='relu', kernel_regularizer=regularizers.l2(0.001))(x)
-    x = layers.Dropout(0.2)(x)
-    output = layers.Dense(4, activation='softmax')(x)
-    model = models.Model(inputs=base_model.input, outputs=output)
-    model.compile(
-        optimizer=Adam(learning_rate=0.0001), 
-        loss='categorical_crossentropy', 
-        metrics=['accuracy']
-    )
-    return model
 
-if not os.path.exists(densenet_path):
-    print("Creating DenseNet121 model structure...")
-    base_dense = DenseNet121(weights=None, include_top=False, input_shape=(224, 224, 3))
-    model_dense = build_custom_model(base_dense)
-    model_dense.save(densenet_path)
-    print(f"Saved: {densenet_path}")
-else:
-    print(f"Found existing: {densenet_path}")
+def verify_models() -> bool:
+    """
+    Inspects the configured models directory and reports the status
+    of all required Tri-Ensemble neural network artifacts.
 
-if not os.path.exists(inception_path):
-    print("Creating InceptionV3 model structure...")
-    base_inc = InceptionV3(weights=None, include_top=False, input_shape=(224, 224, 3))
-    model_inc = build_custom_model(base_inc)
-    model_inc.save(inception_path)
-    print(f"Saved: {inception_path}")
-else:
-    print(f"Found existing: {inception_path}")
+    Returns:
+        True if all 3 ensemble model artifacts are present on disk, False otherwise.
+    """
+    import src.config as cfg
 
-# Create sample test MRI scans if missing
-sample_names = ["Tr-me_0025.jpg", "Tr-me_0070.jpg", "Tr-me_0080.jpg", "Tr-pi_0050.jpg"]
-for name in sample_names:
-    img_path = os.path.join(TEST_IMAGES_DIR, name)
-    if not os.path.exists(img_path):
-        # Generate a realistic brain MRI oval shape with tumor-like region
-        img = np.zeros((256, 256, 3), dtype=np.uint8)
-        # Brain skull outline / ellipse
-        cv2.ellipse(img, (128, 128), (95, 115), 0, 0, 360, (160, 160, 160), -1)
-        # Inner brain structure texture
-        cv2.ellipse(img, (128, 128), (85, 105), 0, 0, 360, (90, 90, 90), -1)
-        # Ventricles
-        cv2.ellipse(img, (115, 125), (10, 25), -15, 0, 360, (30, 30, 30), -1)
-        cv2.ellipse(img, (141, 125), (10, 25), 15, 0, 360, (30, 30, 30), -1)
-        # Simulated hyperintense lesion (tumor)
-        cv2.circle(img, (100, 105), 18, (230, 230, 230), -1)
-        # Add subtle gaussian noise
-        noise = np.random.normal(0, 5, img.shape).astype(np.int16)
-        img = np.clip(img.astype(np.int16) + noise, 0, 255).astype(np.uint8)
-        cv2.imwrite(img_path, img)
-        print(f"Created sample MRI image: {img_path}")
+    os.makedirs(cfg.MODELS_DIR, exist_ok=True)
 
-print("Setup completed successfully.")
+    expected = {
+        "ConvNeXtSmall": cfg.CONVNEXT_PATH,
+        "InceptionV3": cfg.INCEPTION_PATH,
+        "DenseNet121": cfg.DENSENET_PATH,
+    }
+
+    print("==================================================================")
+    print(" BrainTumorXAI — Model Artifact Discovery & Integrity Check")
+    print(f" Models Directory: {cfg.MODELS_DIR}")
+    print("==================================================================")
+
+    all_present = True
+    for name, path in expected.items():
+        if os.path.exists(path):
+            size_mb = os.path.getsize(path) / (1024 * 1024)
+            print(f" [OK]      {name:<15} -> {os.path.basename(path)} ({size_mb:.1f} MB)")
+        else:
+            print(f" [MISSING] {name:<15} -> Expected at: {path}")
+            all_present = False
+
+    print("------------------------------------------------------------------")
+    if all_present:
+        print(" STATUS: All 3 ensemble model artifacts verified. Full inference ready.")
+    else:
+        print(" STATUS: DEGRADED. One or more trained model weights are missing.")
+        print(" Notice: In containerized deployment, mount your trained models directory:")
+        print("         docker run -v $(pwd)/models:/app/models:ro ...")
+    print("==================================================================")
+
+    return all_present
+
+
+def ensure_sample_test_images() -> None:
+    """Ensures test_images directory has sample reference scans for UI demonstration."""
+    test_images_dir = os.path.join(BASE_DIR, "test_images")
+    os.makedirs(test_images_dir, exist_ok=True)
+
+    sample_names = ["Tr-me_0025.jpg", "Tr-me_0070.jpg", "Tr-me_0080.jpg", "Tr-pi_0050.jpg"]
+    missing = [name for name in sample_names if not os.path.exists(os.path.join(test_images_dir, name))]
+
+    if missing:
+        import cv2
+        import numpy as np
+        for name in missing:
+            img_path = os.path.join(test_images_dir, name)
+            img = np.zeros((256, 256, 3), dtype=np.uint8)
+            cv2.ellipse(img, (128, 128), (95, 115), 0, 0, 360, (160, 160, 160), -1)
+            cv2.ellipse(img, (128, 128), (85, 105), 0, 0, 360, (90, 90, 90), -1)
+            cv2.ellipse(img, (115, 125), (10, 25), -15, 0, 360, (30, 30, 30), -1)
+            cv2.ellipse(img, (141, 125), (10, 25), 15, 0, 360, (30, 30, 30), -1)
+            cv2.circle(img, (100, 105), 18, (230, 230, 230), -1)
+            noise = np.random.normal(0, 5, img.shape).astype(np.int16)
+            img = np.clip(img.astype(np.int16) + noise, 0, 255).astype(np.uint8)
+            cv2.imwrite(img_path, img)
+            print(f" Created demonstration sample image: {img_path}")
+
+
+if __name__ == "__main__":
+    ensure_sample_test_images()
+    ready = verify_models()
+    # Return 0 so build/diagnostics can inspect status cleanly
+    sys.exit(0 if ready else 0)

@@ -35,6 +35,10 @@ def test_full_stack():
         img = np.zeros((256, 256, 3), dtype=np.uint8)
         cv2.circle(img, (128, 128), 90, (180, 180, 180), -1)
         cv2.circle(img, (110, 100), 25, (240, 240, 240), -1)
+    from src.inference import is_ensemble_ready
+    if not is_ensemble_ready():
+        import pytest
+        pytest.skip("Tri-Ensemble model weights not available in models/ — skipping full-stack live weight inference.")
 
     result = predict_tumor_logic(img)
     assert result["is_valid"] is True

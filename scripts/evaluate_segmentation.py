@@ -17,19 +17,19 @@ import tensorflow as tf
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.inference import predict_tumor_logic, make_gradcam_heatmap, model_dense
-from src.processor import create_segmentation
+from src.processor import create_segmentation, compute_dice_coefficient, compute_iou
 
 def compute_single_metrics(pred_mask, gt_mask):
-    pred = pred_mask.astype(bool)
-    gt = gt_mask.astype(bool)
+    pred = (pred_mask > 0).astype(bool)
+    gt = (gt_mask > 0).astype(bool)
 
-    TP = np.sum(pred & gt)
-    FP = np.sum(pred & ~gt)
-    FN = np.sum(~pred & gt)
-    TN = np.sum(~pred & ~gt)
+    TP = int(np.sum(pred & gt))
+    FP = int(np.sum(pred & ~gt))
+    FN = int(np.sum(~pred & gt))
+    TN = int(np.sum(~pred & ~gt))
 
-    dice = (2 * TP) / (2 * TP + FP + FN + 1e-7)
-    iou = TP / (TP + FP + FN + 1e-7)
+    dice = compute_dice_coefficient(gt_mask, pred_mask)
+    iou = compute_iou(gt_mask, pred_mask)
     sensitivity = TP / (TP + FN + 1e-7)
     specificity = TN / (TN + FP + 1e-7)
 

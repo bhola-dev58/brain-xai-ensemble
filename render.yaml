@@ -20,3 +20,9 @@ services:
         value: 3
       - key: PYTHONUNBUFFERED
         value: 1
+      - key: ENABLE_API_DOCS
+        value: "false"
+    disk:
+      name: brain-tumor-data
+      mountPath: /app/data
+      sizeGB: 10

@@ -23,14 +23,29 @@ def extract_brain_region(img: np.ndarray) -> np.ndarray:
     Returns:
         Cropped numpy array containing the focused brain region, or original image.
     """
-    if img is None:
+    if img is None or not isinstance(img, np.ndarray) or img.size == 0 or img.ndim < 2:
+        return img
+    if not np.all(np.isfinite(img)):
         return img
     try:
         h, w = img.shape[:2]
+        if h < 10 or w < 10:
+            return img
+
         if len(img.shape) == 3:
-            gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+            if img.shape[2] == 1:
+                gray = img.squeeze(-1)
+            elif img.shape[2] == 4:
+                gray = cv2.cvtColor(img[:, :, :3], cv2.COLOR_RGB2GRAY)
+            elif img.shape[2] == 3:
+                gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+            else:
+                return img
         else:
             gray = img.copy()
+
+        if gray.dtype != np.uint8:
+            gray = np.clip(gray, 0, 255).astype(np.uint8)
 
         # Threshold background vs brain tissue
         _, thresh = cv2.threshold(gray, 15, 255, cv2.THRESH_BINARY)
@@ -77,20 +92,36 @@ def create_segmentation(
             - Binary mask of the segmented tumor (same spatial dimensions).
             - Percentage of brain area covered by the tumor.
     """
-    try:
-        h, w = original_img.shape[:2]
+    if original_img is None or not isinstance(original_img, np.ndarray) or original_img.size == 0 or original_img.ndim < 2:
+        return original_img, np.zeros((1, 1), dtype=np.uint8), 0.0
+    h, w = original_img.shape[:2]
+    if not np.all(np.isfinite(original_img)):
+        return original_img.copy(), np.zeros((h, w), dtype=np.uint8), 0.0
 
-        # 1. Resize and normalize heatmap to full image resolution
-        hm = cv2.resize(heatmap_raw, (w, h)).astype(np.float32)
-        hm_max = hm.max()
+    if heatmap_raw is None or not isinstance(heatmap_raw, np.ndarray) or heatmap_raw.size == 0:
+        return original_img.copy(), np.zeros((h, w), dtype=np.uint8), 0.0
+
+    try:
+        # 1. Clean and normalize heatmap to full image resolution
+        hm_cleaned = np.nan_to_num(heatmap_raw.astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+        hm = cv2.resize(hm_cleaned, (w, h)).astype(np.float32)
+        hm_max = float(hm.max())
         if hm_max > 1e-8:
             hm = hm / hm_max
 
         # 2. Get grayscale image
         if len(original_img.shape) == 3:
-            gray = cv2.cvtColor(original_img, cv2.COLOR_RGB2GRAY)
+            if original_img.shape[2] == 4:
+                gray = cv2.cvtColor(original_img[:, :, :3], cv2.COLOR_RGB2GRAY)
+            elif original_img.shape[2] == 3:
+                gray = cv2.cvtColor(original_img, cv2.COLOR_RGB2GRAY)
+            else:
+                gray = original_img[:, :, 0].copy()
         else:
             gray = original_img.copy()
+
+        if gray.dtype != np.uint8:
+            gray = np.clip(gray, 0, 255).astype(np.uint8)
 
         # 3. Compute brain mask if not provided
         if brain_mask is None:
@@ -168,13 +199,10 @@ def create_segmentation(
 
         # 7. Area percentage — calculated as % of BRAIN area (not whole image)
         tumor_px = np.sum(tumor_mask > 0)
-        area_pct = (tumor_px / brain_area_px) * 100
+        if tumor_px == 0:
+            return original_img.copy(), np.zeros((h, w), dtype=np.uint8), 0.0
 
-        # Fallback: if tumor mask is too small or unrealistically large, use ROI
-        if area_pct == 0 or area_pct > 30.0:
-            tumor_mask = roi_mask
-            tumor_px = np.sum(tumor_mask > 0)
-            area_pct = (tumor_px / brain_area_px) * 100
+        area_pct = float((tumor_px / brain_area_px) * 100.0)
 
         # 8. Apply semi-transparent red fill overlay
         result = original_img.copy().astype(np.float32)
@@ -201,8 +229,8 @@ def estimate_location(
     img_shape: Union[Tuple[int, int], Tuple[int, int, int]]
 ) -> str:
     """
-    Estimates the location of the tumor based on the spatial coordinate
-    of the peak Grad-CAM activation value.
+    Estimates the anatomical location of the focal activation based on the spatial
+    coordinate of the peak Grad-CAM activation value.
 
     Args:
         heatmap_raw: Raw heatmap values.
@@ -211,9 +239,19 @@ def estimate_location(
     Returns:
         String describing anatomical position (e.g., 'Left Frontal Lobe (Superior)').
     """
+    if heatmap_raw is None or not isinstance(heatmap_raw, np.ndarray) or heatmap_raw.size == 0:
+        return "Unknown Location"
+
     try:
         h, w = img_shape[:2]
-        hm = cv2.resize(heatmap_raw, (w, h))
+        if h <= 0 or w <= 0:
+            return "Unknown Location"
+
+        hm_clean = np.nan_to_num(heatmap_raw.astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+        if np.max(hm_clean) <= 1e-8:
+            return "Indeterminate / Diffuse Activation"
+
+        hm = cv2.resize(hm_clean, (w, h))
         y_center, x_center = np.unravel_index(np.argmax(hm), hm.shape)
 
         v_pos = "Superior" if y_center < h / 2 else "Inferior"
@@ -230,6 +268,99 @@ def estimate_location(
     except Exception as e:
         logger.error(f"Error estimating tumor location: {e}")
         return "Unknown Location"
+
+
+def compute_dice_coefficient(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    eps: float = 1e-7
+) -> float:
+    """
+    Computes the Dice Similarity Coefficient (DSC) between a ground-truth reference
+    mask and a predicted binary segmentation mask.
+    
+    DSC = (2 * |Y_true ∩ Y_pred|) / (|Y_true| + |Y_pred|)
+
+    Args:
+        y_true: Reference ground truth mask (numpy array, 2D or 3D).
+        y_pred: Predicted segmentation mask (numpy array, same shape as y_true).
+        eps: Numerical epsilon to prevent division by zero.
+
+    Returns:
+        Float value in [0.0, 1.0]. Returns 1.0 if both masks are empty (true negative).
+        Returns 0.0 if one mask is empty and the other is non-empty.
+
+    Raises:
+        ValueError: If inputs are invalid, non-array, or have mismatched spatial shapes.
+    """
+    if y_true is None or y_pred is None:
+        raise ValueError("y_true and y_pred masks must not be None.")
+    if not isinstance(y_true, np.ndarray) or not isinstance(y_pred, np.ndarray):
+        raise ValueError("Both masks must be numpy ndarrays.")
+    if y_true.shape != y_pred.shape:
+        raise ValueError(f"Shape mismatch: y_true shape {y_true.shape} != y_pred shape {y_pred.shape}")
+
+    gt = (y_true > 0).astype(bool)
+    pred = (y_pred > 0).astype(bool)
+
+    gt_sum = int(np.sum(gt))
+    pred_sum = int(np.sum(pred))
+
+    if gt_sum == 0 and pred_sum == 0:
+        return 1.0
+    if gt_sum == 0 or pred_sum == 0:
+        return 0.0
+
+    intersection = int(np.sum(gt & pred))
+    dice = (2.0 * intersection) / (gt_sum + pred_sum + eps)
+    return float(np.clip(dice, 0.0, 1.0))
+
+
+def compute_iou(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    eps: float = 1e-7
+) -> float:
+    """
+    Computes Intersection over Union (IoU / Jaccard Index) between a reference mask
+    and a predicted binary segmentation mask.
+    
+    IoU = |Y_true ∩ Y_pred| / |Y_true ∪ Y_pred|
+
+    Args:
+        y_true: Reference ground truth mask.
+        y_pred: Predicted segmentation mask.
+        eps: Numerical epsilon to prevent division by zero.
+
+    Returns:
+        Float value in [0.0, 1.0]. Returns 1.0 if both masks are empty.
+        Returns 0.0 if one mask is empty and the other is non-empty.
+
+    Raises:
+        ValueError: If inputs are invalid, non-array, or have mismatched shapes.
+    """
+    if y_true is None or y_pred is None:
+        raise ValueError("y_true and y_pred masks must not be None.")
+    if not isinstance(y_true, np.ndarray) or not isinstance(y_pred, np.ndarray):
+        raise ValueError("Both masks must be numpy ndarrays.")
+    if y_true.shape != y_pred.shape:
+        raise ValueError(f"Shape mismatch: y_true shape {y_true.shape} != y_pred shape {y_pred.shape}")
+
+    gt = (y_true > 0).astype(bool)
+    pred = (y_pred > 0).astype(bool)
+
+    gt_sum = int(np.sum(gt))
+    pred_sum = int(np.sum(pred))
+
+    if gt_sum == 0 and pred_sum == 0:
+        return 1.0
+    if gt_sum == 0 or pred_sum == 0:
+        return 0.0
+
+    intersection = int(np.sum(gt & pred))
+    union = int(np.sum(gt | pred))
+    iou = float(intersection) / (float(union) + eps)
+    return float(np.clip(iou, 0.0, 1.0))
 
 
 def estimate_severity(

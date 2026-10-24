@@ -1,16 +1,17 @@
 import os
-import logging
-
-# Central Logging Configuration
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
-logger = logging.getLogger("BrainTumorXAI")
+from src.logger import logger, configure_logging
 
 # Project Root and Paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODELS_DIR = os.path.join(BASE_DIR, "models")
+MODELS_DIR = os.getenv("MODELS_DIR", os.path.join(BASE_DIR, "models"))
+DATA_DIR = os.getenv("DATA_DIR", os.path.join(BASE_DIR, "data"))
+DB_PATH = os.getenv("DB_PATH", os.path.join(DATA_DIR, "patient_history.db"))
+REPORTS_DIR = os.getenv("REPORTS_DIR", os.path.join(BASE_DIR, "reports"))
+TEMP_REPORTS_DIR = os.getenv("TEMP_REPORTS_DIR", os.path.join(REPORTS_DIR, "temp"))
+
+# Runtime Server Settings
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8000"))
 
 def _get_model_path(base_name, extensions=[".keras", ".h5"]):
     for ext in extensions:
@@ -29,7 +30,8 @@ INCEPTION_PATH = _get_model_path("inception")
 DENSENET_PATH = _get_model_path("densenet")
 EFFNET_PATH = _get_model_path("effnet", extensions=[".keras"])
 
-# Classification Settings
+# Classification & Pipeline Settings
+PIPELINE_VERSION = "3.0.0 (Tri-Ensemble)"
 CLASSES = ['No Tumor', 'Glioma Tumor', 'Meningioma Tumor', 'Pituitary Tumor']
 IMG_SIZE_CLASSIFY = (224, 224)
 IMG_SIZE_INCEPTION = (299, 299)

@@ -211,79 +211,144 @@ Access the dashboard in your web browser:
 - Local URL: `http://localhost:7860`
 - Network URL: `http://127.0.0.1:7860`
 
-### 5. Running the REST API
+### 5. Running the REST API & PACS Workstation
 
-Launch the FastAPI backend server:
+Launch the FastAPI backend server (serves the web PACS interface at `/` and REST API at `/api/*`):
 
 ```bash
 python3 scripts/run_api.py
 ```
 
-- API Base URL: `http://localhost:8000`
-- Interactive Swagger Documentation: `http://localhost:8000/docs`
+- Web PACS Workstation: `http://localhost:8000/`
+- API Base URL: `http://localhost:8000/api`
+- Interactive Swagger Documentation: `http://localhost:8000/docs` (configurable)
+- Liveness Probe: `GET http://localhost:8000/api/health`
 
-API Endpoints:
+Key Endpoints:
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| GET | /api/health | Health probe and model status check |
-| POST | /api/predict | Multi-part image upload returning diagnosis, confidence, and XAI maps |
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/health` | Public | Liveness probe & active model ensemble readiness status |
+| `GET` | `/api/models` | Public | Telemetry and active ensemble voting weights |
+| `POST` | `/api/predict` | Protected* | Multi-part image/DICOM upload returning classification & XAI base64 overlays |
+| `POST` | `/api/report` | Protected* | Upload scan + patient metadata to generate downloadable PDF report |
+| `GET` | `/api/reports/{id}` | Protected* | Securely retrieves generated PDF report by unique analysis ID |
+| `GET` | `/api/history` | Protected* | Paginated scan history records from SQLite database |
+
+*\* Protected endpoints enforce `X-API-Key` or `Authorization: Bearer <key>` when `BRAIN_XAI_API_KEY` is configured in the environment. In local development with no key configured, requests proceed in open development mode.*
 
 Example API Request via curl:
 
 ```bash
 curl -X POST http://localhost:8000/api/predict \
+     -H "X-API-Key: your_api_key_here" \
      -F "file=@test_images/Tr-me_0025.jpg"
 ```
 
-### 6. Running Model Validation and Metrics Evaluation
+---
 
-To compute validation accuracy, classification reports, and confusion matrices across all 1,269 benchmark scans:
+## Deployment & Containerization
+
+### Runtime Configuration & Environment Variables
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `HOST` | `0.0.0.0` | Host IP interface to bind ASGI server |
+| `PORT` | `8000` | Port for the web PACS workstation & API |
+| `BRAIN_XAI_API_KEY` | *(None)* | Secret API key for authenticating `/api/predict`, `/api/report`, `/api/history` |
+| `CORS_ALLOWED_ORIGINS`| `localhost` | Comma-delimited list of allowed client origins (or `*`) |
+| `ENABLE_API_DOCS` | `true` | Set to `false` in production to disable `/docs` and `/redoc` |
+| `MAX_UPLOAD_SIZE_MB` | `25` | Maximum upload size threshold before returning HTTP 413 |
+| `MODELS_DIR` | `<root>/models` | Directory containing trained `.keras` / `.h5` model weights |
+| `DATA_DIR` | `<root>/data` | Directory storing `patient_history.db` SQLite database |
+| `REPORTS_DIR` | `<root>/reports` | Directory storing generated PDF clinical diagnostic reports |
+
+### Model Artifact Requirements
+
+Before running in production, verify that trained weights are present in `models/`:
+- `models/convnext_full_best.keras` (or `convnext_best.h5`)
+- `models/inception_full_best.keras` (or `inception_best.h5`)
+- `models/densenet_full_best.keras` (or `densenet_best.h5`)
+
+Verify model discovery and weight integrity using the verification utility:
 
 ```bash
-python3 scripts/compute_detailed_metrics.py
+python3 scripts/init_models.py
 ```
 
-To run the full multi-pass Test-Time Augmentation (TTA) evaluation pipeline:
+*Notice: Missing models never produce fake weights; the application gracefully enters `status: degraded, ready: false` mode and responds with HTTP 503 on inference requests.*
+
+### Running with Docker Compose (Recommended)
+
+Docker Compose starts the container as an unprivileged non-root user (`appuser`) and mounts persistent host directories for models, data, and reports:
 
 ```bash
-python3 scripts/boost_metrics_tta.py
+# Start container in detached mode with persistent volume mounts
+docker compose up -d
+
+# Check service health and container status
+docker compose ps
+
+# Inspect logs
+docker compose logs -f
+
+# Stop container safely (preserving data/ and reports/ on host)
+docker compose down
 ```
 
-To compute segmentation metrics (Dice Similarity Coefficient and Mean IoU):
+### Running with Standalone Docker
 
 ```bash
-python3 scripts/evaluate_segmentation.py
-```
-
-### 7. Running the Automated Test Suite
-
-Execute the test suite using pytest:
-
-```bash
-# Run all tests
-pytest tests/ -v
-
-# Run only image processing unit tests
-pytest tests/test_processor.py -v
-
-# Run full-stack integration tests
-pytest tests/test_full_stack.py -v
-```
-
-### 8. Running with Docker
-
-Build the container image:
-
-```bash
+# 1. Build the production image
 docker build -t braintumor-xai .
+
+# 2. Run with volume mounts for persistence and non-root execution
+docker run -d \
+  --name braintumor-workstation \
+  -p 8000:8000 \
+  -v "$(pwd)/models:/app/models:ro" \
+  -v "$(pwd)/data:/app/data" \
+  -v "$(pwd)/reports:/app/reports" \
+  braintumor-xai
 ```
 
-Run the containerized application:
+### Health Check and Monitoring
+
+Check container health and model readiness:
 
 ```bash
-docker run -p 7860:7860 braintumor-xai
+curl -f http://localhost:8000/api/health
 ```
+
+Expected JSON response:
+```json
+{
+  "status": "ok",
+  "ready": true,
+  "models_active": {
+    "ConvNeXtSmall": true,
+    "InceptionV3": true,
+    "DenseNet121": true
+  },
+  "pipeline_version": "3.0.0 (Tri-Ensemble)"
+}
+```
+
+### Persistent Storage Expectations & Cloud Deployment
+
+- **Local & Docker:** SQLite database (`data/patient_history.db`) and PDF reports (`reports/`) persist on the host filesystem via volume bind mounts.
+- **Render / Ephemeral Cloud Hosts:** By default, cloud containers run on ephemeral storage. The included `render.yaml` specifies a persistent disk mount (`/app/data`) so patient case history is not lost across container restarts.
+
+### Troubleshooting
+
+1. **`status: degraded, ready: false` on `/api/health`:**
+   - One or more model weight files are missing in `models/`. Run `python3 scripts/init_models.py` to identify missing artifacts and ensure the `./models` volume is correctly mounted.
+2. **HTTP 413 Payload Too Large:**
+   - Scan upload exceeds 25 MB. Increase `MAX_UPLOAD_SIZE_MB` in environment variables if processing thick-slice volumetric DICOM datasets.
+3. **HTTP 401 Unauthorized:**
+   - `BRAIN_XAI_API_KEY` is configured on the server. Include `X-API-Key: <key>` or `Authorization: Bearer <key>` in request headers.
+4. **Port collision on 8000:**
+   - Change `PORT=8080` in `.env` or run `PORT=8080 docker compose up -d`.
 
 ---
 

@@ -317,6 +317,7 @@ def handle_prediction(img: Optional[np.ndarray], filename: str = "N/A"):
             inference_time=data["inference_time"],
             scan_filename=filename,
             input_type="IMAGE",
+            analysis_id=data.get("analysis_id"),
         )
 
     return result
@@ -401,9 +402,9 @@ def handle_pdf_export(
         patient_id=patient_id or "PT-8942",
         patient_name=patient_name or "Anonymous Patient",
         patient_age=patient_age or "45",
-        patient_gender=patient_gender or "Unspecified"
+        patient_gender=patient_gender or "Unspecified",
+        analysis_id=data.get("analysis_id"),
     )
-    # Update last log row with pdf_path (best-effort)
     return pdf_path
 
 

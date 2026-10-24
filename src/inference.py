@@ -1,6 +1,6 @@
 import os
 import time
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 import numpy as np
 
 # Suppress TF and CUDA logs BEFORE importing tensorflow
@@ -18,7 +18,9 @@ import absl.logging
 absl.logging.set_verbosity(absl.logging.ERROR)
 tf.get_logger().setLevel('ERROR')
 
+import hashlib
 from src.config import (
+    PIPELINE_VERSION,
     CONVNEXT_PATH,
     INCEPTION_PATH,
     DENSENET_PATH,
@@ -72,40 +74,144 @@ def _create_grad_model(model, model_type="densenet"):
     return None
 
 
-def init_models():
-    """Initializes and loads available Tri-Ensemble models."""
+def is_ensemble_ready() -> bool:
+    """
+    Returns True only when all three required ensemble backbones
+    (ConvNeXtSmall, InceptionV3, DenseNet121) are fully loaded and operational.
+    """
+    return (
+        model_convnext is not None
+        and model_inc is not None
+        and model_dense is not None
+    )
+
+
+def get_model_status() -> Dict[str, bool]:
+    """
+    Returns live availability status for each individual ensemble model.
+    """
+    return {
+        "ConvNeXtSmall": model_convnext is not None,
+        "InceptionV3": model_inc is not None,
+        "DenseNet121": model_dense is not None,
+    }
+
+
+_PROVENANCE_HASH_CACHE: Dict[str, Optional[str]] = {}
+
+
+def _compute_file_sha256(path: str, chunk_size: int = 65536) -> Optional[str]:
+    """Computes SHA-256 digest for an artifact file, returning hex string or None if file missing."""
+    if not path or not os.path.exists(path):
+        return None
+    if path in _PROVENANCE_HASH_CACHE:
+        return _PROVENANCE_HASH_CACHE[path]
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            while chunk := f.read(chunk_size):
+                h.update(chunk)
+        digest = h.hexdigest()
+        _PROVENANCE_HASH_CACHE[path] = digest
+        return digest
+    except Exception as e:
+        logger.warning(f"Could not compute artifact digest for {path}: {e}")
+        return None
+
+
+def get_model_provenance() -> Dict[str, Any]:
+    """
+    Returns complete architecture, artifact digest, and weighting provenance for the active ensemble.
+    File paths are sanitized to basenames to prevent leaking internal server directories.
+    """
+    return {
+        "pipeline_version": PIPELINE_VERSION,
+        "models": {
+            "ConvNeXtSmall": {
+                "artifact": os.path.basename(CONVNEXT_PATH) if os.path.exists(CONVNEXT_PATH) else "N/A",
+                "sha256": _compute_file_sha256(CONVNEXT_PATH),
+                "weight": CONVNEXT_VOTE_WEIGHT,
+                "input_size": list(IMG_SIZE_CLASSIFY),
+            },
+            "InceptionV3": {
+                "artifact": os.path.basename(INCEPTION_PATH) if os.path.exists(INCEPTION_PATH) else "N/A",
+                "sha256": _compute_file_sha256(INCEPTION_PATH),
+                "weight": INCEPTION_VOTE_WEIGHT,
+                "input_size": list(IMG_SIZE_INCEPTION),
+            },
+            "DenseNet121": {
+                "artifact": os.path.basename(DENSENET_PATH) if os.path.exists(DENSENET_PATH) else "N/A",
+                "sha256": _compute_file_sha256(DENSENET_PATH),
+                "weight": DENSENET_VOTE_WEIGHT,
+                "input_size": list(IMG_SIZE_CLASSIFY),
+            },
+        },
+        "classes": CLASSES,
+    }
+
+
+def init_models(force_reload: bool = False) -> bool:
+    """
+    Initializes and loads required Tri-Ensemble models.
+    Does not reload if models are already loaded unless force_reload=True.
+    Returns True if all required models loaded successfully, False otherwise.
+    """
     global model_convnext, model_inc, model_dense, _grad_model_dense, _grad_model_convnext
+
+    if not force_reload and is_ensemble_ready():
+        return True
 
     logger.info("Loading Tri-Ensemble models (ConvNeXtSmall + InceptionV3 + DenseNet121)...")
 
     # 1. ConvNeXtSmall
-    if os.path.exists(CONVNEXT_PATH):
-        try:
-            model_convnext = tf.keras.models.load_model(CONVNEXT_PATH, compile=False)
-            logger.info(f"Loaded ConvNeXtSmall from: {CONVNEXT_PATH}")
-            _grad_model_convnext = _create_grad_model(model_convnext, "convnext")
-        except Exception as e:
-            logger.warning(f"Could not load ConvNeXtSmall: {e}")
+    if model_convnext is None or force_reload:
+        if os.path.exists(CONVNEXT_PATH):
+            try:
+                model_convnext = tf.keras.models.load_model(CONVNEXT_PATH, compile=False)
+                logger.info(f"Loaded ConvNeXtSmall from: {CONVNEXT_PATH}")
+                _grad_model_convnext = _create_grad_model(model_convnext, "convnext")
+            except Exception as e:
+                logger.error(f"Failed to load ConvNeXtSmall from {CONVNEXT_PATH}: {e}")
+                model_convnext = None
+                _grad_model_convnext = None
+        else:
+            logger.warning(f"ConvNeXtSmall weights file not found: {CONVNEXT_PATH}")
+            model_convnext = None
+            _grad_model_convnext = None
 
     # 2. InceptionV3
-    if os.path.exists(INCEPTION_PATH):
-        try:
-            model_inc = tf.keras.models.load_model(INCEPTION_PATH, compile=False)
-            logger.info(f"Loaded InceptionV3 from: {INCEPTION_PATH}")
-        except Exception as e:
-            logger.warning(f"Could not load InceptionV3: {e}")
+    if model_inc is None or force_reload:
+        if os.path.exists(INCEPTION_PATH):
+            try:
+                model_inc = tf.keras.models.load_model(INCEPTION_PATH, compile=False)
+                logger.info(f"Loaded InceptionV3 from: {INCEPTION_PATH}")
+            except Exception as e:
+                logger.error(f"Failed to load InceptionV3 from {INCEPTION_PATH}: {e}")
+                model_inc = None
+        else:
+            logger.warning(f"InceptionV3 weights file not found: {INCEPTION_PATH}")
+            model_inc = None
 
     # 3. DenseNet121
-    if os.path.exists(DENSENET_PATH):
-        try:
-            model_dense = tf.keras.models.load_model(DENSENET_PATH, compile=False)
-            logger.info(f"Loaded DenseNet121 from: {DENSENET_PATH}")
-            _grad_model_dense = _create_grad_model(model_dense, "densenet")
-        except Exception as e:
-            logger.warning(f"Could not load DenseNet121: {e}")
+    if model_dense is None or force_reload:
+        if os.path.exists(DENSENET_PATH):
+            try:
+                model_dense = tf.keras.models.load_model(DENSENET_PATH, compile=False)
+                logger.info(f"Loaded DenseNet121 from: {DENSENET_PATH}")
+                _grad_model_dense = _create_grad_model(model_dense, "densenet")
+            except Exception as e:
+                logger.error(f"Failed to load DenseNet121 from {DENSENET_PATH}: {e}")
+                model_dense = None
+                _grad_model_dense = None
+        else:
+            logger.warning(f"DenseNet121 weights file not found: {DENSENET_PATH}")
+            model_dense = None
+            _grad_model_dense = None
 
-    loaded_count = sum([1 for m in [model_convnext, model_inc, model_dense] if m is not None])
-    logger.info(f"Tri-Ensemble initialization complete. {loaded_count}/3 models active.")
+    status = get_model_status()
+    loaded_count = sum(status.values())
+    logger.info(f"Tri-Ensemble initialization complete: {loaded_count}/3 models active. Ready: {is_ensemble_ready()}")
+    return is_ensemble_ready()
 
 
 try:
@@ -199,7 +305,7 @@ def _top_k_channel_pooling(grads: tf.Tensor, conv_outputs: tf.Tensor, top_k_rati
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))  # (C,)
 
     # Only keep positive gradients (ReLU in feature space)
-    pooled_grads = tf.maximum(pooled_grads, 0)
+    pooled_grads = tf.maximum(pooled_grads, 0.0)
 
     # Select top-K channels by gradient magnitude
     num_channels = pooled_grads.shape[0]
@@ -217,9 +323,10 @@ def _top_k_channel_pooling(grads: tf.Tensor, conv_outputs: tf.Tensor, top_k_rati
         )
         pooled_grads = sparse_grads
 
-    # Weighted combination: (H, W, C) @ (C,) -> (H, W)
+    # Weighted combination: (H, W, C) @ (C, 1) -> (H, W, 1)
     heatmap = conv_outputs[0] @ pooled_grads[..., tf.newaxis]
-    return tf.squeeze(heatmap)
+    # Extract spatial channels without squeezing spatial dims (preserves (H, W) even if H=1 or W=1)
+    return heatmap[:, :, 0]
 
 
 def make_gradcam_heatmap(
@@ -231,11 +338,13 @@ def make_gradcam_heatmap(
     """
     Generates Grad-CAM or Grad-CAM++ heatmap with brain-mask gating.
 
-    Key improvements over previous version:
+    Key improvements:
+    - Target class validation ensures heatmap matches winning ensemble class.
     - Brain mask gates all outside-brain activations to zero.
-    - Adaptive Otsu threshold replaces hardcoded 0.30 cutoff.
+    - Adaptive Otsu threshold replaces hardcoded cutoffs.
     - Top-K channel pooling reduces noise from irrelevant feature maps.
-    - Correct Grad-CAM++ formula (Chattopadhay 2018, Eq. 19).
+    - Chattopadhay et al. (2018) Grad-CAM++ formulation.
+    - Strict non-finite checks and dimension safeguards; no fabricated output.
 
     Args:
         img_array: Preprocessed model input (1, H, W, 3), float32 [0,1].
@@ -253,13 +362,8 @@ def make_gradcam_heatmap(
 
     grad_model = _grad_model_dense or _grad_model_convnext
     if grad_model is None:
-        # Gaussian fallback centered on image
-        y, x = np.ogrid[:h_orig, :w_orig]
-        cy, cx = h_orig // 2, w_orig // 2
-        dist_sq = (x - cx)**2 + (y - cy)**2
-        fallback = np.exp(-dist_sq / (2 * (min(h_orig, w_orig) / 4)**2)).astype(np.float32)
-        fallback = _apply_brain_gate(fallback, brain_mask)
-        return fallback, brain_mask
+        logger.warning("No grad_model available for explainability generation.")
+        return np.zeros((h_orig, w_orig), dtype=np.float32), brain_mask
 
     try:
         g_shape = grad_model.input_shape
@@ -279,13 +383,20 @@ def make_gradcam_heatmap(
         conv_outputs, preds = grad_model(img_tensor)
         tape.watch(conv_outputs)
 
+        num_classes = preds.shape[-1]
         if pred_index is None:
             pred_index = int(tf.argmax(preds[0]))
+        elif not isinstance(pred_index, (int, np.integer)) or pred_index < 0 or pred_index >= num_classes:
+            logger.warning(f"Invalid pred_index {pred_index} for model with {num_classes} classes. Falling back to argmax.")
+            pred_index = int(tf.argmax(preds[0]))
+
         class_channel = preds[:, pred_index]
 
     # First-order gradients
     grads = tape.gradient(class_channel, conv_outputs)
-    if grads is None:
+    if grads is None or not tf.reduce_all(tf.math.is_finite(grads)):
+        del tape
+        logger.warning("Grad-CAM backpropagation yielded None or non-finite gradients.")
         return np.zeros((h_orig, w_orig), dtype=np.float32), brain_mask
 
     if use_pp:
@@ -297,8 +408,6 @@ def make_gradcam_heatmap(
         conv_val = conv_outputs[0]   # (H, W, C)
         grads_val = grads[0]         # (H, W, C)
 
-        # Compute exp(S^c) * grads using GradientTape higher-order
-        # Approximation: use squared and cubed grads as proxies for 2nd/3rd derivatives
         grads_sq = grads_val ** 2
         grads_cu = grads_val ** 3
 
@@ -327,7 +436,7 @@ def make_gradcam_heatmap(
             weights = sparse_w
 
         heatmap = conv_val @ weights[..., tf.newaxis]  # (H, W, 1)
-        heatmap = tf.squeeze(heatmap)
+        heatmap = heatmap[:, :, 0]
     else:
         # =========================================================
         # Standard Grad-CAM with Top-K channel pooling
@@ -336,16 +445,22 @@ def make_gradcam_heatmap(
 
     del tape
 
-    # ReLU + normalize to [0, 1]
-    heatmap = tf.maximum(heatmap, 0)
+    # ReLU + sanitize non-finite values + normalize
+    heatmap = tf.maximum(heatmap, 0.0)
+    heatmap = tf.where(tf.math.is_finite(heatmap), heatmap, tf.zeros_like(heatmap))
     max_val = tf.reduce_max(heatmap)
     if max_val > 1e-8:
         heatmap = heatmap / max_val
+    else:
+        heatmap = tf.zeros_like(heatmap)
 
     heatmap_np = heatmap.numpy().astype(np.float32)
+    if not np.any(heatmap_np > 1e-8):
+        return np.zeros((h_orig, w_orig), dtype=np.float32), brain_mask
 
-    # Resize heatmap to original image resolution
+    # Resize heatmap to original image resolution with clamp against interpolation ringing
     heatmap_resized = cv2.resize(heatmap_np, (w_orig, h_orig), interpolation=cv2.INTER_CUBIC)
+    heatmap_resized = np.clip(heatmap_resized, 0.0, 1.0)
 
     # STEP 1: Brain mask gating — zero out all outside-brain activations
     heatmap_gated = _apply_brain_gate(heatmap_resized, brain_mask)
@@ -360,8 +475,10 @@ def make_gradcam_heatmap(
     sm_max = heatmap_smooth.max()
     if sm_max > 1e-8:
         heatmap_smooth = heatmap_smooth / sm_max
+    else:
+        heatmap_smooth = np.zeros_like(heatmap_smooth)
 
-    return heatmap_smooth, brain_mask
+    return heatmap_smooth.astype(np.float32), brain_mask
 
 
 def _build_overlay(
@@ -383,8 +500,24 @@ def _build_overlay(
     Returns:
         Blended image (H, W, 3), uint8.
     """
+    if img is None or not isinstance(img, np.ndarray) or img.size == 0:
+        return np.zeros((10, 10, 3), dtype=np.uint8)
+
     h, w = img.shape[:2]
-    hm = cv2.resize(heatmap, (w, h))
+    base = img.copy()
+    if base.ndim == 2:
+        base = np.stack([base, base, base], axis=-1)
+    elif base.ndim == 3 and base.shape[2] == 1:
+        base = np.concatenate([base, base, base], axis=-1)
+    elif base.ndim == 3 and base.shape[2] == 4:
+        base = base[:, :, :3]
+
+    if heatmap is None or not isinstance(heatmap, np.ndarray) or heatmap.size == 0 or np.all(heatmap <= 0):
+        return base.astype(np.uint8)
+
+    hm_clean = np.nan_to_num(heatmap.astype(np.float32), nan=0.0, posinf=0.0, neginf=0.0)
+    hm_clean = np.clip(hm_clean, 0.0, 1.0)
+    hm = cv2.resize(hm_clean, (w, h))
 
     # Colorize the heatmap
     hm_u8 = np.uint8(255 * hm)
@@ -398,100 +531,375 @@ def _build_overlay(
     # Per-pixel alpha: opacity scales with activation intensity
     alpha = (hm * opacity)[:, :, np.newaxis]
 
-    base = img.astype(np.float32)
-    result = base * (1.0 - alpha) + hm_color.astype(np.float32) * alpha
+    base_f = base.astype(np.float32)
+    result = base_f * (1.0 - alpha) + hm_color.astype(np.float32) * alpha
     return np.uint8(np.clip(result, 0, 255))
 
 
 def calculate_entropy(probs: np.ndarray) -> float:
-    """Calculates normalized Shannon Entropy as a measure of model uncertainty."""
-    eps = 1e-12
-    probs = np.clip(probs, eps, 1.0)
-    entropy = -np.sum(probs * np.log2(probs))
-    max_entropy = np.log2(len(probs))
-    return float(entropy / max_entropy) * 100.0
+    """
+    Calculates normalized Shannon Entropy (0.0 to 100.0%) of a discrete probability vector.
+    
+    Dispersion metric:
+    - 0.0% = maximum concentration (deterministic one-hot prediction).
+    - 100.0% = uniform distribution across all K classes (maximum dispersion / ambiguity).
+    
+    IMPORTANT CLINICAL CAVEAT:
+    Shannon entropy measures the mathematical dispersion of the model's softmax outputs across classes.
+    It does NOT represent calibrated Bayesian uncertainty, aleatoric sensor noise, or
+    epistemic out-of-distribution clinical uncertainty.
+    """
+    if probs is None or not isinstance(probs, np.ndarray) or probs.size == 0:
+        return 0.0
+    if not np.all(np.isfinite(probs)):
+        return 0.0
+
+    p = np.clip(np.asarray(probs, dtype=np.float64), 0.0, 1.0)
+    p_sum = np.sum(p)
+    if p_sum <= 0:
+        return 0.0
+    p = p / p_sum
+
+    positive_p = p[p > 1e-12]
+    if len(positive_p) <= 1:
+        return 0.0
+
+    entropy = -np.sum(positive_p * np.log2(positive_p))
+    k = len(p)
+    max_entropy = np.log2(k) if k > 1 else 1.0
+    if max_entropy <= 0:
+        return 0.0
+
+    norm_entropy = float(np.clip((entropy / max_entropy) * 100.0, 0.0, 100.0))
+    return round(norm_entropy, 4)
 
 
-def predict_tumor_logic(img: Optional[np.ndarray]) -> Dict[str, Any]:
+def _validate_model_output(pred: Any, model_name: str) -> Optional[np.ndarray]:
+    """
+    Validates and normalizes an individual model prediction vector.
+    
+    Ensures:
+    - Output is a 1D numpy array of length matching CLASSES (4).
+    - Contains only finite numerical values (no NaN or Inf).
+    - Represents a valid probability distribution (non-negative, sums to 1.0).
+      Applies numerically stable softmax if unnormalized logits are detected.
+      
+    Returns:
+        1D float32 numpy array of length 4 summing to 1.0, or None if invalid.
+    """
+    if pred is None:
+        logger.error(f"Model output validation failed [{model_name}]: None output.")
+        return None
+
+    try:
+        arr = np.asarray(pred, dtype=np.float32)
+    except Exception as e:
+        logger.error(f"Model output validation failed [{model_name}]: could not convert to float32: {e}")
+        return None
+
+    if arr.ndim == 2 and arr.shape[0] == 1:
+        arr = arr[0]
+
+    if arr.ndim != 1 or arr.shape[0] != len(CLASSES):
+        logger.error(
+            f"Model output validation failed [{model_name}]: invalid shape {arr.shape}. "
+            f"Expected 1D vector of length {len(CLASSES)}."
+        )
+        return None
+
+    if not np.all(np.isfinite(arr)):
+        logger.error(f"Model output validation failed [{model_name}]: non-finite values (NaN/Inf) detected.")
+        return None
+
+    # Check if already a valid probability vector (non-negative, sums to ~1.0)
+    is_prob = np.all(arr >= 0.0) and (0.95 <= float(np.sum(arr)) <= 1.05)
+    if not is_prob:
+        shift_arr = arr - np.max(arr)
+        exp_arr = np.exp(shift_arr)
+        sum_exp = np.sum(exp_arr)
+        if sum_exp <= 0 or not np.isfinite(sum_exp):
+            logger.error(f"Model output validation failed [{model_name}]: numerical instability during softmax.")
+            return None
+        arr = exp_arr / sum_exp
+    else:
+        s = float(np.sum(arr))
+        if s > 0:
+            arr = arr / s
+
+    return arr.astype(np.float32)
+
+
+def _generate_tta_variants(img_rgb: np.ndarray, num_passes: int = 5) -> List[np.ndarray]:
+    """
+    Generates deterministic, clinically plausible 2D MRI test-time augmentations.
+    
+    Pass 0: Original input image.
+    Pass 1: Horizontal reflection (sagittal/axial symmetry).
+    Pass 2: Subtle clockwise rotation (+5 degrees).
+    Pass 3: Subtle counter-clockwise rotation (-5 degrees).
+    Pass 4: Subtle isotropic magnification (1.04x zoom).
+    """
+    variants = [img_rgb]
+    if num_passes <= 1:
+        return variants
+
+    h, w = img_rgb.shape[:2]
+
+    # Pass 1: Horizontal flip
+    if len(variants) < num_passes:
+        variants.append(cv2.flip(img_rgb, 1))
+
+    # Pass 2: Mild +5 deg rotation
+    if len(variants) < num_passes:
+        M_pos = cv2.getRotationMatrix2D((w / 2.0, h / 2.0), 5.0, 1.0)
+        variants.append(cv2.warpAffine(img_rgb, M_pos, (w, h), borderMode=cv2.BORDER_REFLECT_101))
+
+    # Pass 3: Mild -5 deg rotation
+    if len(variants) < num_passes:
+        M_neg = cv2.getRotationMatrix2D((w / 2.0, h / 2.0), -5.0, 1.0)
+        variants.append(cv2.warpAffine(img_rgb, M_neg, (w, h), borderMode=cv2.BORDER_REFLECT_101))
+
+    # Pass 4: Mild zoom (1.04x)
+    if len(variants) < num_passes:
+        zoom_factor = 1.04
+        zh, zw = int(h * zoom_factor), int(w * zoom_factor)
+        iz = cv2.resize(img_rgb, (zw, zh))
+        sh, sw = (zh - h) // 2, (zw - w) // 2
+        variants.append(iz[sh:sh + h, sw:sw + w])
+
+    return variants[:num_passes]
+
+
+def _predict_single_model(
+    model_obj: Any,
+    img_cropped: np.ndarray,
+    target_size: Tuple[int, int],
+    model_name: str,
+    use_tta: bool = False,
+    tta_passes: int = 5
+) -> Optional[np.ndarray]:
+    """
+    Runs model inference for a single backbone with shape adaptation,
+    optional multi-pass TTA, and strict output validation.
+    """
+    if model_obj is None:
+        return None
+
+    try:
+        mw, mh = target_size
+        try:
+            s = model_obj.input_shape
+            if isinstance(s, list):
+                s = s[0]
+            if len(s) >= 3 and s[1] is not None and s[2] is not None:
+                mh, mw = int(s[1]), int(s[2])
+        except Exception:
+            pass
+
+        if not use_tta:
+            resized = cv2.resize(img_cropped, (mw, mh))
+            inp = np.expand_dims(resized, axis=0).astype(np.float32) / 255.0
+            raw_pred = model_obj.predict(inp, verbose=0)
+            if isinstance(raw_pred, list):
+                raw_pred = raw_pred[0]
+            if hasattr(raw_pred, "numpy"):
+                raw_pred = raw_pred.numpy()
+            return _validate_model_output(raw_pred[0], model_name)
+
+        # Multi-Pass TTA
+        variants = _generate_tta_variants(img_cropped, num_passes=tta_passes)
+        pass_preds = []
+        for var in variants:
+            resized = cv2.resize(var, (mw, mh))
+            inp = np.expand_dims(resized, axis=0).astype(np.float32) / 255.0
+            raw = model_obj.predict(inp, verbose=0)
+            if isinstance(raw, list):
+                raw = raw[0]
+            if hasattr(raw, "numpy"):
+                raw = raw.numpy()
+            v = _validate_model_output(raw[0], model_name)
+            if v is not None:
+                pass_preds.append(v)
+
+        if not pass_preds:
+            logger.error(f"All TTA passes failed validation for {model_name}.")
+            return None
+
+        # Mean of valid TTA passes
+        mean_pred = np.mean(pass_preds, axis=0).astype(np.float32)
+        s = float(np.sum(mean_pred))
+        if s > 0:
+            mean_pred = mean_pred / s
+        return mean_pred
+
+    except Exception as e:
+        logger.error(f"Prediction execution failed for {model_name}: {e}", exc_info=True)
+        return None
+
+
+def predict_tumor_logic(
+    img: Optional[np.ndarray],
+    analysis_id: Optional[str] = None,
+    use_tta: bool = False,
+    tta_passes: int = 5
+) -> Dict[str, Any]:
     """
     Inference handler: classification, heatmap generation,
     segmentation, and metadata analysis.
     """
-    if img is None:
-        return {"is_valid": False, "error": "Please upload an MRI image first."}
+    import uuid
+    from datetime import datetime, timezone
 
+    analysis_id = analysis_id or f"ANL-{uuid.uuid4().hex[:10].upper()}"
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    def _fail_response(error_msg: str, code: str, extra: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        resp = {
+            "is_valid": False,
+            "status": "FAILED",
+            "error": error_msg,
+            "code": code,
+            "error_code": code,
+            "pipeline_version": PIPELINE_VERSION,
+            "analysis_id": analysis_id,
+            "timestamp": timestamp,
+        }
+        if extra:
+            resp.update(extra)
+        return resp
+
+    # 1. Input presence and type validation
+    if img is None:
+        logger.warning(f"Inference rejected: analysis_id={analysis_id} reason='Empty image input'")
+        return _fail_response("Please upload an MRI image first.", "INVALID_INPUT")
+
+    if not isinstance(img, np.ndarray):
+        logger.warning(f"Inference rejected: analysis_id={analysis_id} reason='Invalid input type {type(img)}'")
+        return _fail_response(f"Invalid image input type {type(img).__name__}. Expected numpy.ndarray.", "INVALID_INPUT")
+
+    if img.size == 0:
+        logger.warning(f"Inference rejected: analysis_id={analysis_id} reason='Image array has 0 pixels'")
+        return _fail_response("Image array is empty (0 pixels).", "INVALID_INPUT")
+
+    # 2. Non-finite values (NaN / Inf) check
+    if not np.all(np.isfinite(img)):
+        logger.warning(f"Inference rejected: analysis_id={analysis_id} reason='Non-finite pixel values (NaN/Inf)'")
+        return _fail_response("Image contains non-finite pixel values (NaN or Inf). Cannot safely perform clinical inference.", "INVALID_INPUT")
+
+    # 3. Dimension and channel checks
+    if img.ndim < 2 or img.ndim > 3:
+        logger.warning(f"Inference rejected: analysis_id={analysis_id} reason='Invalid array ndim {img.ndim}'")
+        return _fail_response(f"Invalid image array dimension: {img.shape}. Expected 2D (H, W) or 3D (H, W, C).", "INVALID_INPUT")
+
+    if img.ndim == 3 and img.shape[2] not in (1, 3, 4):
+        logger.warning(f"Inference rejected: analysis_id={analysis_id} reason='Invalid channel count {img.shape[2]}'")
+        return _fail_response(f"Unsupported channel count {img.shape[2]}. Expected 1 (grayscale), 3 (RGB), or 4 (RGBA).", "INVALID_INPUT")
+
+    h, w = img.shape[:2]
+    if h < 10 or w < 10:
+        logger.warning(f"Inference rejected: analysis_id={analysis_id} reason='Dimensions too small ({w}x{h})'")
+        return _fail_response(f"Image dimensions ({w}x{h}) are too small for clinical inference (minimum 10x10).", "INVALID_INPUT")
+
+    if h > 5000 or w > 5000:
+        logger.warning(f"Inference rejected: analysis_id={analysis_id} reason='Dimensions too large ({w}x{h})'")
+        return _fail_response(f"Image dimensions ({w}x{h}) exceed maximum allowable size (5000x5000).", "INVALID_INPUT")
+
+    # 4. Check model availability
+    if not is_ensemble_ready():
+        status = get_model_status()
+        missing = [m for m, active in status.items() if not active]
+        msg = f"Inference unavailable: Ensemble requires all 3 models, but missing or inactive: {', '.join(missing)}."
+        logger.error(f"Inference rejected: analysis_id={analysis_id} reason='{msg}'")
+        return _fail_response(msg, "MODELS_UNAVAILABLE", {"models_active": status})
+
+    logger.info(f"Inference started: analysis_id={analysis_id} tta_enabled={use_tta}")
     start_time = time.time()
 
     try:
-        if img.dtype != np.uint8:
-            img = np.uint8(np.clip(img, 0, 255))
+        # Standardize pixel values to uint8 [0, 255]
+        if img.dtype in (np.float32, np.float64):
+            if img.max() <= 1.0 and img.min() >= 0.0:
+                img_u8 = (img * 255.0).astype(np.uint8)
+            else:
+                img_u8 = np.clip(img, 0, 255).astype(np.uint8)
+        elif img.dtype != np.uint8:
+            img_u8 = np.clip(img, 0, 255).astype(np.uint8)
+        else:
+            img_u8 = img.copy()
 
-        img_cropped = extract_brain_region(img)
+        # Standardize color channels to 3-channel RGB uint8
+        if img_u8.ndim == 2:
+            img_rgb = np.stack([img_u8, img_u8, img_u8], axis=-1)
+        elif img_u8.ndim == 3 and img_u8.shape[2] == 1:
+            img_rgb = np.concatenate([img_u8, img_u8, img_u8], axis=-1)
+        elif img_u8.ndim == 3 and img_u8.shape[2] == 4:
+            img_rgb = img_u8[:, :, :3]
+        else:
+            img_rgb = img_u8
 
-        # 1. 224x224 for ConvNeXtSmall and DenseNet121
+        img_cropped = extract_brain_region(img_rgb)
+        if img_cropped.ndim == 2:
+            img_cropped = np.stack([img_cropped, img_cropped, img_cropped], axis=-1)
+        elif img_cropped.ndim == 3 and img_cropped.shape[2] == 1:
+            img_cropped = np.concatenate([img_cropped, img_cropped, img_cropped], axis=-1)
+        elif img_cropped.ndim == 3 and img_cropped.shape[2] == 4:
+            img_cropped = img_cropped[:, :, :3]
+
+        # 224x224 input tensor for Grad-CAM
         img_224 = cv2.resize(img_cropped, IMG_SIZE_CLASSIFY)
         img_224_array = np.expand_dims(img_224, axis=0).astype(np.float32) / 255.0
-
-        # 2. 299x299 for InceptionV3
-        img_299 = cv2.resize(img_cropped, IMG_SIZE_INCEPTION)
-        img_299_array = np.expand_dims(img_299, axis=0).astype(np.float32) / 255.0
 
         pred_dict = {}
         weighted_sum = np.zeros(len(CLASSES), dtype=np.float32)
         total_weight = 0.0
 
-        def _get_input_for(model_obj, default_array):
-            """Dynamically determines the tensor shape expected by the model layer."""
-            try:
-                s = model_obj.input_shape
-                if isinstance(s, list):
-                    s = s[0]
-                mh, mw = int(s[1]), int(s[2])
-                if (mh, mw) == (224, 224):
-                    return img_224_array
-                elif (mh, mw) == (299, 299):
-                    return img_299_array
-                else:
-                    custom = cv2.resize(img_cropped, (mw, mh))
-                    return np.expand_dims(custom, axis=0).astype(np.float32) / 255.0
-            except Exception:
-                return default_array
-
-        # ConvNeXtSmall
+        # ConvNeXtSmall (45% vote)
         if model_convnext is not None:
-            inp_cnx = _get_input_for(model_convnext, img_224_array)
-            pred_cnx = model_convnext.predict(inp_cnx, verbose=0)[0]
-            pred_dict["ConvNeXtSmall"] = pred_cnx
-            weighted_sum += pred_cnx * CONVNEXT_VOTE_WEIGHT
-            total_weight += CONVNEXT_VOTE_WEIGHT
+            pred_cnx = _predict_single_model(
+                model_convnext, img_cropped, IMG_SIZE_CLASSIFY, "ConvNeXtSmall", use_tta, tta_passes
+            )
+            if pred_cnx is not None:
+                pred_dict["ConvNeXtSmall"] = pred_cnx
+                weighted_sum += pred_cnx * CONVNEXT_VOTE_WEIGHT
+                total_weight += CONVNEXT_VOTE_WEIGHT
 
-        # InceptionV3
+        # InceptionV3 (35% vote)
         if model_inc is not None:
-            inp_inc = _get_input_for(model_inc, img_299_array)
-            pred_inc = model_inc.predict(inp_inc, verbose=0)[0]
-            pred_dict["InceptionV3"] = pred_inc
-            weighted_sum += pred_inc * INCEPTION_VOTE_WEIGHT
-            total_weight += INCEPTION_VOTE_WEIGHT
+            pred_inc = _predict_single_model(
+                model_inc, img_cropped, IMG_SIZE_INCEPTION, "InceptionV3", use_tta, tta_passes
+            )
+            if pred_inc is not None:
+                pred_dict["InceptionV3"] = pred_inc
+                weighted_sum += pred_inc * INCEPTION_VOTE_WEIGHT
+                total_weight += INCEPTION_VOTE_WEIGHT
 
-        # DenseNet121
+        # DenseNet121 (20% vote)
         if model_dense is not None:
-            inp_dense = _get_input_for(model_dense, img_224_array)
-            pred_dense = model_dense.predict(inp_dense, verbose=0)[0]
-            pred_dict["DenseNet121"] = pred_dense
-            weighted_sum += pred_dense * DENSENET_VOTE_WEIGHT
-            total_weight += DENSENET_VOTE_WEIGHT
+            pred_dense = _predict_single_model(
+                model_dense, img_cropped, IMG_SIZE_CLASSIFY, "DenseNet121", use_tta, tta_passes
+            )
+            if pred_dense is not None:
+                pred_dict["DenseNet121"] = pred_dense
+                weighted_sum += pred_dense * DENSENET_VOTE_WEIGHT
+                total_weight += DENSENET_VOTE_WEIGHT
 
-        # Fallback handling
-        if total_weight == 0:
-            mock_probs = np.array([0.05, 0.85, 0.07, 0.03], dtype=np.float32)
-            avg_pred = mock_probs
-            pred_dict = {
-                "ConvNeXtSmall": mock_probs,
-                "InceptionV3": np.array([0.08, 0.80, 0.09, 0.03], dtype=np.float32),
-                "DenseNet121": np.array([0.06, 0.83, 0.08, 0.03], dtype=np.float32)
-            }
-        else:
-            avg_pred = weighted_sum / total_weight
+        # Strict ensemble policy: all 3 models must successfully participate
+        if len(pred_dict) == 0:
+            msg = "An internal error occurred during model inference."
+            logger.error(f"Inference rejected: analysis_id={analysis_id} reason='All models failed during execution.'")
+            return _fail_response(msg, "INFERENCE_ERROR")
+        elif len(pred_dict) < 3 or total_weight == 0.0:
+            missing = [m for m in ("ConvNeXtSmall", "InceptionV3", "DenseNet121") if m not in pred_dict]
+            msg = f"Ensemble inference failed: incomplete or invalid model predictions. Missing or failed: {', '.join(missing)}."
+            logger.error(f"Inference rejected: analysis_id={analysis_id} reason='{msg}'")
+            return _fail_response(msg, "INCOMPLETE_ENSEMBLE", {"valid_models": list(pred_dict.keys())})
+
+        avg_pred = weighted_sum / total_weight
+        # Re-normalize to guarantee exact sum to 1.0 without precision drift
+        avg_pred = np.clip(avg_pred, 0.0, 1.0)
+        s_sum = float(np.sum(avg_pred))
+        if s_sum > 0:
+            avg_pred = avg_pred / s_sum
 
         class_idx = int(np.argmax(avg_pred))
         class_name = CLASSES[class_idx]
@@ -512,6 +920,7 @@ def predict_tumor_logic(img: Optional[np.ndarray]) -> Dict[str, Any]:
             heatmap_raw, brain_mask = make_gradcam_heatmap(
                 img_224_array,
                 original_img=img_cropped,
+                pred_index=class_idx,
                 use_pp=False
             )
             gradcam_overlay = _build_overlay(
@@ -524,6 +933,7 @@ def predict_tumor_logic(img: Optional[np.ndarray]) -> Dict[str, Any]:
             heatmap_pp_raw, _ = make_gradcam_heatmap(
                 img_224_array,
                 original_img=img_cropped,
+                pred_index=class_idx,
                 use_pp=True
             )
             gradcam_pp_overlay = _build_overlay(
@@ -537,21 +947,36 @@ def predict_tumor_logic(img: Optional[np.ndarray]) -> Dict[str, Any]:
                     heatmap_raw, img_cropped, brain_mask
                 )
                 location = estimate_location(heatmap_raw, img_cropped.shape)
+            else:
+                location = "No Tumor Detected"
 
         except Exception as ex:
-            logger.error(f"Failed to generate visualization overlays: {ex}", exc_info=True)
+            logger.warning(f"Explainability generation partial failure: analysis_id={analysis_id} error={ex}")
 
         severity, severity_color = estimate_severity(confidence, tumor_percentage)
+        logger.info(
+            f"Inference completed: analysis_id={analysis_id} class='{class_name}' "
+            f"confidence={confidence:.2f}% is_tumor={is_tumor} tta={use_tta} duration={inference_time:.4f}s"
+        )
 
         return {
             "is_valid": True,
+            "status": "COMPLETED",
+            "pipeline_version": PIPELINE_VERSION,
+            "provenance": get_model_provenance(),
+            "analysis_id": analysis_id,
+            "timestamp": timestamp,
+            "tta_enabled": use_tta,
+            "tta_passes": tta_passes if use_tta else 1,
             "img": img_cropped,
             "segmentation_img": segmentation_img,
             "gradcam_overlay": gradcam_overlay,
             "gradcam_pp_overlay": gradcam_pp_overlay,
             "class_name": class_name,
             "confidence": confidence,
+            "confidence_metric": "Ensemble Softmax Probability (Uncalibrated)",
             "uncertainty": uncertainty,
+            "uncertainty_metric": "Normalized Shannon Entropy of Softmax Distribution",
             "is_tumor": is_tumor,
             "inference_time": inference_time,
             "tumor_percentage": tumor_percentage,
@@ -565,5 +990,5 @@ def predict_tumor_logic(img: Optional[np.ndarray]) -> Dict[str, Any]:
         }
 
     except Exception as e:
-        logger.error(f"Inference error in prediction pipeline: {e}", exc_info=True)
-        return {"is_valid": False, "error": f"An internal server error occurred: {e}"}
+        logger.error(f"Inference pipeline failure: analysis_id={analysis_id} error={e}", exc_info=True)
+        return _fail_response("An internal error occurred during model inference.", "INFERENCE_ERROR")

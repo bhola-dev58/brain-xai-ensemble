@@ -17,7 +17,7 @@ import cv2
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.inference import predict_tumor_logic
+from src.inference import predict_tumor_logic, is_ensemble_ready
 
 
 # ------------------------------------------------------------------ #
@@ -42,6 +42,8 @@ def real_mri_scan():
 @pytest.fixture(scope="module")
 def prediction_result(real_mri_scan):
     """Runs inference once and caches result for all tests in this module."""
+    if not is_ensemble_ready():
+        pytest.skip("Tri-Ensemble model weights not available in models/ — skipping live weight inference tests.")
     return predict_tumor_logic(real_mri_scan)
 
 
@@ -115,6 +117,8 @@ class TestEdgeCases:
 
     def test_float_image_is_normalized(self):
         """Passing a float image should be safely clipped and cast to uint8."""
+        if not is_ensemble_ready():
+            pytest.skip("Tri-Ensemble model weights not available in models/ — skipping live weight inference tests.")
         float_img = np.random.uniform(0, 1, (224, 224, 3)).astype(np.float32) * 255
         result = predict_tumor_logic(float_img)
         assert result["is_valid"] is True
