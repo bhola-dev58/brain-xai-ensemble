@@ -28,6 +28,7 @@ f.txt
 *.env
 .env
 *.txt
+!requirements.txt
 
 # Zip archives (large, not needed at runtime)
 *.zip
