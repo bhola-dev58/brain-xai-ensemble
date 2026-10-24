@@ -26,9 +26,17 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ ./src/
 COPY static/ ./static/
 COPY scripts/ ./scripts/
-COPY models/ ./models/
 COPY test_images/ ./test_images/
 COPY app.py .
+
+# Ensure runtime directories exist
+RUN mkdir -p models data reports
+
+# Copy models if present in the build context (e.g. local builds)
+COPY [m]odels* ./models/
+
+# Initialize baseline models if directory is empty (ensures cloud builds without git models succeed)
+RUN python scripts/init_models.py
 
 # Expose default HTTP port (8000 for FastAPI + PACS workstation; supports cloud $PORT overrides)
 EXPOSE 8000
