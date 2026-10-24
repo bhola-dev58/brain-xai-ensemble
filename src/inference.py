@@ -261,6 +261,17 @@ def make_gradcam_heatmap(
         fallback = _apply_brain_gate(fallback, brain_mask)
         return fallback, brain_mask
 
+    try:
+        g_shape = grad_model.input_shape
+        if isinstance(g_shape, list):
+            g_shape = g_shape[0]
+        gh, gw = int(g_shape[1]), int(g_shape[2])
+        if img_array.shape[1:3] != (gh, gw):
+            resized = cv2.resize(original_img, (gw, gh))
+            img_array = np.expand_dims(resized, axis=0).astype(np.float32) / 255.0
+    except Exception:
+        pass
+
     img_tensor = tf.constant(img_array, dtype=tf.float32)
 
     with tf.GradientTape(persistent=True) as tape:
@@ -429,23 +440,43 @@ def predict_tumor_logic(img: Optional[np.ndarray]) -> Dict[str, Any]:
         weighted_sum = np.zeros(len(CLASSES), dtype=np.float32)
         total_weight = 0.0
 
-        # ConvNeXtSmall (45% Weight)
+        def _get_input_for(model_obj, default_array):
+            """Dynamically determines the tensor shape expected by the model layer."""
+            try:
+                s = model_obj.input_shape
+                if isinstance(s, list):
+                    s = s[0]
+                mh, mw = int(s[1]), int(s[2])
+                if (mh, mw) == (224, 224):
+                    return img_224_array
+                elif (mh, mw) == (299, 299):
+                    return img_299_array
+                else:
+                    custom = cv2.resize(img_cropped, (mw, mh))
+                    return np.expand_dims(custom, axis=0).astype(np.float32) / 255.0
+            except Exception:
+                return default_array
+
+        # ConvNeXtSmall
         if model_convnext is not None:
-            pred_cnx = model_convnext.predict(img_224_array, verbose=0)[0]
+            inp_cnx = _get_input_for(model_convnext, img_224_array)
+            pred_cnx = model_convnext.predict(inp_cnx, verbose=0)[0]
             pred_dict["ConvNeXtSmall"] = pred_cnx
             weighted_sum += pred_cnx * CONVNEXT_VOTE_WEIGHT
             total_weight += CONVNEXT_VOTE_WEIGHT
 
-        # InceptionV3 (35% Weight)
+        # InceptionV3
         if model_inc is not None:
-            pred_inc = model_inc.predict(img_299_array, verbose=0)[0]
+            inp_inc = _get_input_for(model_inc, img_299_array)
+            pred_inc = model_inc.predict(inp_inc, verbose=0)[0]
             pred_dict["InceptionV3"] = pred_inc
             weighted_sum += pred_inc * INCEPTION_VOTE_WEIGHT
             total_weight += INCEPTION_VOTE_WEIGHT
 
-        # DenseNet121 (20% Weight)
+        # DenseNet121
         if model_dense is not None:
-            pred_dense = model_dense.predict(img_224_array, verbose=0)[0]
+            inp_dense = _get_input_for(model_dense, img_224_array)
+            pred_dense = model_dense.predict(inp_dense, verbose=0)[0]
             pred_dict["DenseNet121"] = pred_dense
             weighted_sum += pred_dense * DENSENET_VOTE_WEIGHT
             total_weight += DENSENET_VOTE_WEIGHT
