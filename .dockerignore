@@ -33,25 +33,11 @@ f.txt
 # Zip archives (large, not needed at runtime)
 *.zip
 
-# Imported chat history / IDE artifacts
-1bc5afd1-2f93-413f-b95d-1546b40842d6/
-*.jsonl
-
-# Training reference directories (not needed at runtime)
-"full code i used for training data module to get this"/
-"training code"/
+# College research references & archives (not needed in container)
+college_references/
+archives/
 datasets/
-
-# Research and reference documents
-"Base paper"/
-"IEEE pattern of research paper"/
-"already collected info"/
-
-# Temporary / session files
-PREVIOUS_CHAT_SUMMARY.md
-PROJECT_RULES.md
-brain_tumor_xai_paper.tex
-copy_images.py
+"training code"/
 
 # Test artifacts
 tests/

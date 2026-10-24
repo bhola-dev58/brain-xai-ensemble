@@ -27,17 +27,14 @@ test_images.zip
 *.zip
 
 
-# Research PDF reference directories (large binaries)
-Base paper/
-IEEE pattern of research paper/
-already collected info/
-research paper bases for the model conNext /
-paper made  before ConvNeXtSmall /
+# College research references & archives (local-only materials)
+college_references/
+archives/
 report_details/
 *.pdf
 
 # Generated Runtime Files & Reports
-reports
+reports/
 *.log
 
 # IDE, Editor & Agent Configuration
@@ -46,22 +43,10 @@ reports
 .vscode/
 .idea/
 .pytest_cache/
-1bc5afd1-2f93-413f-b95d-1546b40842d6/
-
-# Training reference directories & local-only docs
-full code i used for training data module to get this/
-BrainTumor_98pct_Ensemble_Training.ipynb
-PREVIOUS_CHAT_SUMMARY.md
-PROJECT_RULES.md
-brain_tumor_xai_paper.tex
-copy_images.py
 
 # OS-generated files
 .DS_Store
 Thumbs.db
-
-FAER/
-FULL INFORMATION OF THIS PROJECT.txt
 
 
 

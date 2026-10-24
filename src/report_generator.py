@@ -54,8 +54,8 @@ def generate_pdf_report(
 
 
 def _save_temp_image(np_img: np.ndarray, filename: str) -> str:
-    """Saves a temporary PNG image for PDF inclusion."""
-    temp_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "temp_report_assets")
+    """Saves a temporary PNG image for PDF inclusion inside reports/temp."""
+    temp_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "reports", "temp")
     os.makedirs(temp_dir, exist_ok=True)
     file_path = os.path.join(temp_dir, filename)
     Image.fromarray(np_img.astype(np.uint8)).save(file_path, format="PNG")
@@ -305,10 +305,17 @@ def _generate_reportlab_pdf(
         ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
         ('TOPPADDING', (0, 0), (-1, -1), 10)
     ]))
-    story.append(sig_table)
-
     doc.build(story)
     logger.info(f"Generated Clinical PDF Report at: {pdf_path}")
+
+    # Clean up temporary snapshot images
+    try:
+        for temp_img in [img_orig_path, img_grad_path, img_seg_path]:
+            if os.path.exists(temp_img):
+                os.remove(temp_img)
+    except Exception:
+        pass
+
     return pdf_path
 
 
