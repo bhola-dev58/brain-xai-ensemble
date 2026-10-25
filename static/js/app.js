@@ -55,8 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarToggleBtn:   document.getElementById('sidebar-toggle-btn'),
     sidebarCollapseBtn: document.getElementById('sidebar-collapse-btn'),
 
-    // Tab Navigation
-    tabBtns:    document.querySelectorAll('.tab-btn'),
+    // Tab Panels
     tabPanels:  document.querySelectorAll('.tab-panel'),
 
     // Patient Bar
@@ -291,30 +290,23 @@ document.addEventListener('DOMContentLoaded', () => {
       tabContent.classList.toggle('is-diagnostics', targetId === 'tab-diagnostics');
     }
 
-    // 1. Update horizontal tab buttons
-    dom.tabBtns.forEach(btn => {
-      const isTarget = btn.dataset.tab === targetId;
-      btn.classList.toggle('active', isTarget);
-      btn.setAttribute('aria-selected', String(isTarget));
-    });
-
-    // 2. Show target tab panel
+    // 1. Show target tab panel
     dom.tabPanels.forEach(panel => {
       panel.classList.toggle('active', panel.id === targetId);
     });
 
-    // 3. Sync vertical nav rail active indicators
+    // 2. Sync vertical nav rail active indicators and aria-selected
     dom.navRailItems.forEach(item => {
       const railTab = item.dataset.railTab;
       if (railTab && railTab !== 'scans') {
-        item.classList.toggle('active', railTab === targetId);
+        const isTarget = railTab === targetId;
+        item.classList.toggle('active', isTarget);
+        if (item.getAttribute('role') === 'tab') {
+          item.setAttribute('aria-selected', String(isTarget));
+        }
       }
     });
   }
-
-  dom.tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-  });
 
   // Vertical Navigation Rail interactions
   dom.navRailItems.forEach(item => {

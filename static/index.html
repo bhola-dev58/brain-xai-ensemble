@@ -152,36 +152,36 @@
     <!-- -------------------------------------------------------
          STUDIO VERTICAL NAV RAIL (Matching Reference)
          ------------------------------------------------------- -->
-    <nav class="nav-rail" aria-label="Studio Primary Navigation">
-      <button class="nav-rail-item active" data-rail-tab="tab-diagnostics" title="Diagnostic Studio Dashboard">
+    <nav class="nav-rail" role="tablist" aria-label="Studio Primary Navigation">
+      <button class="nav-rail-item active" id="nav-rail-diagnostics" data-rail-tab="tab-diagnostics" role="tab" aria-selected="true" aria-controls="tab-diagnostics" title="Diagnostic Studio Dashboard">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
         <strong>Dashboard</strong>
       </button>
 
       <div class="nav-rail-divider" aria-hidden="true"></div>
 
-      <button class="nav-rail-item" data-rail-tab="scans" title="MRI Scans & Viewports">
+      <button class="nav-rail-item" id="nav-rail-scans" data-rail-tab="scans" title="MRI Scans & Viewports">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <strong>Scans</strong>
       </button>
 
       <div class="nav-rail-divider" aria-hidden="true"></div>
 
-      <button class="nav-rail-item" data-rail-tab="tab-report" title="Clinical PDF Reports">
+      <button class="nav-rail-item" id="nav-rail-report" data-rail-tab="tab-report" role="tab" aria-selected="false" aria-controls="tab-report" title="Clinical PDF Reports">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <strong>Reports</strong>
       </button>
 
       <div class="nav-rail-divider" aria-hidden="true"></div>
 
-      <button class="nav-rail-item" data-rail-tab="tab-analytics" title="Tri-Ensemble Analytics">
+      <button class="nav-rail-item" id="nav-rail-analytics" data-rail-tab="tab-analytics" role="tab" aria-selected="false" aria-controls="tab-analytics" title="Tri-Ensemble Analytics">
         <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <strong>Analytics</strong>
       </button>
 
       <div class="nav-rail-divider" aria-hidden="true"></div>
 
-      <button class="nav-rail-item" data-rail-tab="tab-history" title="Patient Case History">
+      <button class="nav-rail-item" id="nav-rail-history" data-rail-tab="tab-history" role="tab" aria-selected="false" aria-controls="tab-history" title="Patient Case History">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         <strong>Patients</strong>
       </button>
@@ -386,26 +386,6 @@
          ------------------------------------------------------- -->
     <div class="workstation-main" id="workstation-main">
 
-      <!-- Horizontal Tab Navigation (Matching Reference) -->
-      <nav class="tab-nav" role="tablist" aria-label="Workstation views">
-        <button class="tab-btn active" data-tab="tab-diagnostics" role="tab" id="tabctrl-diagnostics" aria-selected="true" aria-controls="tab-diagnostics">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-          Clinical Diagnostics &amp; XAI
-        </button>
-        <button class="tab-btn" data-tab="tab-analytics" role="tab" id="tabctrl-analytics" aria-selected="false" aria-controls="tab-analytics">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          Tri-Ensemble Analytics
-        </button>
-        <button class="tab-btn" data-tab="tab-report" role="tab" id="tabctrl-report" aria-selected="false" aria-controls="tab-report">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          Clinical Report Export (PDF)
-        </button>
-        <button class="tab-btn" data-tab="tab-history" role="tab" id="tabctrl-history" aria-selected="false" aria-controls="tab-history">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Architecture &amp; Citations
-        </button>
-      </nav>
-
       <!-- Tab Content Area -->
       <main class="tab-content is-diagnostics" role="main">
 
@@ -416,7 +396,7 @@
           id="tab-diagnostics"
           class="tab-panel active"
           role="tabpanel"
-          aria-labelledby="tabctrl-diagnostics"
+          aria-labelledby="nav-rail-diagnostics"
         >
 
 
@@ -744,7 +724,7 @@
           id="tab-analytics"
           class="tab-panel"
           role="tabpanel"
-          aria-labelledby="tabctrl-analytics"
+          aria-labelledby="nav-rail-analytics"
         >
           <div class="analytics-grid">
 
@@ -844,7 +824,7 @@
           id="tab-report"
           class="tab-panel"
           role="tabpanel"
-          aria-labelledby="tabctrl-report"
+          aria-labelledby="nav-rail-report"
         >
           <div class="panel" role="region" aria-label="PDF Clinical Report Generator">
             <div class="panel-header">
@@ -900,7 +880,7 @@
           id="tab-history"
           class="tab-panel"
           role="tabpanel"
-          aria-labelledby="tabctrl-history"
+          aria-labelledby="nav-rail-history"
         >
           <div class="panel" role="region" aria-label="Recent patient history">
             <div class="panel-header">
