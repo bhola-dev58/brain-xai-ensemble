@@ -12,26 +12,25 @@ from src.config import (
     logger
 )
 
-def extract_brain_region(img: np.ndarray) -> np.ndarray:
+def extract_brain_region_bounds(img: np.ndarray) -> Tuple[np.ndarray, Tuple[int, int, int, int]]:
     """
     Extracts the primary brain bounding region by cropping out dark background padding.
-    If cropping is invalid or too small, returns original image.
+    If cropping is invalid or too small, returns original image and full image bounds.
 
     Args:
         img: Input image array (uint8).
 
     Returns:
-        Cropped numpy array containing the focused brain region, or original image.
+        Tuple containing:
+            - Cropped numpy array containing the focused brain region, or original image.
+            - Bounding box coordinates (x1, y1, x2, y2).
     """
     if img is None or not isinstance(img, np.ndarray) or img.size == 0 or img.ndim < 2:
-        return img
-    if not np.all(np.isfinite(img)):
-        return img
+        return img, (0, 0, 0, 0)
+    h, w = img.shape[:2]
+    if not np.all(np.isfinite(img)) or h < 10 or w < 10:
+        return img, (0, 0, w, h)
     try:
-        h, w = img.shape[:2]
-        if h < 10 or w < 10:
-            return img
-
         if len(img.shape) == 3:
             if img.shape[2] == 1:
                 gray = img.squeeze(-1)
@@ -40,7 +39,7 @@ def extract_brain_region(img: np.ndarray) -> np.ndarray:
             elif img.shape[2] == 3:
                 gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
             else:
-                return img
+                return img, (0, 0, w, h)
         else:
             gray = img.copy()
 
@@ -51,7 +50,7 @@ def extract_brain_region(img: np.ndarray) -> np.ndarray:
         _, thresh = cv2.threshold(gray, 15, 255, cv2.THRESH_BINARY)
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         if not contours:
-            return img
+            return img, (0, 0, w, h)
 
         largest_contour = max(contours, key=cv2.contourArea)
         x, y, bw, bh = cv2.boundingRect(largest_contour)
@@ -64,11 +63,26 @@ def extract_brain_region(img: np.ndarray) -> np.ndarray:
             y1 = max(0, y - pad_y)
             x2 = min(w, x + bw + pad_x)
             y2 = min(h, y + bh + pad_y)
-            return img[y1:y2, x1:x2]
-        return img
+            return img[y1:y2, x1:x2], (x1, y1, x2, y2)
+        return img, (0, 0, w, h)
     except Exception as e:
         logger.error(f"Error during brain region extraction: {e}")
-        return img
+        return img, (0, 0, w, h)
+
+
+def extract_brain_region(img: np.ndarray) -> np.ndarray:
+    """
+    Extracts the primary brain bounding region by cropping out dark background padding.
+    If cropping is invalid or too small, returns original image.
+
+    Args:
+        img: Input image array (uint8).
+
+    Returns:
+        Cropped numpy array containing the focused brain region, or original image.
+    """
+    cropped, _ = extract_brain_region_bounds(img)
+    return cropped
 
 
 def create_segmentation(

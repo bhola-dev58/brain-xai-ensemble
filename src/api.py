@@ -375,6 +375,9 @@ async def predict(
     hm_pp_raw = result.get("heatmap_pp_raw")
     hm_pp_raw_b64 = _ndarray_to_base64(np.uint8(np.clip(hm_pp_raw, 0, 1) * 255)) if hm_pp_raw is not None else None
 
+    tumor_mask = result.get("tumor_mask")
+    tumor_mask_b64 = _ndarray_to_base64(tumor_mask) if tumor_mask is not None else None
+
     img_cropped_b64 = _ndarray_to_base64(result.get("img")) if result.get("img") is not None else None
 
     pred_breakdown = {}
@@ -413,6 +416,7 @@ async def predict(
             "gradcam_overlay_b64": gradcam_b64,
             "gradcam_pp_overlay_b64": gradcam_pp_b64,
             "segmentation_b64": seg_b64,
+            "tumor_mask_b64": tumor_mask_b64,
             "heatmap_raw_b64": hm_raw_b64,
             "heatmap_pp_raw_b64": hm_pp_raw_b64,
             "img_cropped_b64": img_cropped_b64,

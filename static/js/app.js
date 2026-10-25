@@ -479,6 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cachedBaseImg = null;
     cachedHmImg = null;
     cachedHmPPImg = null;
+    cachedMaskImg = null;
     updateColormapBadges(state.selectedColormap || 'jet');
 
     // Reset verdict and gauge
@@ -641,6 +642,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     updateColormapBadges(state.selectedColormap);
 
+    if (data.img_cropped_b64) {
+      const scanSrc = `data:image/png;base64,${data.img_cropped_b64}`;
+      if (dom.imgRaw) dom.imgRaw.src = scanSrc;
+      [dom.imgUnderlayGradcam, dom.imgUnderlayGradcamPP, dom.imgUnderlaySeg].forEach(img => {
+        if (img) {
+          img.src = scanSrc;
+          img.classList.remove('hidden');
+        }
+      });
+    }
+
     renderHeatmaps(data);
     renderVerdict(data);
     renderConfidenceGauge(data);
@@ -648,15 +660,14 @@ document.addEventListener('DOMContentLoaded', () => {
     renderProbabilities(data);
     appendHistoryRow(data);
 
-    if (data.img_cropped_b64 && data.heatmap_raw_b64) {
+    if (data.heatmap_raw_b64) {
       loadCachedHeatmapImages(
         data.img_cropped_b64,
         data.heatmap_raw_b64,
         data.heatmap_pp_raw_b64,
+        data.tumor_mask_b64,
         () => {
-          if (state.selectedColormap !== 'jet' || state.saliencyCutoff !== 30) {
-            recolorSaliencyOverlays();
-          }
+          recolorSaliencyOverlays();
         }
       );
     }
@@ -949,8 +960,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let cachedBaseImg = null;
   let cachedHmImg = null;
   let cachedHmPPImg = null;
+  let cachedMaskImg = null;
 
-  function loadCachedHeatmapImages(baseB64, hmB64, hmPPB64, onLoaded) {
+  function loadCachedHeatmapImages(baseB64, hmB64, hmPPB64, maskB64, onLoaded) {
     let pending = 0;
     const checkDone = () => {
       pending--;
@@ -978,6 +990,16 @@ document.addEventListener('DOMContentLoaded', () => {
       cachedHmPPImg.onerror = checkDone;
       cachedHmPPImg.src = `data:image/png;base64,${hmPPB64}`;
     }
+    if (maskB64) {
+      pending++;
+      cachedMaskImg = new Image();
+      cachedMaskImg.onload = checkDone;
+      cachedMaskImg.onerror = checkDone;
+      cachedMaskImg.src = `data:image/png;base64,${maskB64}`;
+    }
+    if (pending === 0 && onLoaded) {
+      onLoaded();
+    }
   }
 
   function updateColormapBadges(colormapName) {
@@ -986,19 +1008,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dom.tagGatingC) dom.tagGatingC.textContent = `Multi-Focal (${cmLabel})`;
   }
 
-  function blendHeatmapToCanvas(baseImg, hmImg, lut, threshold, targetElement) {
-    if (!baseImg || !hmImg || !targetElement) return;
-    const w = baseImg.naturalWidth || baseImg.width || 224;
-    const h = baseImg.naturalHeight || baseImg.height || 224;
+  function blendHeatmapToCanvas(hmImg, lut, threshold, targetElement) {
+    if (!hmImg || !targetElement) return;
+    const w = hmImg.naturalWidth || hmImg.width || 224;
+    const h = hmImg.naturalHeight || hmImg.height || 224;
     if (w === 0 || h === 0) return;
-
-    const c = document.createElement('canvas');
-    c.width = w;
-    c.height = h;
-    const ctx = c.getContext('2d');
-    ctx.drawImage(baseImg, 0, 0, w, h);
-    const baseImgData = ctx.getImageData(0, 0, w, h);
-    const basePx = baseImgData.data;
 
     const cHm = document.createElement('canvas');
     cHm.width = w;
@@ -1006,43 +1020,86 @@ document.addEventListener('DOMContentLoaded', () => {
     const ctxHm = cHm.getContext('2d');
     ctxHm.drawImage(hmImg, 0, 0, w, h);
     const hmImgData = ctxHm.getImageData(0, 0, w, h);
-    const hmPx = hmData.data;
+    const hmPx = hmImgData.data;
 
-    const opacityMax = 0.55;
-    const len = basePx.length;
+    const cOut = document.createElement('canvas');
+    cOut.width = w;
+    cOut.height = h;
+    const ctxOut = cOut.getContext('2d');
+    const outImgData = ctxOut.createImageData(w, h);
+    const outPx = outImgData.data;
+
+    const len = hmPx.length;
 
     for (let i = 0; i < len; i += 4) {
       const v = hmPx[i]; // Grayscale activation intensity [0, 255]
       if (v < threshold || v === 0) continue;
 
-      const alpha = (v / 255) * opacityMax;
       const lutIdx = v * 3;
-      const r = lut[lutIdx];
-      const g = lut[lutIdx + 1];
-      const b = lut[lutIdx + 2];
-
-      basePx[i]     = Math.min(255, Math.round(basePx[i]     * (1 - alpha) + r * alpha));
-      basePx[i + 1] = Math.min(255, Math.round(basePx[i + 1] * (1 - alpha) + g * alpha));
-      basePx[i + 2] = Math.min(255, Math.round(basePx[i + 2] * (1 - alpha) + b * alpha));
+      outPx[i]     = lut[lutIdx];
+      outPx[i + 1] = lut[lutIdx + 1];
+      outPx[i + 2] = lut[lutIdx + 2];
+      // Soft alpha blend so underlying anatomy is visible through the overlay
+      outPx[i + 3] = Math.min(235, Math.round(95 + (v / 255) * 140));
     }
 
-    ctx.putImageData(baseImgData, 0, 0);
-    targetElement.src = c.toDataURL('image/png');
+    ctxOut.putImageData(outImgData, 0, 0);
+    targetElement.src = cOut.toDataURL('image/png');
+  }
+
+  function renderSegmentationToCanvas(maskImg, targetElement) {
+    if (!maskImg || !targetElement) return;
+    const w = maskImg.naturalWidth || maskImg.width || 224;
+    const h = maskImg.naturalHeight || maskImg.height || 224;
+    if (w === 0 || h === 0) return;
+
+    const cMask = document.createElement('canvas');
+    cMask.width = w;
+    cMask.height = h;
+    const ctxMask = cMask.getContext('2d');
+    ctxMask.drawImage(maskImg, 0, 0, w, h);
+    const maskImgData = ctxMask.getImageData(0, 0, w, h);
+    const maskPx = maskImgData.data;
+
+    const cOut = document.createElement('canvas');
+    cOut.width = w;
+    cOut.height = h;
+    const ctxOut = cOut.getContext('2d');
+    const outImgData = ctxOut.createImageData(w, h);
+    const outPx = outImgData.data;
+
+    const len = maskPx.length;
+    for (let i = 0; i < len; i += 4) {
+      const v = maskPx[i];
+      if (v < 50) continue;
+
+      // Soft red lesion fill (RGBA: 239, 68, 68, 160)
+      outPx[i]     = 239;
+      outPx[i + 1] = 68;
+      outPx[i + 2] = 68;
+      outPx[i + 3] = 160;
+    }
+
+    ctxOut.putImageData(outImgData, 0, 0);
+    targetElement.src = cOut.toDataURL('image/png');
   }
 
   function recolorSaliencyOverlays() {
-    if (!cachedBaseImg || !cachedHmImg || !state.lastResult) return;
+    if (!state.lastResult) return;
 
     const cm = state.selectedColormap || 'jet';
     const lut = COLORMAP_LUTS[cm] || COLORMAP_LUTS.jet;
     const cutoff = state.saliencyCutoff != null ? state.saliencyCutoff : 30;
     const threshold = Math.round(255 * (1 - (cutoff / 100)));
 
-    if (dom.imgGradcam) {
-      blendHeatmapToCanvas(cachedBaseImg, cachedHmImg, lut, threshold, dom.imgGradcam);
+    if (cachedHmImg && dom.imgGradcam) {
+      blendHeatmapToCanvas(cachedHmImg, lut, threshold, dom.imgGradcam);
     }
     if (cachedHmPPImg && dom.imgGradcamPP) {
-      blendHeatmapToCanvas(cachedBaseImg, cachedHmPPImg, lut, threshold, dom.imgGradcamPP);
+      blendHeatmapToCanvas(cachedHmPPImg, lut, threshold, dom.imgGradcamPP);
+    }
+    if (cachedMaskImg && dom.imgSeg) {
+      renderSegmentationToCanvas(cachedMaskImg, dom.imgSeg);
     }
   }
 

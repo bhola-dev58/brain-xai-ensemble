@@ -33,7 +33,7 @@ from src.config import (
     DENSENET_VOTE_WEIGHT,
     logger
 )
-from src.processor import create_segmentation, estimate_location, estimate_severity, extract_brain_region
+from src.processor import create_segmentation, estimate_location, estimate_severity, extract_brain_region, extract_brain_region_bounds
 
 # Module-level model references
 model_convnext = None
@@ -838,7 +838,7 @@ def predict_tumor_logic(
         else:
             img_rgb = img_u8
 
-        img_cropped = extract_brain_region(img_rgb)
+        img_cropped, (bx1, by1, bx2, by2) = extract_brain_region_bounds(img_rgb)
         if img_cropped.ndim == 2:
             img_cropped = np.stack([img_cropped, img_cropped, img_cropped], axis=-1)
         elif img_cropped.ndim == 3 and img_cropped.shape[2] == 1:
@@ -910,9 +910,13 @@ def predict_tumor_logic(
 
         inference_time = time.time() - start_time
 
-        gradcam_overlay = img_cropped.copy()
-        gradcam_pp_overlay = img_cropped.copy()
-        segmentation_img = img_cropped.copy()
+        h_orig, w_orig = img_rgb.shape[:2]
+        brain_mask_full = _compute_brain_mask(img_rgb)
+
+        gradcam_overlay = img_rgb.copy()
+        gradcam_pp_overlay = img_rgb.copy()
+        segmentation_img = img_rgb.copy()
+        tumor_mask = np.zeros((h_orig, w_orig), dtype=np.uint8)
         tumor_percentage = 0.0
         location = "N/A"
         heatmap_raw = None
@@ -930,41 +934,63 @@ def predict_tumor_logic(
 
         try:
             # ── Standard Grad-CAM ──────────────────────────────────────────────
-            heatmap_raw, brain_mask = make_gradcam_heatmap(
+            heatmap_raw_crop, _ = make_gradcam_heatmap(
                 img_224_array,
                 original_img=img_cropped,
                 pred_index=class_idx,
                 use_pp=False
             )
+            heatmap_raw = np.zeros((h_orig, w_orig), dtype=np.float32)
+            if heatmap_raw_crop is not None and (by2 > by1) and (bx2 > bx1):
+                hm_h, hm_w = by2 - by1, bx2 - bx1
+                if heatmap_raw_crop.shape[:2] != (hm_h, hm_w):
+                    heatmap_raw_crop = cv2.resize(heatmap_raw_crop, (hm_w, hm_h))
+                heatmap_raw[by1:by2, bx1:bx2] = heatmap_raw_crop
+            heatmap_raw = _apply_brain_gate(heatmap_raw, brain_mask_full)
+
             gradcam_overlay = _build_overlay(
-                img_cropped, heatmap_raw,
+                img_rgb, heatmap_raw,
                 colormap=cm_code,
                 opacity=GRADCAM_OVERLAY_OPACITY
             )
 
             # ── Grad-CAM++ (Multi-Focus) ───────────────────────────────────────
-            heatmap_pp_raw, _ = make_gradcam_heatmap(
+            heatmap_pp_raw_crop, _ = make_gradcam_heatmap(
                 img_224_array,
                 original_img=img_cropped,
                 pred_index=class_idx,
                 use_pp=True
             )
+            heatmap_pp_raw = np.zeros((h_orig, w_orig), dtype=np.float32)
+            if heatmap_pp_raw_crop is not None and (by2 > by1) and (bx2 > bx1):
+                hm_h, hm_w = by2 - by1, bx2 - bx1
+                if heatmap_pp_raw_crop.shape[:2] != (hm_h, hm_w):
+                    heatmap_pp_raw_crop = cv2.resize(heatmap_pp_raw_crop, (hm_w, hm_h))
+                heatmap_pp_raw[by1:by2, bx1:bx2] = heatmap_pp_raw_crop
+            heatmap_pp_raw = _apply_brain_gate(heatmap_pp_raw, brain_mask_full)
+
             gradcam_pp_overlay = _build_overlay(
-                img_cropped, heatmap_pp_raw,
+                img_rgb, heatmap_pp_raw,
                 colormap=cm_pp_code,
                 opacity=GRADCAM_OVERLAY_OPACITY
             )
 
             if is_tumor:
-                segmentation_img, _, tumor_percentage = create_segmentation(
-                    heatmap_raw, img_cropped, brain_mask
+                segmentation_img, tumor_mask, tumor_percentage = create_segmentation(
+                    heatmap_raw, img_rgb, brain_mask_full
                 )
-                location = estimate_location(heatmap_raw, img_cropped.shape)
+                location = estimate_location(heatmap_raw, img_rgb.shape)
             else:
+                segmentation_img = img_rgb.copy()
+                tumor_mask = np.zeros((h_orig, w_orig), dtype=np.uint8)
                 location = "No Tumor Detected"
 
         except Exception as ex:
             logger.warning(f"Explainability generation partial failure: analysis_id={analysis_id} error={ex}")
+            gradcam_overlay = img_rgb.copy()
+            gradcam_pp_overlay = img_rgb.copy()
+            segmentation_img = img_rgb.copy()
+            tumor_mask = np.zeros((h_orig, w_orig), dtype=np.uint8)
 
         severity, severity_color = estimate_severity(confidence, tumor_percentage)
         logger.info(
@@ -982,8 +1008,9 @@ def predict_tumor_logic(
             "tta_enabled": use_tta,
             "tta_passes": tta_passes if use_tta else 1,
             "colormap": cm_key,
-            "img": img_cropped,
+            "img": img_rgb,
             "segmentation_img": segmentation_img,
+            "tumor_mask": tumor_mask,
             "gradcam_overlay": gradcam_overlay,
             "gradcam_pp_overlay": gradcam_pp_overlay,
             "heatmap_raw": heatmap_raw,
