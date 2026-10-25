@@ -381,6 +381,13 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.fileInput?.click();
   });
 
+  // Clicking anywhere on the dropzone triggers file picker
+  dom.dropzone?.addEventListener('click', e => {
+    if (e.target !== dom.btnBrowse && e.target !== dom.fileInput) {
+      dom.fileInput?.click();
+    }
+  });
+
   /**
    * Handles selected MRI image file, reads preview, and prepares UI.
    * @param {File} file
