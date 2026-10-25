@@ -1,11 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NeuroScan XAI — Brain MRI Analysis Workstation</title>
+  <title>BrainTumorXAI — Clinical Diagnostic Studio</title>
   <meta name="description" content="Explainable AI brain tumor analysis using a Tri-Ensemble (ConvNeXtSmall, InceptionV3, DenseNet121) with Grad-CAM++ saliency and morphological segmentation.">
   <meta name="robots" content="noindex, nofollow">
+
+  <!-- Instant Theme Script: Prevents theme flash before CSS renders -->
+  <script>
+    (function() {
+      try {
+        const savedTheme = localStorage.getItem('btxai_theme');
+        if (savedTheme) {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
 
   <!-- Fonts & Stylesheet -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,14 +31,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 
-  <!-- Favicon: Brain SVG -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230EA5E9' stroke-width='2'><path d='M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-5.04z'/><path d='M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-5.04z'/></svg>">
+  <!-- Favicon: Warm Amber Brain SVG -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F97316' stroke-width='2'><path d='M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-5.04z'/><path d='M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-5.04z'/></svg>">
 </head>
 
 <body>
 
   <!-- =========================================================
-       APP HEADER — Brand, System Status, Ensemble Telemetry
+       APP HEADER — Clinical Diagnostic Studio Header
        ========================================================= -->
   <header class="app-header" role="banner">
     <div class="header-inner">
@@ -30,8 +48,8 @@
         <button
           class="sidebar-toggle-btn"
           id="sidebar-toggle-btn"
-          aria-label="Toggle PACS settings panel"
-          title="Toggle Settings Panel (Ctrl+B)"
+          aria-label="Toggle PACS controls panel"
+          title="Toggle PACS Controls (Ctrl+B)"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <line x1="3" y1="6" x2="21" y2="6"/>
@@ -40,7 +58,7 @@
           </svg>
         </button>
 
-        <div class="brand-logo" aria-hidden="true">
+        <div class="brand-logo-wrap" aria-hidden="true">
           <svg viewBox="0 0 24 24">
             <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-5.04z"/>
             <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-5.04z"/>
@@ -48,23 +66,78 @@
         </div>
 
         <div class="brand-text">
-          <h1>NeuroScan <span class="brand-accent">XAI</span></h1>
-          <p class="brand-tagline">Brain MRI Analysis Workstation</p>
+          <div class="brand-title-row">
+            <h1>BrainTumor<span class="brand-accent">XAI</span></h1>
+            <span class="brand-accent">Clinical Diagnostic Studio</span>
+          </div>
+          <p class="brand-tagline">Explainable AI Ensemble Diagnostic System (ConvNeXtSmall + InceptionV3 + DenseNet121)</p>
+        </div>
+
+        <!-- Reference Feature Badges -->
+        <div class="header-badges" role="region" aria-label="System Highlights">
+          <span class="header-badge">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polygon points="12 8 8 12 12 16 16 12 12 8"/></svg>
+            SOTA Tri-Ensemble (98.79% Target)
+          </span>
+          <span class="header-badge">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Grad-CAM &amp; Grad-CAM++
+          </span>
+          <span class="header-badge">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            PDF Clinical Reports
+          </span>
         </div>
       </div>
 
-      <!-- Right: Live System Telemetry -->
-      <div class="header-telemetry" role="status" aria-live="polite">
-        <div class="telemetry-chip" id="chip-status">
+      <!-- Right: Controls, Theme Toggle, Profile & Telemetry -->
+      <div class="header-controls">
+
+        <!-- Export Report Button -->
+        <button class="header-action-btn" id="btn-header-export" type="button" title="Export clinical PDF report">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>Export Report</span>
+        </button>
+
+        <!-- Color Theme Toggle Button (Dark / Light) -->
+        <button
+          class="theme-toggle-btn"
+          id="theme-toggle-btn"
+          type="button"
+          aria-label="Switch to light color theme"
+          title="Toggle theme (Light / Dark)"
+        >
+          <span class="theme-icon-wrap" aria-hidden="true">
+            <svg class="icon-sun" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </span>
+          <span class="theme-label" id="theme-label">Dark</span>
+        </button>
+
+        <!-- Authenticated Radiologist Profile Chip -->
+        <div class="user-profile-badge" title="Active Radiologist Session">
+          <div class="user-avatar" aria-hidden="true">BT</div>
+          <div class="user-info">
+            <span class="user-name">Dr. Alex Johnson</span>
+            <span class="user-role">Neuro-Radiologist</span>
+          </div>
+        </div>
+
+        <!-- Telemetry Status Chip -->
+        <div class="telemetry-chip" id="chip-status" role="status" aria-live="polite">
           <span class="status-dot" id="status-dot"></span>
           <span id="status-text">Connecting to engine…</span>
         </div>
-        <div class="telemetry-chip telemetry-ensemble">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
-          <span>Tri-Ensemble: ConvNeXt 45% · Inception 35% · DenseNet 20%</span>
-        </div>
+
       </div>
 
     </div>
@@ -72,15 +145,57 @@
 
 
   <!-- =========================================================
-       WORKSTATION LAYOUT — Left Sidebar + Right Main Stage
+       WORKSTATION LAYOUT — Nav Rail + PACS Sidebar + Main Stage
        ========================================================= -->
   <div class="workstation-layout" id="workstation-layout">
 
+    <!-- -------------------------------------------------------
+         STUDIO VERTICAL NAV RAIL (Matching Reference)
+         ------------------------------------------------------- -->
+    <nav class="nav-rail" aria-label="Studio Primary Navigation">
+      <button class="nav-rail-item active" data-rail-tab="tab-diagnostics" title="Diagnostic Studio Dashboard">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Dashboard</span>
+      </button>
+
+      <button class="nav-rail-item" data-rail-tab="scans" title="MRI Scans & Viewports">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>Scans</span>
+      </button>
+
+      <button class="nav-rail-item" data-rail-tab="tab-report" title="Clinical PDF Reports">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Reports</span>
+      </button>
+
+      <button class="nav-rail-item" data-rail-tab="tab-analytics" title="Tri-Ensemble Analytics">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Analytics</span>
+      </button>
+
+      <button class="nav-rail-item" data-rail-tab="tab-history" title="Patient Case History">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Patients</span>
+      </button>
+
+      <button class="nav-rail-item" id="nav-rail-settings" title="Toggle PACS Controls Panel">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 4.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 .33 1.65 1.65 0 0 0 10 .84V.75a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 1.84a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 6a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Settings</span>
+      </button>
+
+      <div class="nav-rail-spacer"></div>
+
+      <button class="nav-rail-item" id="nav-rail-help" title="Keyboard Shortcuts &amp; Help">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Help</span>
+      </button>
+    </nav>
+
 
     <!-- -------------------------------------------------------
-         PACS SETTINGS SIDEBAR (collapsible)
+         PACS SETTINGS SIDEBAR (Collapsible)
          ------------------------------------------------------- -->
-    <aside class="pacs-sidebar" id="pacs-sidebar" aria-label="PACS Settings">
+    <aside class="pacs-sidebar" id="pacs-sidebar" aria-label="PACS Controls">
 
       <div class="sidebar-header">
         <div class="sidebar-title">
@@ -88,13 +203,13 @@
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 4.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 .33 1.65 1.65 0 0 0 10 .84V.75a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 1.84a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 6a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
-          <span class="sidebar-label">PACS Controls</span>
+          <span>PACS Controls</span>
         </div>
         <button
           class="sidebar-collapse-btn"
           id="sidebar-collapse-btn"
           aria-label="Collapse sidebar"
-          title="Collapse"
+          title="Collapse (Ctrl+B)"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <polyline points="15 18 9 12 15 6"/>
@@ -104,65 +219,60 @@
 
       <div class="sidebar-scroll-area">
 
-        <!-- Section: Radiological Window Presets -->
+        <!-- Radiological Window Presets -->
         <section class="sidebar-section" aria-labelledby="label-presets">
           <div class="section-heading" id="label-presets">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 2a10 10 0 0 1 0 20z"/>
-            </svg>
-            <span class="sidebar-label">Window Presets</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z"/></svg>
+            <span>Window Presets</span>
           </div>
           <div class="preset-grid" role="group" aria-label="Radiological window presets">
             <button class="preset-btn active" data-preset="default" title="Standard CE-MRI">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-              <span class="sidebar-label">Standard</span>
+              <span>Standard</span>
             </button>
             <button class="preset-btn" data-preset="brain" title="Brain Parenchyma">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-5.04z"/></svg>
-              <span class="sidebar-label">Parenchyma</span>
+              <span>Parenchyma</span>
             </button>
             <button class="preset-btn" data-preset="high-contrast" title="High Contrast">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z"/></svg>
-              <span class="sidebar-label">High Contrast</span>
+              <span>Contrast</span>
             </button>
             <button class="preset-btn" data-preset="bone" title="Bone Window">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span class="sidebar-label">Bone</span>
+              <span>Bone</span>
             </button>
             <button class="preset-btn" data-preset="invert" title="Invert Grayscale">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-              <span class="sidebar-label">Invert</span>
+              <span>Invert</span>
             </button>
             <button class="preset-btn" data-preset="angio" title="Vascular Flow">
               <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              <span class="sidebar-label">Vascular</span>
+              <span>Vascular</span>
             </button>
           </div>
         </section>
 
-        <!-- Section: XAI Saliency Tuning -->
+        <!-- XAI Saliency Tuning -->
         <section class="sidebar-section" aria-labelledby="label-saliency">
           <div class="section-heading" id="label-saliency">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>
-            <span class="sidebar-label">XAI Saliency</span>
+            <span>XAI Saliency</span>
           </div>
 
-          <!-- Colormap Selector -->
           <div class="setting-row">
-            <label for="select-colormap" class="setting-label sidebar-label">Colormap</label>
-            <select id="select-colormap" class="setting-select sidebar-label">
-              <option value="jet">Jet (Clinical)</option>
-              <option value="turbo">Turbo</option>
+            <label for="select-colormap" class="setting-label">Colormap</label>
+            <select id="select-colormap" class="setting-select">
+              <option value="jet">Jet (Clinical Standard)</option>
+              <option value="turbo">Turbo (High Perceptual)</option>
               <option value="inferno">Inferno</option>
-              <option value="viridis">Viridis (A11y)</option>
+              <option value="viridis">Viridis (A11y Compliant)</option>
             </select>
           </div>
 
-          <!-- Saliency Cutoff -->
           <div class="setting-row">
             <div class="setting-label-row">
-              <label for="slider-saliency" class="setting-label sidebar-label">ROI Cutoff</label>
+              <label for="slider-saliency" class="setting-label">ROI Cutoff</label>
               <span class="setting-val" id="val-saliency">Top 30%</span>
             </div>
             <input
@@ -175,11 +285,11 @@
           </div>
         </section>
 
-        <!-- Section: Clinical Protocol Toggles -->
+        <!-- Clinical Protocol Toggles -->
         <section class="sidebar-section" aria-labelledby="label-protocols">
           <div class="section-heading" id="label-protocols">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span class="sidebar-label">Clinical Protocols</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Protocols &amp; Safety</span>
           </div>
 
           <!-- TTA Toggle -->
@@ -188,11 +298,11 @@
               <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
               <span class="dot-indicator active" id="dot-tta"></span>
             </div>
-            <div class="toggle-info sidebar-label">
-              <span class="toggle-name">5-Pass TTA</span>
-              <span class="toggle-desc">Geometric augmentation boost</span>
+            <div class="toggle-info">
+              <span class="toggle-name">Test-Time Aug (TTA)</span>
+              <span class="toggle-desc">Geometric voting stability</span>
             </div>
-            <label class="toggle-switch" aria-label="Enable 5-Pass TTA augmentation">
+            <label class="toggle-switch" aria-label="Toggle Test-Time Augmentation">
               <input type="checkbox" id="toggle-tta" checked>
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
             </label>
@@ -204,9 +314,9 @@
               <svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
               <span class="dot-indicator active" id="dot-gating"></span>
             </div>
-            <div class="toggle-info sidebar-label">
+            <div class="toggle-info">
               <span class="toggle-name">Calvarial Gating</span>
-              <span class="toggle-desc">Suppress extra-cranial region</span>
+              <span class="toggle-desc">Suppress skull artifacts</span>
             </div>
             <label class="toggle-switch" aria-label="Enable calvarial brain-mask gating">
               <input type="checkbox" id="toggle-gating" checked>
@@ -220,9 +330,9 @@
               <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               <span class="dot-indicator" id="dot-phi"></span>
             </div>
-            <div class="toggle-info sidebar-label">
+            <div class="toggle-info">
               <span class="toggle-name">Anonymize PHI</span>
-              <span class="toggle-desc">HIPAA / GDPR de-identification</span>
+              <span class="toggle-desc">HIPAA de-identification</span>
             </div>
             <label class="toggle-switch" aria-label="Anonymize patient PHI data">
               <input type="checkbox" id="toggle-phi">
@@ -236,7 +346,7 @@
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
               <span class="dot-indicator active" id="dot-crosshair"></span>
             </div>
-            <div class="toggle-info sidebar-label">
+            <div class="toggle-info">
               <span class="toggle-name">Precision Crosshair</span>
               <span class="toggle-desc">Quad-view inspection cursor</span>
             </div>
@@ -247,16 +357,16 @@
           </div>
         </section>
 
-        <!-- Section: Actions -->
-        <section class="sidebar-section sidebar-section--actions">
+        <!-- Actions -->
+        <section class="sidebar-section">
           <button class="btn-restore" id="btn-restore-defaults" title="Reset all PACS settings">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
-            <span class="sidebar-label">Restore Defaults</span>
+            <span>Restore Defaults</span>
           </button>
         </section>
 
-      </div><!-- end .sidebar-scroll-area -->
-    </aside><!-- end .pacs-sidebar -->
+      </div>
+    </aside>
 
 
     <!-- -------------------------------------------------------
@@ -264,23 +374,23 @@
          ------------------------------------------------------- -->
     <div class="workstation-main" id="workstation-main">
 
-      <!-- Tab Navigation -->
+      <!-- Horizontal Tab Navigation (Matching Reference) -->
       <nav class="tab-nav" role="tablist" aria-label="Workstation views">
         <button class="tab-btn active" data-tab="tab-diagnostics" role="tab" id="tabctrl-diagnostics" aria-selected="true" aria-controls="tab-diagnostics">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-          Diagnostic Studio
+          Clinical Diagnostics &amp; XAI
         </button>
         <button class="tab-btn" data-tab="tab-analytics" role="tab" id="tabctrl-analytics" aria-selected="false" aria-controls="tab-analytics">
           <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          Ensemble Analytics
+          Tri-Ensemble Analytics
         </button>
         <button class="tab-btn" data-tab="tab-report" role="tab" id="tabctrl-report" aria-selected="false" aria-controls="tab-report">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          PDF Report
+          Clinical Report Export (PDF)
         </button>
         <button class="tab-btn" data-tab="tab-history" role="tab" id="tabctrl-history" aria-selected="false" aria-controls="tab-history">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Case History
+          Architecture &amp; Citations
         </button>
       </nav>
 
@@ -288,7 +398,7 @@
       <main class="tab-content" role="main">
 
         <!-- =====================================================
-             TAB 1: DIAGNOSTIC STUDIO
+             TAB 1: CLINICAL DIAGNOSTICS & XAI
              ===================================================== -->
         <section
           id="tab-diagnostics"
@@ -296,6 +406,17 @@
           role="tabpanel"
           aria-labelledby="tabctrl-diagnostics"
         >
+          <!-- Instruction Banner (Matching Reference UI) -->
+          <div class="diagnostic-banner" role="status">
+            <div class="banner-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-5.04z"/>
+                <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-5.04z"/>
+              </svg>
+            </div>
+            <p>Upload an MRI axial slice and click <strong>Analyze MRI Scan</strong> to trigger Tri-Ensemble neural inference with multi-model explainability.</p>
+          </div>
+
           <!-- Patient Context Bar -->
           <div class="patient-bar" id="patient-bar">
             <div class="patient-bar-left">
@@ -329,30 +450,48 @@
           <!-- Three-Column Diagnostic Grid -->
           <div class="diagnostic-grid">
 
-            <!-- Column 1: MRI Upload & Controls -->
-            <div class="panel panel--upload" role="region" aria-label="MRI image upload">
+            <!-- Column 1: Upload & Action Controls -->
+            <div class="panel panel--upload" role="region" aria-label="1. Upload Brain MRI Axial Slice">
               <div class="panel-header">
                 <div class="panel-title">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  Axial MRI Input
+                  1. Upload Brain MRI Axial Slice
                 </div>
                 <span class="panel-badge">T1c / CE-MRI</span>
               </div>
 
               <!-- Drag & Drop Zone -->
-              <div class="dropzone" id="mri-dropzone" role="button" aria-label="Drop MRI image or click to select file" tabindex="0">
-                <input type="file" id="mri-file-input" accept="image/jpeg,image/png,image/webp" aria-hidden="true">
+              <div class="dropzone" id="mri-dropzone" role="button" aria-label="Drop MRI image or click to browse files" tabindex="0">
+                <input type="file" id="mri-file-input" accept="image/jpeg,image/png,image/webp,.dcm" aria-hidden="true">
                 <div class="dropzone-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+                    <path d="M12 12v9"/>
+                    <path d="m16 16-4-4-4 4"/>
+                  </svg>
                 </div>
-                <p class="dropzone-primary" id="dropzone-label">Drop Brain MRI Slice Here</p>
-                <p class="dropzone-secondary">JPEG, PNG, WebP — DICOM-derived slices</p>
+                <p class="dropzone-primary" id="dropzone-label">Drag &amp; drop MRI image here</p>
+                <span class="dropzone-divider">or</span>
+                <button type="button" class="btn-browse" id="btn-browse">Browse Files</button>
+                <p class="dropzone-secondary">Supports: JPG, PNG, DICOM (Max 25MB)</p>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="action-buttons-row">
+                <button class="btn-analyze" id="btn-analyze" disabled aria-disabled="true">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>Analyze MRI Scan</span>
+                </button>
+                <button class="btn-reset" id="btn-reset" type="button" title="Clear scan and reset studio">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+                  <span>Reset</span>
+                </button>
               </div>
 
               <!-- Sample Benchmark Cases -->
               <div class="sample-section">
-                <p class="sample-heading">Sample Benchmark Cases</p>
-                <div class="sample-grid" role="group" aria-label="Sample MRI benchmark cases">
+                <p class="sample-heading">Sample MRI Scans</p>
+                <div class="sample-grid" role="group" aria-label="Sample MRI scans">
                   <button class="sample-btn" data-sample="/samples/sample_glioma.jpg" data-label="Glioma Benchmark">
                     <span class="tag tag--danger">Glioma</span>
                     <strong>High Grade</strong>
@@ -363,25 +502,19 @@
                   </button>
                   <button class="sample-btn" data-sample="/samples/sample_pituitary.jpg" data-label="Pituitary Benchmark">
                     <span class="tag tag--cyan">Pituitary</span>
-                    <strong>Macroadenoma</strong>
+                    <strong>Adenoma</strong>
                   </button>
                   <button class="sample-btn" data-sample="/samples/sample_healthy.jpg" data-label="Healthy Control">
                     <span class="tag tag--success">No Tumor</span>
-                    <strong>Healthy Brain</strong>
+                    <strong>Healthy</strong>
                   </button>
                 </div>
               </div>
-
-              <!-- Analyze Button -->
-              <button class="btn-analyze" id="btn-analyze" disabled aria-disabled="true">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                <span>Run Tri-Ensemble XAI</span>
-              </button>
             </div><!-- end Column 1 -->
 
 
-            <!-- Column 2: PACS Quad-View Viewport -->
-            <div class="panel panel--viewport" role="region" aria-label="Radiological image viewport">
+            <!-- Column 2: PACS Quad-View Saliency Viewport -->
+            <div class="panel panel--viewport" role="region" aria-label="PACS Quad-View Viewport">
               <div class="panel-header">
                 <div class="panel-title">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
@@ -389,7 +522,7 @@
                 </div>
                 <div class="viewport-toolbar">
                   <label for="opacity-slider" class="sr-only">Heatmap overlay opacity</label>
-                  <span class="toolbar-label">Blend:</span>
+                  <span>Blend:</span>
                   <input type="range" id="opacity-slider" min="0" max="100" value="100" aria-label="Overlay blend opacity">
                   <span id="opacity-label">100%</span>
                 </div>
@@ -398,7 +531,7 @@
               <!-- Quad Grid -->
               <div class="quad-grid">
 
-                <!-- Panel A: Raw Axial Scan -->
+                <!-- Panel A: Raw Scan -->
                 <div class="viewport-cell">
                   <div class="viewport-cell-header">
                     <span>A — Raw Axial Scan</span>
@@ -416,7 +549,7 @@
                   </div>
                 </div>
 
-                <!-- Panel B: Grad-CAM Heatmap -->
+                <!-- Panel B: Grad-CAM Saliency -->
                 <div class="viewport-cell">
                   <div class="viewport-cell-header">
                     <span>B — Grad-CAM Saliency</span>
@@ -477,17 +610,39 @@
             </div><!-- end Column 2 -->
 
 
-            <!-- Column 3: Clinical Findings -->
-            <div class="panel panel--findings" role="region" aria-label="Clinical findings and biomarkers">
+            <!-- Column 3: Findings, Gauge & Clinical Measurements -->
+            <div class="panel panel--findings" role="region" aria-label="Clinical Findings & Measurements">
+
+              <!-- Circular Confidence Gauge Card (Matching Reference) -->
+              <div class="confidence-gauge-card">
+                <div class="gauge-header">
+                  <span class="gauge-title">TRI-ENSEMBLE CONFIDENCE</span>
+                  <span class="gauge-tag" id="confidence-verdict-tag">--</span>
+                </div>
+                <div class="gauge-body">
+                  <div class="gauge-svg-wrap">
+                    <svg class="gauge-svg" viewBox="0 0 100 100" aria-hidden="true">
+                      <circle class="gauge-bg" cx="50" cy="50" r="42" />
+                      <circle class="gauge-meter" id="gauge-meter" cx="50" cy="50" r="42" />
+                    </svg>
+                    <div class="gauge-inner-val" id="gauge-val">--%</div>
+                  </div>
+                  <div class="gauge-info">
+                    <div class="gauge-status-msg" id="gauge-status-msg">Awaiting scan input…</div>
+                    <p class="gauge-sub">Weighted consensus: ConvNeXt (45%) + Inception (35%) + DenseNet (20%)</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Clinical Verdict Banner -->
               <div class="panel-header">
                 <div class="panel-title">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                  Clinical Findings
+                  Diagnosis Verdict
                 </div>
                 <span class="panel-badge" id="latency-badge">Latency: -- ms</span>
               </div>
 
-              <!-- Diagnosis Verdict -->
               <div class="diagnosis-verdict">
                 <div class="verdict-pill status--ready" id="verdict-pill">
                   <span id="verdict-text">System Ready</span>
@@ -495,52 +650,82 @@
                 <div class="verdict-class" id="verdict-class">--</div>
               </div>
 
-              <!-- Quantitative Biomarkers -->
-              <div class="biomarkers-stack" role="list" aria-label="Quantitative biomarkers">
-
-                <div class="biomarker" role="listitem">
-                  <div class="biomarker-header">
-                    <span class="biomarker-label">Confidence (Softmax)</span>
-                    <span class="biomarker-val val--orange" id="metric-confidence">-- %</span>
+              <!-- Clinical Measurements 4-Card Grid (Matching Reference) -->
+              <div class="measurements-grid" role="group" aria-label="Clinical measurements">
+                <div class="measurement-card">
+                  <div class="measurement-header">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span>Estimated Location</span>
                   </div>
-                  <div class="progress-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                    <div class="progress-fill fill--orange" id="bar-confidence" style="width:0%"></div>
-                  </div>
+                  <div class="measurement-val" id="metric-location">--</div>
                 </div>
 
-                <div class="biomarker" role="listitem">
-                  <div class="biomarker-header">
-                    <span class="biomarker-label">Shannon Entropy (Dispersion)</span>
-                    <span class="biomarker-val val--teal" id="metric-entropy">-- %</span>
+                <div class="measurement-card">
+                  <div class="measurement-header">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2"/></svg>
+                    <span>Tumor Tissue Area</span>
                   </div>
-                  <div class="progress-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                    <div class="progress-fill fill--teal" id="bar-entropy" style="width:0%"></div>
-                  </div>
+                  <div class="measurement-val" id="metric-area">-- %</div>
                 </div>
 
-                <div class="biomarker" role="listitem">
-                  <div class="biomarker-header">
-                    <span class="biomarker-label">Estimated Lesion Area</span>
-                    <span class="biomarker-val val--cyan" id="metric-area">-- %</span>
+                <div class="measurement-card">
+                  <div class="measurement-header">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <span>Severity Grading</span>
                   </div>
-                  <div class="progress-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                    <div class="progress-fill fill--cyan" id="bar-area" style="width:0%"></div>
-                  </div>
+                  <div class="measurement-val" id="metric-severity">--</div>
                 </div>
 
-                <div class="biomarker" role="listitem">
-                  <div class="biomarker-header">
-                    <span class="biomarker-label">Severity Indicator</span>
-                    <span class="biomarker-val" id="metric-severity">--</span>
+                <div class="measurement-card">
+                  <div class="measurement-header">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <span>Uncertainty Entropy</span>
+                  </div>
+                  <div class="measurement-val" id="metric-entropy">-- %</div>
+                </div>
+              </div>
+
+              <!-- Multi-Class Probabilities -->
+              <div class="probabilities-panel" role="region" aria-label="Multi-Class Probabilities">
+                <span class="gauge-title">MULTI-CLASS PROBABILITIES</span>
+                <div class="prob-list">
+                  <div class="prob-item">
+                    <div class="prob-header">
+                      <span>Glioma</span>
+                      <span class="prob-pct" id="metric-confidence">0.00%</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill fill--danger" id="bar-confidence" style="width:0%"></div>
+                    </div>
+                  </div>
+                  <div class="prob-item">
+                    <div class="prob-header">
+                      <span>Meningioma</span>
+                      <span class="prob-pct" id="prob-meningioma-card">0.00%</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill fill--orange" id="bar-meningioma-card" style="width:0%"></div>
+                    </div>
+                  </div>
+                  <div class="prob-item">
+                    <div class="prob-header">
+                      <span>Pituitary</span>
+                      <span class="prob-pct" id="prob-pituitary-card">0.00%</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill fill--cyan" id="bar-pituitary-card" style="width:0%"></div>
+                    </div>
+                  </div>
+                  <div class="prob-item">
+                    <div class="prob-header">
+                      <span>No Tumor</span>
+                      <span class="prob-pct" id="prob-notumor-card">0.00%</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill fill--teal" id="bar-notumor-card" style="width:0%"></div>
+                    </div>
                   </div>
                 </div>
-
-              </div><!-- end .biomarkers-stack -->
-
-              <!-- Anatomical Location -->
-              <div class="location-tile">
-                <span class="biomarker-label">Estimated Peak Location</span>
-                <div class="location-val" id="metric-location">Awaiting scan analysis…</div>
               </div>
 
             </div><!-- end Column 3 -->
@@ -550,7 +735,7 @@
 
 
         <!-- =====================================================
-             TAB 2: ENSEMBLE ANALYTICS
+             TAB 2: TRI-ENSEMBLE ANALYTICS
              ===================================================== -->
         <section
           id="tab-analytics"
@@ -560,7 +745,6 @@
         >
           <div class="analytics-grid">
 
-            <!-- Class Probability Distribution -->
             <div class="panel" role="region" aria-label="Class probability distribution">
               <div class="panel-header">
                 <div class="panel-title">
@@ -571,7 +755,6 @@
               </div>
 
               <div class="prob-list" role="list" aria-label="Softmax probability by class">
-
                 <div class="prob-item" role="listitem">
                   <div class="prob-header">
                     <span>Glioma Tumor</span>
@@ -588,7 +771,7 @@
                     <span class="prob-pct" id="prob-meningioma">0.00%</span>
                   </div>
                   <div class="progress-track">
-                    <div class="progress-fill" id="fill-meningioma" style="width:0%; background:var(--clr-warning)"></div>
+                    <div class="progress-fill" id="fill-meningioma" style="width:0%; background:var(--clr-accent)"></div>
                   </div>
                 </div>
 
@@ -611,11 +794,10 @@
                     <div class="progress-fill" id="fill-notumor" style="width:0%; background:var(--clr-success)"></div>
                   </div>
                 </div>
-
               </div>
             </div>
 
-            <!-- Ensemble Architecture Overview -->
+            <!-- Architecture Details -->
             <div class="panel" role="region" aria-label="Tri-ensemble architecture details">
               <div class="panel-header">
                 <div class="panel-title">
@@ -638,32 +820,22 @@
                 <div class="model-card">
                   <h3 class="model-name">InceptionV3</h3>
                   <div class="model-weight">35%</div>
-                  <p class="model-role">Multi-scale asymmetric inception grids</p>
+                  <p class="model-role">Multi-scale asymmetric factorized kernels</p>
                 </div>
                 <div class="model-card">
                   <h3 class="model-name">DenseNet121</h3>
                   <div class="model-weight">20%</div>
-                  <p class="model-role">Dense feature reuse & compact texture encoding</p>
+                  <p class="model-role">Dense connectivity preventing gradient vanishing</p>
                 </div>
-              </div>
-
-              <!-- Clinical Disclaimer -->
-              <div class="disclaimer-box" role="note">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <p>
-                  <strong>Research Tool Only.</strong>
-                  Softmax probabilities are uncalibrated and do not represent Bayesian posterior clinical probabilities.
-                  All outputs must be reviewed by a qualified radiologist before any clinical use.
-                </p>
               </div>
             </div>
 
-          </div><!-- end .analytics-grid -->
+          </div>
         </section><!-- end TAB 2 -->
 
 
         <!-- =====================================================
-             TAB 3: PDF REPORT
+             TAB 3: CLINICAL REPORT EXPORT (PDF)
              ===================================================== -->
         <section
           id="tab-report"
@@ -671,78 +843,55 @@
           role="tabpanel"
           aria-labelledby="tabctrl-report"
         >
-          <div class="report-grid">
-
-            <!-- Patient Intake Form -->
-            <div class="panel" role="region" aria-label="Patient clinical intake form">
-              <div class="panel-header">
-                <div class="panel-title">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                  Patient & Clinical Intake
-                </div>
-                <span class="panel-badge">Hospital Triage Form</span>
+          <div class="panel" role="region" aria-label="PDF Clinical Report Generator">
+            <div class="panel-header">
+              <div class="panel-title">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                PDF Clinical Diagnostic Report Generator
               </div>
-
-              <form id="report-form" novalidate>
-                <div class="form-group">
-                  <label for="rep-patient-id">Patient Medical Record Number (MRN)</label>
-                  <input type="text" id="rep-patient-id" value="PT-2026-9812" autocomplete="off" required>
-                </div>
-                <div class="form-group">
-                  <label for="rep-patient-name">Patient Full Name</label>
-                  <input type="text" id="rep-patient-name" value="Anonymous Patient" autocomplete="off" required>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="rep-patient-age">Age (Years)</label>
-                    <input type="number" id="rep-patient-age" value="52" min="1" max="120" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="rep-patient-gender">Biological Sex</label>
-                    <select id="rep-patient-gender">
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other / Unspecified</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="rep-clinician">Referring Radiologist / Oncologist</label>
-                  <input type="text" id="rep-clinician" value="Dr. A. Gupta, MD (Radiology)" autocomplete="off">
-                </div>
-
-                <button type="button" class="btn-primary btn-pdf" id="btn-generate-pdf">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  Generate PDF Report
-                </button>
-              </form>
+              <span class="panel-badge">ReportLab Secure</span>
             </div>
 
-            <!-- Report Preview Panel -->
-            <div class="panel panel--pdf-preview" role="region" aria-label="PDF generation status">
-              <div class="pdf-icon-wrap" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <p class="panel-description">
+              Generate a multi-page, court-admissible clinical PDF report containing patient metadata, consensus diagnosis, ensemble confidence metrics, and all 4 XAI quad-view saliency overlays.
+            </p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="rep-patient-id" class="form-label">Patient MRN / ID</label>
+                <input type="text" id="rep-patient-id" class="form-input" value="PT-2026-9812">
               </div>
-              <h2 class="pdf-preview-title">Clinical AI Decision Support Report</h2>
-              <p class="pdf-preview-desc">
-                Exports patient metadata, axial MRI scans, Grad-CAM saliency heatmaps,
-                segmentation contours, ensemble probability breakdown, and mandatory
-                clinical disclaimer for case conferences.
-              </p>
+              <div class="form-group">
+                <label for="rep-patient-name" class="form-label">Patient Name</label>
+                <input type="text" id="rep-patient-name" class="form-input" value="Anonymous Patient">
+              </div>
+              <div class="form-group">
+                <label for="rep-patient-age" class="form-label">Patient Age</label>
+                <input type="text" id="rep-patient-age" class="form-input" value="52">
+              </div>
+              <div class="form-group">
+                <label for="rep-patient-gender" class="form-label">Gender</label>
+                <input type="text" id="rep-patient-gender" class="form-input" value="Male">
+              </div>
+            </div>
+
+            <div style="margin-top: 0.5rem; display: flex; gap: 0.75rem; align-items: center;">
+              <button class="btn-primary" id="btn-generate-pdf">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Generate Clinical PDF
+              </button>
               <div id="pdf-download-wrap" class="hidden">
-                <a id="pdf-download-link" class="btn-primary btn-download" href="#" download>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <a id="pdf-download-link" class="btn-download" href="#" target="_blank" download="clinical_report.pdf">
                   Download PDF Report
                 </a>
               </div>
             </div>
-
-          </div><!-- end .report-grid -->
+          </div>
         </section><!-- end TAB 3 -->
 
 
         <!-- =====================================================
-             TAB 4: CASE HISTORY
+             TAB 4: ARCHITECTURE & CITATIONS / CASE HISTORY
              ===================================================== -->
         <section
           id="tab-history"
@@ -750,48 +899,47 @@
           role="tabpanel"
           aria-labelledby="tabctrl-history"
         >
-          <div class="panel" role="region" aria-label="Case history log">
+          <div class="panel" role="region" aria-label="Recent patient history">
             <div class="panel-header">
               <div class="panel-title">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                Recent Diagnostic Sessions
+                Recent Diagnostic Audit History
               </div>
-              <span class="panel-badge" id="history-count">Loading…</span>
+              <span class="panel-badge" id="history-count">3 Cases</span>
             </div>
 
-            <div class="history-table-wrap">
-              <table class="history-table" aria-label="Diagnostic case history">
+            <div class="table-wrap">
+              <table class="history-table">
                 <thead>
                   <tr>
-                    <th scope="col">Timestamp</th>
-                    <th scope="col">Patient ID</th>
-                    <th scope="col">Classification</th>
-                    <th scope="col">Confidence</th>
-                    <th scope="col">Entropy</th>
-                    <th scope="col">Severity</th>
+                    <th>Timestamp</th>
+                    <th>MRN</th>
+                    <th>Diagnosis</th>
+                    <th>Confidence</th>
+                    <th>Uncertainty</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody id="history-tbody">
-                  <!-- Seeded example rows -->
                   <tr>
-                    <td>Just Now</td>
-                    <td>PT-8942</td>
-                    <td><strong>Meningioma Tumor</strong></td>
-                    <td><strong class="val--orange">98.42%</strong></td>
-                    <td>3.15%</td>
-                    <td><span class="verdict-pill status--tumor verdict-pill--sm">High Risk</span></td>
+                    <td>10 mins ago</td>
+                    <td>PT-2026-9812</td>
+                    <td><strong>Glioma</strong></td>
+                    <td><strong class="val--orange">99.12%</strong></td>
+                    <td>1.24%</td>
+                    <td><span class="verdict-pill status--tumor verdict-pill--sm">Critical</span></td>
                   </tr>
                   <tr>
-                    <td>10 min ago</td>
-                    <td>PT-8941</td>
-                    <td><strong>Pituitary Tumor</strong></td>
-                    <td><strong class="val--orange">99.10%</strong></td>
-                    <td>1.82%</td>
+                    <td>35 mins ago</td>
+                    <td>PT-2026-9788</td>
+                    <td><strong>Meningioma</strong></td>
+                    <td><strong class="val--orange">97.45%</strong></td>
+                    <td>2.10%</td>
                     <td><span class="verdict-pill status--tumor verdict-pill--sm">Moderate</span></td>
                   </tr>
                   <tr>
                     <td>1 hour ago</td>
-                    <td>PT-8940</td>
+                    <td>PT-2026-8940</td>
                     <td><strong>Normal Brain</strong></td>
                     <td><strong class="val--success">99.88%</strong></td>
                     <td>0.45%</td>
@@ -803,10 +951,29 @@
           </div>
         </section><!-- end TAB 4 -->
 
-      </main><!-- end .tab-content -->
+      </main>
     </div><!-- end .workstation-main -->
   </div><!-- end .workstation-layout -->
 
+
+  <!-- =========================================================
+       KEYBOARD SHORTCUTS & HELP MODAL
+       ========================================================= -->
+  <div class="modal-overlay" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h2 class="modal-title" id="help-modal-title">Radiology Studio Shortcuts</h2>
+        <button class="modal-close-btn" id="help-modal-close" aria-label="Close modal">&times;</button>
+      </div>
+      <div>
+        <div class="shortcut-row"><span>Toggle PACS Controls</span><kbd class="kbd">Ctrl+B</kbd></div>
+        <div class="shortcut-row"><span>Toggle Dark / Light Theme</span><kbd class="kbd">Ctrl+T</kbd></div>
+        <div class="shortcut-row"><span>Run Neural Inference</span><kbd class="kbd">Enter</kbd></div>
+        <div class="shortcut-row"><span>Export Clinical PDF Report</span><kbd class="kbd">Ctrl+P</kbd></div>
+        <div class="shortcut-row"><span>Reset Studio &amp; Viewports</span><kbd class="kbd">Esc</kbd></div>
+      </div>
+    </div>
+  </div>
 
   <!-- JavaScript: Main Application Logic -->
   <script src="/js/app.js"></script>
