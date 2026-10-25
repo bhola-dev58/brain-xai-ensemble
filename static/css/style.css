@@ -1298,6 +1298,8 @@ a:hover {
     scrollbar-width: thin;
     display: flex;
     flex-direction: column;
+    padding: 0;
+    gap: 0;
   }
 
   .panel--viewport .panel-header {
@@ -1306,15 +1308,17 @@ a:hover {
     z-index: 10;
     background: var(--bg-card);
     flex-shrink: 0;
-    padding-top: 0.2rem;
-    margin-top: -0.2rem;
+    padding: 0.75rem 1rem;
+    margin: 0;
+    border-top-left-radius: calc(var(--radius-lg) - 1px);
+    border-top-right-radius: calc(var(--radius-lg) - 1px);
     border-bottom: 1px solid var(--border-subtle);
   }
 
   .panel--viewport .quad-grid {
     flex: 1;
     min-height: min-content;
-    padding-bottom: 0.5rem;
+    padding: 0.75rem 1rem 1rem 1rem;
   }
 }
 
@@ -1341,12 +1345,28 @@ a:hover {
     overflow: visible;
   }
   .panel--upload,
-  .panel--findings,
+  .panel--findings {
+    height: auto;
+    max-height: none;
+    position: static;
+    overflow: visible;
+  }
   .panel--viewport {
     height: auto;
     max-height: none;
     position: static;
     overflow: visible;
+    padding: 0;
+    gap: 0;
+  }
+  .panel--viewport .panel-header {
+    padding: 0.75rem 1rem;
+    border-top-left-radius: calc(var(--radius-lg) - 1px);
+    border-top-right-radius: calc(var(--radius-lg) - 1px);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .panel--viewport .quad-grid {
+    padding: 0.75rem 1rem 1rem 1rem;
   }
 }
 
