@@ -346,44 +346,12 @@ a:hover {
   font-weight: 700;
 }
 
-.brand-tagline {
-  font-size: 0.70rem;
-  color: var(--text-muted);
-  font-weight: 400;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Feature Badges in Header */
-.header-badges {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-left: 0.75rem;
-}
-
-.header-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.68rem;
+.brand-sub {
+  font-size: 0.72rem;
   font-weight: 500;
-  padding: 0.2rem 0.55rem;
-  border-radius: var(--radius-full);
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.header-badge svg {
-  width: 11px;
-  height: 11px;
-  stroke: var(--clr-accent);
-  fill: none;
-  stroke-width: 2;
-  flex-shrink: 0;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  padding-left: 0.25rem;
 }
 
 /* Header Controls Right */
@@ -394,52 +362,21 @@ a:hover {
   flex-shrink: 0;
 }
 
-/* Export Report Quick Action */
-.header-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: var(--radius-full);
-  background: var(--clr-accent-dim);
-  border: 1px solid var(--clr-accent);
-  color: var(--clr-accent);
-  font-size: 0.76rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--dur-normal) var(--ease-smooth);
-  white-space: nowrap;
-}
-
-.header-action-btn svg {
-  width: 14px;
-  height: 14px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2;
-}
-
-.header-action-btn:hover {
-  background: var(--clr-accent);
-  color: #FFFFFF;
-  box-shadow: 0 0 12px var(--clr-accent-glow);
-  transform: translateY(-1px);
-}
-
-/* Theme Toggle Button (Dark / Light) */
+/* Theme Toggle Button (Compact Icon Button) */
 .theme-toggle-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.38rem 0.75rem;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   background: var(--bg-card);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-full);
   color: var(--text-secondary);
-  font-size: 0.74rem;
-  font-weight: 600;
   cursor: pointer;
   transition: all var(--dur-normal) var(--ease-smooth);
+  flex-shrink: 0;
 }
 
 .theme-toggle-btn:hover {
@@ -453,13 +390,13 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
 }
 
 .theme-icon-wrap svg {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
@@ -485,49 +422,6 @@ a:hover {
 
 [data-theme="light"] .icon-moon {
   display: block;
-}
-
-/* User Profile Badge (Dr. Alex Johnson) */
-.user-profile-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.65rem 0.25rem 0.3rem;
-  border-radius: var(--radius-full);
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  cursor: default;
-}
-
-.user-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
-  color: #FFFFFF;
-  font-size: 0.72rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 10px rgba(249, 115, 22, 0.45);
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-
-.user-name {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.user-role {
-  font-size: 0.63rem;
-  color: var(--text-muted);
 }
 
 /* Telemetry Status Chip */
@@ -2403,14 +2297,6 @@ a:hover {
   }
 
   .brand-tagline {
-    display: none;
-  }
-
-  .user-profile-badge {
-    padding: 0.2rem 0.45rem;
-  }
-
-  .user-info {
     display: none;
   }
 

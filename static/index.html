@@ -68,47 +68,20 @@
         <div class="brand-text">
           <div class="brand-title-row">
             <h1>BrainTumor<span class="brand-accent">XAI</span></h1>
-            <span class="brand-accent">Clinical Diagnostic Studio</span>
+            <span class="brand-sub">Clinical Diagnostic Studio</span>
           </div>
-          <p class="brand-tagline">Explainable AI Ensemble Diagnostic System (ConvNeXtSmall + InceptionV3 + DenseNet121)</p>
-        </div>
-
-        <!-- Reference Feature Badges -->
-        <div class="header-badges" role="region" aria-label="System Highlights">
-          <span class="header-badge">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polygon points="12 8 8 12 12 16 16 12 12 8"/></svg>
-            SOTA Tri-Ensemble (98.79% Target)
-          </span>
-          <span class="header-badge">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            Grad-CAM &amp; Grad-CAM++
-          </span>
-          <span class="header-badge">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            PDF Clinical Reports
-          </span>
         </div>
       </div>
 
-      <!-- Right: Controls, Theme Toggle, Profile & Telemetry -->
+      <!-- Right: Controls, Theme Toggle & Telemetry -->
       <div class="header-controls">
 
-        <!-- Export Report Button -->
-        <button class="header-action-btn" id="btn-header-export" type="button" title="Export clinical PDF report">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          <span>Export Report</span>
-        </button>
-
-        <!-- Color Theme Toggle Button (Dark / Light) -->
+        <!-- Color Theme Toggle Button (Icon only) -->
         <button
           class="theme-toggle-btn"
           id="theme-toggle-btn"
           type="button"
-          aria-label="Switch to light color theme"
+          aria-label="Switch color theme"
           title="Toggle theme (Light / Dark)"
         >
           <span class="theme-icon-wrap" aria-hidden="true">
@@ -120,22 +93,13 @@
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
           </span>
-          <span class="theme-label" id="theme-label">Dark</span>
+          <span class="sr-only" id="theme-label">Dark</span>
         </button>
 
-        <!-- Authenticated Radiologist Profile Chip -->
-        <div class="user-profile-badge" title="Active Radiologist Session">
-          <div class="user-avatar" aria-hidden="true">BT</div>
-          <div class="user-info">
-            <span class="user-name">Dr. Alex Johnson</span>
-            <span class="user-role">Neuro-Radiologist</span>
-          </div>
-        </div>
-
         <!-- Telemetry Status Chip -->
-        <div class="telemetry-chip" id="chip-status" role="status" aria-live="polite">
+        <div class="telemetry-chip" id="chip-status" role="status" aria-live="polite" title="Engine Status">
           <span class="status-dot" id="status-dot"></span>
-          <span id="status-text">Connecting to engine…</span>
+          <span class="status-text" id="status-text">Connecting…</span>
         </div>
 
       </div>

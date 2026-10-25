@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
     statusText:       document.getElementById('status-text'),
     themeToggleBtn:   document.getElementById('theme-toggle-btn'),
     themeLabel:       document.getElementById('theme-label'),
-    btnHeaderExport:  document.getElementById('btn-header-export'),
 
     // Navigation Rail
     navRail:          document.querySelector('.nav-rail'),
@@ -265,11 +264,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await res.json();
       dom.statusDot.classList.add('online');
-      dom.statusText.textContent =
-        `Tri-Ensemble Engine Online — v${data.pipeline_version || data.version || '3.0'}`;
+      dom.statusDot.classList.remove('offline');
+      if (dom.statusText) dom.statusText.textContent = 'Engine Online';
+      if (dom.chipStatus) {
+        dom.chipStatus.title = `Tri-Ensemble Engine Online — v${data.pipeline_version || data.version || '3.0'}`;
+      }
     } catch {
       dom.statusDot.classList.add('offline');
-      dom.statusText.textContent = 'Backend Offline — Start scripts/run_api.py';
+      dom.statusDot.classList.remove('online');
+      if (dom.statusText) dom.statusText.textContent = 'Backend Offline';
+      if (dom.chipStatus) {
+        dom.chipStatus.title = 'Backend Offline — Start scripts/run_api.py';
+      }
     }
   }
 
@@ -341,13 +347,6 @@ document.addEventListener('DOMContentLoaded', () => {
     openHelpModal();
   });
 
-  // Header quick "Export Report" button
-  dom.btnHeaderExport?.addEventListener('click', () => {
-    switchTab('tab-report');
-    if (state.currentFile && dom.btnGeneratePdf) {
-      dom.btnGeneratePdf.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  });
 
 
   /* ============================================================
