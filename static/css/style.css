@@ -18,28 +18,28 @@
   /* ------------------------------------------------------------------
      Surface / Canvas Hierarchy (Dark Theme — Default)
   ------------------------------------------------------------------ */
-  --bg-page:        #0C1017;   /* Obsidian charcoal dark */
-  --bg-surface:     #121824;   /* Surface / sidebar */
-  --bg-card:        #161E2D;   /* Panel & card backdrop */
-  --bg-card-alt:    #1C2537;   /* Elevated hover card */
-  --bg-overlay:     rgba(12, 16, 23, 0.94);
+  --bg-page:        #080B0F;   /* Exact match to assets/styles.css --bg-primary */
+  --bg-surface:     #0D1116;   /* Exact match to src/theme.py background_fill_primary */
+  --bg-card:        #11161C;   /* Exact match to assets/styles.css --card-bg */
+  --bg-card-alt:    #161C24;   /* Elevated hover card */
+  --bg-overlay:     rgba(8, 11, 15, 0.95);
 
   /* ------------------------------------------------------------------
      Border Scale
   ------------------------------------------------------------------ */
-  --border-faint:   rgba(255, 255, 255, 0.05);
-  --border-subtle:  rgba(255, 255, 255, 0.09);
-  --border-medium:  rgba(255, 255, 255, 0.16);
-  --border-strong:  rgba(249, 115, 22, 0.40);
+  --border-faint:   rgba(255, 255, 255, 0.04);
+  --border-subtle:  #252C35;   /* Exact match to assets/styles.css --card-border */
+  --border-medium:  rgba(255, 122, 0, 0.25);
+  --border-strong:  rgba(255, 122, 0, 0.45);
 
   /* ------------------------------------------------------------------
-     Brand Accent: Warm Clinical Amber / Orange (Matching Reference UI)
+     Brand Accent: Electric Amber / Orange (Matching assets/styles.css)
   ------------------------------------------------------------------ */
-  --clr-accent:        #F97316;   /* Orange-500 — radiant primary action */
-  --clr-accent-dim:    rgba(249, 115, 22, 0.14);
-  --clr-accent-glow:   rgba(249, 115, 22, 0.35);
-  --clr-accent-hover:  #FB923C;   /* Orange-400 */
-  --clr-accent-active: #EA580C;   /* Orange-600 */
+  --clr-accent:        #FF7A00;   /* Exact match to assets/styles.css --accent-primary */
+  --clr-accent-dim:    rgba(255, 122, 0, 0.14);
+  --clr-accent-glow:   rgba(255, 122, 0, 0.35);
+  --clr-accent-hover:  #FF8A1A;   /* Exact match to assets/styles.css --accent-hover */
+  --clr-accent-active: #E66E00;
 
   /* ------------------------------------------------------------------
      Secondary / Warm Amber
@@ -51,17 +51,17 @@
   /* ------------------------------------------------------------------
      Clinical Status Colors
   ------------------------------------------------------------------ */
-  --clr-danger:          #F43F5E;
-  --clr-danger-bg:       rgba(244, 63, 94, 0.12);
-  --clr-danger-border:   rgba(244, 63, 94, 0.30);
+  --clr-danger:          #ef4444;   /* Match --color-tumor */
+  --clr-danger-bg:       rgba(239, 68, 68, 0.12);
+  --clr-danger-border:   rgba(239, 68, 68, 0.30);
 
   --clr-warning:         #F59E0B;
   --clr-warning-bg:      rgba(245, 158, 11, 0.12);
   --clr-warning-border:  rgba(245, 158, 11, 0.30);
 
-  --clr-success:         #10B981;
-  --clr-success-bg:      rgba(16, 185, 129, 0.12);
-  --clr-success-border:  rgba(16, 185, 129, 0.30);
+  --clr-success:         #22c55e;   /* Match --color-normal */
+  --clr-success-bg:      rgba(34, 197, 94, 0.12);
+  --clr-success-border:  rgba(34, 197, 94, 0.30);
 
   --clr-cyan:            #06B6D4;
   --clr-cyan-bg:         rgba(6, 182, 212, 0.12);
@@ -82,13 +82,13 @@
   /* ------------------------------------------------------------------
      Typography
   ------------------------------------------------------------------ */
-  --font-body:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body:   'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono:   'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --text-primary:   #F1F5F9;
-  --text-secondary: #94A3B8;
-  --text-muted:     #64748B;
-  --text-inverse:   #0C1017;
+  --text-primary:   #F2F2F2;   /* Exact match to assets/styles.css --text-primary */
+  --text-secondary: #9CA3AF;   /* Exact match to assets/styles.css --text-secondary */
+  --text-muted:     #6B7280;   /* Exact match to assets/styles.css --text-muted */
+  --text-inverse:   #080B0F;
 
   /* ------------------------------------------------------------------
      Shadows (Dark Mode)
