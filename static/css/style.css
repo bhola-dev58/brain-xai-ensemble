@@ -1227,24 +1227,153 @@ a:hover {
 /* Three-Column Diagnostic Grid */
 .diagnostic-grid {
   display: grid;
-  grid-template-columns: 320px minmax(360px, 1fr) 340px;
+  grid-template-columns: 310px minmax(340px, 1fr) 330px;
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
+  height: 100%;
+  min-height: 0;
 }
 
-@media (max-width: 1366px) and (min-width: 901px) {
-  .diagnostic-grid {
-    grid-template-columns: 300px minmax(0, 1fr);
+/* Fixed left & right panels, scrollable center viewport on desktop */
+@media (min-width: 960px) {
+  .tab-content.is-diagnostics,
+  .tab-content:has(#tab-diagnostics.active) {
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
+
+  #tab-diagnostics.active {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    gap: 0.65rem;
+  }
+
+  #tab-diagnostics.active .patient-bar {
+    flex-shrink: 0;
+  }
+
+  #tab-diagnostics.active .diagnostic-grid {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* Fixed & constant position: Upload panel */
+  .panel--upload {
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    position: sticky;
+    top: 0;
+    flex-shrink: 0;
+  }
+
+  /* Fixed & constant position: Findings panel */
   .panel--findings {
-    grid-column: 1 / -1;
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    position: sticky;
+    top: 0;
+    flex-shrink: 0;
+  }
+
+  /* Dedicated Scrollable Card: Quad-View Saliency Viewport */
+  .panel--viewport {
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel--viewport .panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg-card);
+    flex-shrink: 0;
+    padding-top: 0.2rem;
+    margin-top: -0.2rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .panel--viewport .quad-grid {
+    flex: 1;
+    min-height: min-content;
+    padding-bottom: 0.5rem;
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1240px) and (min-width: 960px) {
+  .diagnostic-grid {
+    grid-template-columns: 280px minmax(300px, 1fr) 290px;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 959px) {
+  .tab-content.is-diagnostics,
+  .tab-content:has(#tab-diagnostics.active) {
+    overflow-y: auto;
+    height: auto;
+  }
+  #tab-diagnostics.active {
+    height: auto;
+    overflow: visible;
+  }
   .diagnostic-grid {
     grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    overflow: visible;
   }
+  .panel--upload,
+  .panel--findings,
+  .panel--viewport {
+    height: auto;
+    max-height: none;
+    position: static;
+    overflow: visible;
+  }
+}
+
+/* Panel Scrollbars */
+.panel--viewport::-webkit-scrollbar,
+.panel--upload::-webkit-scrollbar,
+.panel--findings::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel--viewport::-webkit-scrollbar-track,
+.panel--upload::-webkit-scrollbar-track,
+.panel--findings::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel--viewport::-webkit-scrollbar-thumb,
+.panel--upload::-webkit-scrollbar-thumb,
+.panel--findings::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: var(--radius-full);
+}
+
+.panel--viewport::-webkit-scrollbar-thumb:hover,
+.panel--upload::-webkit-scrollbar-thumb:hover,
+.panel--findings::-webkit-scrollbar-thumb:hover {
+  background: var(--clr-accent);
 }
 
 /* Panels */

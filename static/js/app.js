@@ -285,6 +285,12 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {string} targetId - ID of the target .tab-panel
    */
   function switchTab(targetId) {
+    // 0. Toggle diagnostic lock mode on tab-content container
+    const tabContent = document.querySelector('.tab-content');
+    if (tabContent) {
+      tabContent.classList.toggle('is-diagnostics', targetId === 'tab-diagnostics');
+    }
+
     // 1. Update horizontal tab buttons
     dom.tabBtns.forEach(btn => {
       const isTarget = btn.dataset.tab === targetId;
