@@ -1100,29 +1100,15 @@ a:hover {
   stroke-width: 2;
 }
 
-/* Patient Context Bar */
-.patient-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.55rem 0.85rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.patient-bar-left {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  flex-wrap: wrap;
-}
-
-.patient-meta-item {
+/* Sidebar Patient & Case Context Card */
+.patient-sidebar-card {
   display: flex;
   flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
 }
 
 .meta-label {
@@ -1139,16 +1125,14 @@ a:hover {
   font-weight: 600;
 }
 
-.patient-bar-divider {
-  width: 1px;
-  height: 20px;
-  background: var(--border-medium);
-}
-
-.patient-bar-right {
+.patient-sidebar-badges {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .phi-badge,
@@ -1201,11 +1185,6 @@ a:hover {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    gap: 0.65rem;
-  }
-
-  #tab-diagnostics.active .patient-bar {
-    flex-shrink: 0;
   }
 
   #tab-diagnostics.active .diagnostic-grid {
@@ -2383,15 +2362,6 @@ a:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .patient-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .patient-bar-divider {
-    display: none;
-  }
 }
 
 @media (max-width: 600px) {
