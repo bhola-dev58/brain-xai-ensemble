@@ -15,7 +15,7 @@
 #
 #  After setup:
 #    source venv/bin/activate
-#    python3 app.py        →  http://127.0.0.1:7860
+#    python3 app.py        →  http://127.0.0.1:8000
 # =============================================================================
 
 set -euo pipefail
@@ -101,8 +101,8 @@ if [ "$MODE" = "docker" ]; then
     docker build -t brain-xai-ensemble .
     success "Docker image built."
     echo ""
-    echo -e "  ${BOLD}Run:${RESET}  docker run --rm -p 7860:7860 brain-xai-ensemble"
-    echo -e "  ${BOLD}Open:${RESET} ${CYAN}http://localhost:7860${RESET}"
+    echo -e "  ${BOLD}Run:${RESET}  docker run --rm -p 8000:8000 brain-xai-ensemble"
+    echo -e "  ${BOLD}Open:${RESET} ${CYAN}http://localhost:8000${RESET}"
     exit 0
 fi
 
@@ -248,8 +248,8 @@ success "All runtime directories present."
 # Required source files
 REQUIRED_SRC=(
     "app.py" "src/__init__.py" "src/config.py" "src/inference.py"
-    "src/processor.py" "src/dashboard.py" "src/report_generator.py"
-    "src/database.py" "src/dicom_reader.py" "src/theme.py" "src/api.py"
+    "src/processor.py" "src/report_generator.py"
+    "src/database.py" "src/dicom_reader.py" "src/api.py"
 )
 for f in "${REQUIRED_SRC[@]}"; do
     if [ -f "$f" ]; then
@@ -320,7 +320,6 @@ checks = [
     ("numpy",        "import numpy; print(f'  numpy        {numpy.__version__}')"),
     ("opencv",       "import cv2;   print(f'  opencv       {cv2.__version__}')"),
     ("tensorflow",   "import tensorflow as tf; print(f'  tensorflow   {tf.__version__}')"),
-    ("gradio",       "import gradio as gr; print(f'  gradio       {gr.__version__}')"),
     ("reportlab",    "from reportlab.lib import colors; print('  reportlab    OK')"),
     ("scikit-learn", "import sklearn; print(f'  scikit-learn {sklearn.__version__}')"),
     ("pydicom",      "import pydicom; print(f'  pydicom      {pydicom.__version__}')"),
@@ -357,13 +356,10 @@ else
 fi
 
 echo ""
-echo -e "${BOLD}  Launch the Gradio dashboard:${RESET}"
+echo -e "${BOLD}  Launch the Clinical PACS Workstation:${RESET}"
 echo -e "    ${CYAN}source venv/bin/activate${RESET}"
 echo -e "    ${CYAN}python3 app.py${RESET}"
-echo -e "    Then open: ${CYAN}http://127.0.0.1:7860${RESET}"
-echo ""
-echo -e "${BOLD}  Launch the FastAPI REST backend:${RESET}"
-echo -e "    ${CYAN}uvicorn src.api:app --host 0.0.0.0 --port 8000 --reload${RESET}"
+echo -e "    Then open: ${CYAN}http://127.0.0.1:8000${RESET}"
 echo ""
 [ "$MODE" = "dev" ] && {
     echo -e "${BOLD}  Run test suite:${RESET}"

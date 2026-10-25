@@ -57,7 +57,7 @@ Evaluation on 1,269 isolated validation MRI scans from the BraTS 2019 benchmark 
 | Model Architectures | ConvNeXt-Small, InceptionV3, DenseNet121 |
 | Explainable AI (XAI) | Grad-CAM++, Anatomical Brain Mask Gating |
 | Computer Vision & Preprocessing | OpenCV, NumPy, SciPy (Nelder-Mead Optimization) |
-| Web Application | Gradio 6.x |
+| Web PACS Workstation | Vanilla HTML5 / CSS3 / ES6+ |
 | REST Backend | FastAPI, Uvicorn |
 | Report Synthesis | ReportLab (PDF Engine) |
 | Testing | pytest |
@@ -99,7 +99,7 @@ flowchart TD
 
 ```
 brain-xai-ensemble/
-├── app.py                                    # Gradio web dashboard entrypoint
+├── app.py                                    # Clinical PACS workstation entrypoint
 ├── Dockerfile                                # Container specification for CPU deployment
 ├── .dockerignore                             # Container build exclusions
 ├── .gitignore                                # Git exclusion rules
@@ -111,9 +111,14 @@ brain-xai-ensemble/
 │   ├── inference.py                          # Multi-model prediction and Grad-CAM++ pipeline
 │   ├── processor.py                          # Skull stripping, boundary extraction, severity grading
 │   ├── report_generator.py                   # Clinical PDF diagnostic report engine
-│   ├── theme.py                              # Medical UI design system tokens
-│   ├── dashboard.py                          # Gradio UI components and event listeners
-│   └── api.py                                # FastAPI REST backend endpoints
+│   ├── database.py                           # SQLite patient case history & audit logs
+│   ├── dicom_reader.py                       # DICOM metadata and pixel array extraction
+│   └── api.py                                # FastAPI REST backend endpoints and static UI mount
+│
+├── static/                                   # PACS Clinical Diagnostic Studio frontend
+│   ├── index.html                            # Semantic HTML5 workstation interface
+│   ├── css/style.css                         # 100% hand-crafted vanilla CSS (WCAG 2.2 AA)
+│   └── js/app.js                             # Client-side engine, telemetry, and viewports
 │
 ├── scripts/                                  # Evaluation and benchmarking utilities
 │   ├── __init__.py
@@ -201,27 +206,18 @@ pip install -r requirements.txt
 
 ### 4. Running the Application
 
-Launch the interactive Gradio Clinical Dashboard:
+Launch the Clinical PACS Diagnostic Workstation:
 
 ```bash
 python3 app.py
-```
-
-Access the dashboard in your web browser:
-- Local URL: `http://localhost:7860`
-- Network URL: `http://127.0.0.1:7860`
-
-### 5. Running the REST API & PACS Workstation
-
-Launch the FastAPI backend server (serves the web PACS interface at `/` and REST API at `/api/*`):
-
-```bash
+# or
 python3 scripts/run_api.py
 ```
 
+Access the studio in your web browser:
 - Web PACS Workstation: `http://localhost:8000/`
 - API Base URL: `http://localhost:8000/api`
-- Interactive Swagger Documentation: `http://localhost:8000/docs` (configurable)
+- Interactive Swagger Documentation: `http://localhost:8000/docs`
 - Liveness Probe: `GET http://localhost:8000/api/health`
 
 Key Endpoints:

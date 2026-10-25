@@ -8,16 +8,15 @@
                         └─────────────┬────────────────────────┘
                                       │  Uploads CE-MRI Image
                         ┌─────────────▼──────────────────────┐
-                        │       ENTRY POINTS (Two Options)    │
-                        │                                      │
-                        │  ┌──────────────┐  ┌─────────────┐  │
-                        │  │ Gradio UI    │  │  FastAPI    │  │
-                        │  │ (port 7860)  │  │  REST API   │  │
-                        │  │ dashboard.py │  │  (port 8000)│  │
-                        │  └──────┬───────┘  └──────┬──────┘  │
-                        └─────────┼─────────────────┼─────────┘
-                                  │                  │
-                                  └──────────┬───────┘
+                        │       APPLICATION ENTRY POINT      │
+                        │                                    │
+                        │  ┌──────────────────────────────┐  │
+                        │  │  FastAPI Workstation & REST  │  │
+                        │  │  (app.py / scripts/run_api)  │  │
+                        │  │  Port 8000                   │  │
+                        │  └──────────────┬───────────────┘  │
+                        └─────────────────┼──────────────────┘
+                                          │  Calls predict_tumor_logic()
                                              │  Calls predict_tumor_logic()
                         ┌────────────────────▼───────────────────────────┐
                         │               src/inference.py                  │
@@ -64,16 +63,13 @@
 ## Module Dependency Map
 
 ```
-app.py
-  └── src/dashboard.py        (Gradio UI layout + CSS + HTML builders)
+app.py / scripts/run_api.py
+  └── src/api.py              (FastAPI app + static PACS UI mount + REST API)
         └── src/inference.py  (model loading + predict_tumor_logic)
               ├── src/processor.py    (segmentation, location, severity)
+              ├── src/report_generator.py (PDF generation)
+              ├── src/database.py     (patient history persistence)
               └── src/config.py       (all constants + logger)
-
-scripts/run_api.py
-  └── src/api.py              (FastAPI app + /api/health + /api/predict)
-        └── src/inference.py  (same shared inference core)
-              └── (same chain as above)
 
 scripts/train_segmentation.py
   └── src/config.py           (IMG_SIZE_TRAIN, logger)
@@ -89,10 +85,8 @@ tests/
 ## File-by-File Responsibilities
 
 ### `app.py` — Main Entrypoint
-- Instantiates the Gradio `demo` object by calling `create_app()`.
-- Launches the Gradio server on `0.0.0.0:7860` with `share=True`.
-- Applies custom CSS via `get_custom_css()`.
-- This is the only file you need to run to start the full dashboard.
+- Launches the unified FastAPI Clinical Diagnostic Studio workstation on `0.0.0.0:8000`.
+- Serves both the interactive web PACS interface and the RESTful API endpoints.
 
 ---
 
@@ -119,13 +113,6 @@ tests/
 
 ---
 
-### `src/dashboard.py` — Gradio UI
-- `get_custom_css()` — returns the full dark-theme CSS string.
-- `get_empty_states()` — returns HTML placeholder strings for all output panels.
-- `build_html_outputs()` — formats all prediction data into styled HTML components.
-- `predict_and_format()` — orchestrates the UI trigger: calls inference, formats output.
-- `clear_outputs()` — resets all panels to empty state.
-- `create_app()` — assembles the full Gradio layout and wires up button events.
 
 ---
 
@@ -138,9 +125,8 @@ tests/
 
 ---
 
-### `scripts/run_api.py` — API Server Launcher
-- Runs the FastAPI app using Uvicorn on port 8000.
-- Separate from the Gradio UI — both can run simultaneously.
+### `scripts/run_api.py` — API & Workstation Server Launcher
+- Runs the FastAPI app using Uvicorn on port 8000, serving both the REST API and the PACS Clinical Diagnostic Studio.
 
 ### `scripts/train_segmentation.py` — U-Net Training Script
 - Loads image-mask pairs from `brain-tumor-2d-dataset/`.

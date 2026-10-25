@@ -52,7 +52,7 @@ IMG_SIZE_TRAIN    = (256, 256)   # U-Net training input resolution
 
 | Constant | Value | Used In |
 |---|---|---|
-| `CLASSES` | List of 4 class names | `inference.py`, `dashboard.py` |
+| `CLASSES` | List of 4 class names | `inference.py`, `api.py` |
 | `IMG_SIZE_CLASSIFY` | `(224, 224)` | `inference.py` — resizes input before model prediction |
 | `IMG_SIZE_TRAIN` | `(256, 256)` | `train_segmentation.py` — U-Net input size |
 

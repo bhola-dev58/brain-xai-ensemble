@@ -9,7 +9,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.config import CLASSES, CONVNEXT_VOTE_WEIGHT, INCEPTION_VOTE_WEIGHT, DENSENET_VOTE_WEIGHT
 from src.inference import predict_tumor_logic
 from src.report_generator import generate_pdf_report
-from src.dashboard import create_app
+from fastapi.testclient import TestClient
+from src.api import app as fastapi_app
 
 def test_full_stack():
     print("=" * 60)
@@ -67,11 +68,15 @@ def test_full_stack():
     print(f"  Report generated at: {pdf_path} ({file_size_kb:.1f} KB)")
     print("  [PASSED] PDF Report generated successfully.")
 
-    # 4. Gradio UI Creation
-    print("\n[4/4] Testing Dashboard Factory...")
-    app = create_app()
-    assert app is not None
-    print("  [PASSED] Gradio UI Blocks instantiated cleanly.")
+    # 4. FastAPI PACS Workstation Verification
+    print("\n[4/4] Testing FastAPI PACS Workstation...")
+    client = TestClient(fastapi_app)
+    health_resp = client.get("/api/health")
+    assert health_resp.status_code == 200
+    home_resp = client.get("/")
+    assert home_resp.status_code == 200
+    assert "BrainTumor" in home_resp.text
+    print("  [PASSED] FastAPI PACS Workstation endpoints verified cleanly.")
 
     print("\n" + "=" * 60)
     print("ALL FULL-STACK TESTS PASSED SUCCESSFULLY! 🚀")

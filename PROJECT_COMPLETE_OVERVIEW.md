@@ -4,7 +4,7 @@
 > **Repository:** `bhola-dev58/brain-xai-ensemble`  
 > **Status:** Production-Ready, Tested (36/36 Tests Passing), Deployed on Cloud & Local Workstation  
 > **Live URL:** [https://brain-tumor-xai-jf4z.onrender.com](https://brain-tumor-xai-jf4z.onrender.com)  
-> **Local Port:** `http://localhost:8000` (FastAPI + PACS Workstation) | `http://localhost:7860` (Gradio Dashboard)  
+> **Local Port:** `http://localhost:8000` (FastAPI + PACS Workstation)  
 
 ---
 
@@ -37,7 +37,6 @@ While modern Deep Learning classifiers achieve high statistical accuracy, they s
 | **ASGI Web Server** | `Uvicorn` | 0.46.0 | Lightning-fast async server serving API and static files |
 | **File Parsing** | `python-multipart` | 0.0.27 | Streaming multipart form-data parser for MRI image uploads |
 | **PACS UI Frontend** | `HTML5 + Vanilla CSS + JS` | ES6+ | Zero-framework, zero-Tailwind, 100% hand-crafted PACS clinical interface |
-| **Diagnostic Dashboard** | `Gradio` | 6.14.0 | Interactive alternative diagnostic studio |
 | **Medical PDF Engine** | `ReportLab` | 4.x | Programmatic multi-page clinical triage PDF generator |
 | **Medical Imaging** | `PyDicom` | 2.4.0+ | DICOM Part 10 dataset parsing and tag metadata extraction |
 | **Database** | `SQLite3` | StdLib | Local ACID-compliant patient intake, history, and telemetry storage |
@@ -132,13 +131,13 @@ The repository root is organized as follows:
 
 ```
 Brain_Tumor_Project/
-├── app.py                            # Gradio standalone diagnostic dashboard
+├── app.py                            # Unified application entrypoint (FastAPI PACS Workstation)
 ├── Dockerfile                        # Production Dockerfile with dynamic $PORT & safe models handling
 ├── docker-compose.yml                # Docker Compose orchestration with healthchecks
 ├── render.yaml                       # Render.com Blueprint configuration for auto-deploy
 ├── requirements.txt                  # Pinned Python package dependencies
-├── README.md                         # Main repository guide with Hugging Face Space metadata
-├── setup.sh                          # Automated 7-step Linux/macOS setup script
+├── README.md                         # Main repository guide
+├── setup.sh                          # Automated Linux/macOS setup script
 ├── setup.bat                         # Automated Windows setup script (CMD)
 ├── setup.ps1                         # Automated Windows PowerShell setup script
 ├── .dockerignore                     # Docker build-context exclusion rules
@@ -149,13 +148,11 @@ Brain_Tumor_Project/
 │   ├── __init__.py                   # Package initializer
 │   ├── api.py                        # FastAPI REST endpoints & static file mounting
 │   ├── config.py                     # Central configuration, hyperparameters & logging
-│   ├── dashboard.py                  # Gradio UI components and layout blocks
 │   ├── database.py                   # SQLite patient record database models & migrations
 │   ├── dicom_reader.py               # PyDicom reader for .dcm medical image ingestion
 │   ├── inference.py                  # Tri-ensemble prediction, dynamic shape adaptation, Grad-CAM++
 │   ├── processor.py                  # Morphological segmentation, calvarium cropping, severity
-│   ├── report_generator.py           # ReportLab clinical diagnostic PDF synthesis engine
-│   └── theme.py                      # UI aesthetic tokens, dark mode palette & styles
+│   └── report_generator.py           # ReportLab clinical diagnostic PDF synthesis engine
 │
 ├── static/                           # PACS Clinical Workstation Frontend
 │   ├── index.html                    # Semantic HTML5 clinical workstation with quad viewports
@@ -264,7 +261,7 @@ Brain_Tumor_Project/
 - Set up project structure, virtual environment, and dependency pinning in `requirements.txt`.
 - Built baseline dual-model soft voting ensemble combining DenseNet121 and InceptionV3.
 - Integrated standard Grad-CAM heatmap generation and morphological contour segmentation.
-- Validated initial Gradio UI on port 7860.
+- Validated initial diagnostic UI prototypes.
 
 ### Phase 2: Tri-Ensemble Architecture & ConvNeXt Upgrade
 - Upgraded the ensemble to a **Heterogeneous Tri-Ensemble** by incorporating **ConvNeXt-Small** as the primary deep feature backbone.
@@ -346,11 +343,11 @@ docker compose up -d --build
 - Open in browser: **`http://localhost:8000`**
 - Stop container: `docker compose down`
 
-### 7.3 Running the Alternative Gradio Dashboard
+### 7.3 Running via Root Entrypoint
 ```bash
 python3 app.py
 ```
-- Open in browser: **`http://localhost:7860`**
+- Open in browser: **`http://localhost:8000`**
 
 ### 7.4 Running the Test Suite
 ```bash

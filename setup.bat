@@ -15,7 +15,7 @@
 ::
 ::  After setup:
 ::    venv\Scripts\activate
-::    python app.py        ->  http://127.0.0.1:7860
+::    python app.py        ->  http://127.0.0.1:8000
 :: =============================================================================
 
 setlocal EnableDelayedExpansion
@@ -78,8 +78,8 @@ if /I "%MODE%"=="docker" (
     echo.
     echo [OK]    Docker image built.
     echo.
-    echo   Run:  docker run --rm -p 7860:7860 brain-xai-ensemble
-    echo   Open: http://localhost:7860
+    echo   Run:  docker run --rm -p 8000:8000 brain-xai-ensemble
+    echo   Open: http://localhost:8000
     echo.
     exit /b 0
 )
@@ -195,7 +195,7 @@ for %%D in (models datasets assets src scripts test_images data reports) do (
 echo [OK]    All runtime directories present.
 
 :: Check required source files
-set FILES=app.py src\__init__.py src\config.py src\inference.py src\processor.py src\dashboard.py src\report_generator.py src\database.py src\dicom_reader.py src\theme.py src\api.py
+set FILES=app.py src\__init__.py src\config.py src\inference.py src\processor.py src\report_generator.py src\database.py src\dicom_reader.py src\api.py
 
 for %%F in (%FILES%) do (
     if exist "%%F" (
@@ -257,7 +257,7 @@ echo [INFO]  Verifying module imports ...
 "os.environ['TF_CPP_MIN_LOG_LEVEL']='3';" ^
 "os.environ['CUDA_VISIBLE_DEVICES']='-1';" ^
 "failures=[];" ^
-"checks=[('numpy','import numpy;print(f\"  numpy        {numpy.__version__}\")'),('opencv','import cv2;print(f\"  opencv       {cv2.__version__}\")'),('tensorflow','import tensorflow as tf;print(f\"  tensorflow   {tf.__version__}\")'),('gradio','import gradio as gr;print(f\"  gradio       {gr.__version__}\")'),('pydicom','import pydicom;print(f\"  pydicom      {pydicom.__version__}\")'),('fastapi','import fastapi;print(f\"  fastapi      {fastapi.__version__}\")'),('src.config','from src.config import CLASSES;print(f\"  src.config   OK ({len(CLASSES)} classes)\")'),('src.database','from src.database import get_scan_count;n=get_scan_count();print(f\"  src.database OK ({n} records)\")'),('src.dicom','from src.dicom_reader import read_dicom;print(\"  src.dicom    OK\")')];" ^
+"checks=[('numpy','import numpy;print(f\"  numpy        {numpy.__version__}\")'),('opencv','import cv2;print(f\"  opencv       {cv2.__version__}\")'),('tensorflow','import tensorflow as tf;print(f\"  tensorflow   {tf.__version__}\")'),('pydicom','import pydicom;print(f\"  pydicom      {pydicom.__version__}\")'),('fastapi','import fastapi;print(f\"  fastapi      {fastapi.__version__}\")'),('src.config','from src.config import CLASSES;print(f\"  src.config   OK ({len(CLASSES)} classes)\")'),('src.database','from src.database import get_scan_count;n=get_scan_count();print(f\"  src.database OK ({n} records)\")'),('src.dicom','from src.dicom_reader import read_dicom;print(\"  src.dicom    OK\")')];" ^
 "[failures.append(f'{n}: {e}') or None for n,c in checks for e in [None] if not (lambda:exec(c) or True)()];" ^
 "sys.exit(1) if failures else print('\n  All imports verified.')"
 
@@ -280,14 +280,10 @@ if %ISSUES%==0 (
 )
 echo ====================================================================
 echo.
-echo   Launch the Gradio dashboard:
+echo   Launch the Clinical PACS Workstation:
 echo     venv\Scripts\activate
 echo     python app.py
-echo     Open:  http://127.0.0.1:7860
-echo.
-echo   Launch the FastAPI REST backend:
-echo     venv\Scripts\activate
-echo     uvicorn src.api:app --host 0.0.0.0 --port 8000 --reload
+echo     Open:  http://127.0.0.1:8000
 echo.
 if /I "%MODE%"=="dev" (
     echo   Run tests:

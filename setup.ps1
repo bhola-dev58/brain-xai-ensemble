@@ -69,8 +69,8 @@ if ($Docker) {
     docker build -t brain-xai-ensemble .
     Write-Ok "Image built."
     Write-Host ""
-    Write-Host "  Run:  docker run --rm -p 7860:7860 brain-xai-ensemble" -ForegroundColor Cyan
-    Write-Host "  Open: http://localhost:7860" -ForegroundColor Cyan
+    Write-Host "  Run:  docker run --rm -p 8000:8000 brain-xai-ensemble" -ForegroundColor Cyan
+    Write-Host "  Open: http://localhost:8000" -ForegroundColor Cyan
     exit 0
 }
 
@@ -174,8 +174,8 @@ Write-Ok "All runtime directories present."
 # Required source files
 $RequiredFiles = @(
     "app.py","src\__init__.py","src\config.py","src\inference.py",
-    "src\processor.py","src\dashboard.py","src\report_generator.py",
-    "src\database.py","src\dicom_reader.py","src\theme.py","src\api.py"
+    "src\processor.py","src\report_generator.py",
+    "src\database.py","src\dicom_reader.py","src\api.py"
 )
 foreach ($f in $RequiredFiles) {
     if (Test-Path $f) {
@@ -248,7 +248,6 @@ checks = [
     ('numpy',        "import numpy; print(f'  numpy        {numpy.__version__}')"),
     ('opencv',       "import cv2;   print(f'  opencv       {cv2.__version__}')"),
     ('tensorflow',   "import tensorflow as tf; print(f'  tensorflow   {tf.__version__}')"),
-    ('gradio',       "import gradio as gr; print(f'  gradio       {gr.__version__}')"),
     ('reportlab',    "from reportlab.lib import colors; print('  reportlab    OK')"),
     ('scikit-learn', "import sklearn; print(f'  scikit-learn {sklearn.__version__}')"),
     ('pydicom',      "import pydicom; print(f'  pydicom      {pydicom.__version__}')"),
@@ -292,12 +291,10 @@ if ($Issues -eq 0) {
 }
 
 Write-Host ""
-Write-Host "  Launch the Gradio dashboard:" -ForegroundColor White
+Write-Host "  Launch the Clinical PACS Workstation:" -ForegroundColor White
 Write-Host "    venv\Scripts\activate" -ForegroundColor Cyan
 Write-Host "    python app.py" -ForegroundColor Cyan
-Write-Host "    Open: http://127.0.0.1:7860" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "  Launch the FastAPI REST backend:" -ForegroundColor White
+Write-Host "    Open: http://127.0.0.1:8000" -ForegroundColor Cyan
 Write-Host "    uvicorn src.api:app --host 0.0.0.0 --port 8000 --reload" -ForegroundColor Cyan
 Write-Host ""
 

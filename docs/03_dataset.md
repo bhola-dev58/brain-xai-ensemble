@@ -116,7 +116,7 @@ Masks are:
 
 ## Test Images
 
-The `test_images/` directory contains pre-selected MRI samples included directly in the Gradio dashboard as clickable quick-load examples:
+The `test_images/` directory contains pre-selected MRI samples included directly in the PACS workstation and test suite as quick-load benchmark examples:
 
 | File | Class |
 |---|---|

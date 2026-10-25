@@ -4,10 +4,7 @@ numpy==2.4.4
 opencv-python==4.13.0.92
 matplotlib==3.10.9
 
-# Web UI
-gradio==6.14.0
-
-# REST API
+# REST API & PACS Web Workstation
 fastapi==0.136.1
 uvicorn==0.46.0
 python-multipart==0.0.27

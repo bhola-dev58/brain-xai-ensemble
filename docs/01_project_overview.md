@@ -89,7 +89,7 @@ When a user uploads an MRI scan, the system produces:
 | Models | DenseNet121, InceptionV3 (pre-trained ImageNet weights, fine-tuned) |
 | Explainability | Grad-CAM (via TensorFlow GradientTape) |
 | Computer Vision | OpenCV 4.x, NumPy |
-| Web Dashboard | Gradio 6.x |
+| Web PACS Workstation | Vanilla HTML5 / CSS3 / ES6+ |
 | REST API | FastAPI 0.136 + Uvicorn |
 | Testing | pytest |
 | Containerization | Docker (CPU-only, Python 3.12-slim base) |

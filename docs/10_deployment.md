@@ -58,8 +58,7 @@ pip install -r requirements.txt
 | `numpy` | 2.4.4 | Numerical computing |
 | `opencv-python` | 4.13.0.92 | Image processing |
 | `matplotlib` | 3.10.9 | Optional visualization |
-| `gradio` | 6.14.0 | Web UI framework |
-| `fastapi` | 0.136.1 | REST API framework |
+| `fastapi` | 0.136.1 | REST API & Web Workstation framework |
 | `uvicorn` | 0.46.0 | ASGI server for FastAPI |
 | `python-multipart` | 0.0.27 | File upload support for FastAPI |
 
@@ -78,36 +77,23 @@ If model files are missing, contact the project maintainer to obtain the pre-tra
 
 ---
 
-### Step 5 — Run the Gradio Dashboard
+### Step 5 — Run the Clinical PACS Workstation
 
 ```bash
 python app.py
-```
-
-Expected output:
-```
-INFO  BrainTumorXAI: Initializing ensemble models...
-INFO  BrainTumorXAI: Models loaded successfully.
-Running on local URL:  http://127.0.0.1:7860
-Running on public URL: https://xxxxxxxx.gradio.live
-```
-
-Open `http://127.0.0.1:7860` in your browser.
-
----
-
-### Step 6 — Run the REST API Server (Optional)
-
-The API server runs separately from the dashboard on a different port.
-
-```bash
+# or
 python scripts/run_api.py
 ```
 
 Expected output:
 ```
+2026-10-25 14:34:26 [INFO] [BrainTumorXAI] Loading Tri-Ensemble models (ConvNeXtSmall + InceptionV3 + DenseNet121)...
+2026-10-25 14:34:30 [INFO] [BrainTumorXAI] Tri-Ensemble initialization complete: 3/3 models active. Ready: True
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+```
+
+Open `http://localhost:8000` in your browser.
 ```
 
 Open `http://localhost:8000/docs` for the Swagger UI.
@@ -197,21 +183,11 @@ Hugging Face Spaces provides free hosting with public HTTPS URLs on CPU instance
 
 ## Option 5: Running Local Development Services
 
-**Terminal 1 — Gradio Dashboard:**
 ```bash
 source venv/bin/activate
 python app.py
-# → http://localhost:7860
+# → http://localhost:8000 (serves PACS Workstation at / and REST API at /api/*)
 ```
-
-**Terminal 2 — REST API:**
-```bash
-source venv/bin/activate
-python scripts/run_api.py
-# → http://localhost:8000
-```
-
-Both share the same model weights from `models/`. The models are loaded independently in each process.
 
 ---
 
@@ -253,6 +229,6 @@ python app.py
 | `OSError: models/densenet_best.h5 not found` | Ensure both `.h5` files exist in the `models/` directory |
 | `ModuleNotFoundError: No module named 'src'` | Run commands from the project root directory, not from inside `src/` |
 | `libGL.so.1: cannot open shared object` | Install system libs: `apt-get install -y libgl1 libglib2.0-0` |
-| Port 7860 already in use | Kill existing process: `lsof -ti:7860 \| xargs kill` |
+| Port 8000 already in use | Kill existing process: `lsof -ti:8000 \| xargs kill` |
 | Dashboard loads but shows blank panels | Clear browser cache or use incognito mode |
 | Inference very slow | First run takes 30–60s due to model initialization. Subsequent runs are faster. |

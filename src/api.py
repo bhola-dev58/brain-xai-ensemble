@@ -158,8 +158,6 @@ else:
     allowed_origins = [
         "http://localhost:8000",
         "http://127.0.0.1:8000",
-        "http://localhost:7860",
-        "http://127.0.0.1:7860",
     ]
 
 app.add_middleware(

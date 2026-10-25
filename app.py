@@ -1,15 +1,24 @@
-import os
-import gradio as gr
-from src.dashboard import create_app, get_custom_css
-from src.theme import get_clinical_theme
+"""
+BrainTumorXAI — Production Application Entrypoint
+Launches the FastAPI PACS Clinical Diagnostic Studio workstation.
 
-demo = create_app()
+Usage:
+    python app.py
+    # or
+    python scripts/run_api.py
+
+Access:
+    Web Workstation: http://localhost:8000
+    Interactive API Docs: http://localhost:8000/docs
+    ReDoc Documentation: http://localhost:8000/redoc
+"""
+import os
+import sys
+import uvicorn
+from src.config import HOST, PORT
 
 if __name__ == "__main__":
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
-        share=True,
-        css=get_custom_css(),
-        theme=get_clinical_theme()
-    )
+    host = os.environ.get("HOST", HOST)
+    port = int(os.environ.get("PORT", PORT))
+    print(f"Starting BrainTumorXAI Clinical Workstation on http://{host}:{port}...")
+    uvicorn.run("src.api:app", host=host, port=port, reload=False)

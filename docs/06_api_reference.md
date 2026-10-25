@@ -1,6 +1,6 @@
 # 06 — API Reference
 
-The FastAPI REST backend (`src/api.py`) exposes the complete inference pipeline as HTTP endpoints. It runs independently from the Gradio dashboard and can be integrated with any external system, hospital PACS, or frontend application.
+The FastAPI REST backend (`src/api.py`) exposes the complete inference pipeline as HTTP endpoints while serving the PACS Clinical Diagnostic Studio workstation. It can be integrated with any external system, hospital PACS, or frontend application.
 
 ---
 
@@ -167,15 +167,14 @@ document.getElementById('gradcam-img').src = gradcamSrc;
 
 ---
 
-## API vs Dashboard
+## Workstation & API Features
 
-| Feature | Gradio Dashboard | FastAPI REST API |
+The FastAPI application provides both the interactive Clinical Diagnostic Studio frontend and the headless REST API:
+
+| Capability | Web PACS Studio (`/`) | REST API (`/api/*`) |
 |---|---|---|
-| Port | 7860 | 8000 |
-| Input method | Browser file upload | HTTP multipart upload |
-| Output format | Interactive HTML panels + images | JSON with base64-encoded images |
-| Authentication | None | None (add middleware for production) |
-| Suitable for | Clinicians, demos | System integration, PACS, frontends |
-| Swagger docs | No | Yes (`/docs`) |
-
-Both entry points share the **exact same** `predict_tumor_logic()` function — identical results.
+| Access URL | `http://localhost:8000/` | `http://localhost:8000/api` |
+| Input method | Drag & drop file upload / DICOM | HTTP multipart form upload |
+| Output format | Real-time Quad-View overlays + SVG metrics | JSON with base64-encoded overlays |
+| Interactive documentation | Built-in Diagnostic Guide & Shortcuts | Swagger UI (`/docs`) & ReDoc (`/redoc`) |
+| Use Case | Radiology review, clinical validation | PACS integration, EMR connectors, mobile apps |

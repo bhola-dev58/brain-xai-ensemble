@@ -1,7 +1,7 @@
 """
-Launcher script for the BrainTumorXAI FastAPI REST server.
+Launcher script for the BrainTumorXAI FastAPI PACS Workstation and REST server.
 
-Runs independently from the Gradio UI (app.py).
+Serves both the interactive PACS Clinical Diagnostic Studio and REST endpoints.
 
 Usage:
     ./venv/bin/python scripts/run_api.py

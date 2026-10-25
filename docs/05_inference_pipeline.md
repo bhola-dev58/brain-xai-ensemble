@@ -13,7 +13,7 @@ All inference goes through a single function:
 result = predict_tumor_logic(img)   # img: numpy array (H, W, 3), uint8
 ```
 
-This function is called by both the Gradio UI (`dashboard.py`) and the FastAPI backend (`api.py`).
+This function is called by the FastAPI application (`src/api.py`) to serve both the web PACS workstation and REST endpoints.
 
 ---
 
@@ -28,7 +28,7 @@ if img.dtype != np.uint8:
 ```
 
 - Rejects `None` inputs immediately with a user-friendly error message.
-- Accepts float images (e.g., from Gradio's internal processing) and safely clips + casts them to `uint8`.
+- Accepts float or integer images and safely clips + casts them to `uint8`.
 
 ---
 

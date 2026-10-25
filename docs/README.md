@@ -14,7 +14,7 @@ Welcome to the full technical documentation for **BrainTumorXAI**, an explainabl
 | [04 — Models & Training](./04_models_and_training.md) | DenseNet121, InceptionV3, ensemble logic, and training setup |
 | [05 — Inference Pipeline](./05_inference_pipeline.md) | Step-by-step prediction, Grad-CAM, segmentation |
 | [06 — API Reference](./06_api_reference.md) | FastAPI REST endpoints, request/response schemas |
-| [07 — Dashboard (UI)](./07_dashboard_ui.md) | Gradio interface, components, and layout |
+| [07 — Clinical Diagnostic Studio (UI/UX)](./07_dashboard_ui.md) | PACS workstation interface, components, and layout |
 | [08 — Configuration](./08_configuration.md) | All constants, thresholds, and paths in `config.py` |
 | [09 — Testing](./09_testing.md) | Test suite coverage, running tests, expected results |
 | [10 — Deployment](./10_deployment.md) | Local setup, Docker, and production deployment guide |
@@ -36,9 +36,9 @@ python -m venv venv && source venv/bin/activate
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Launch the Gradio dashboard
+# 4. Launch the Clinical PACS Workstation
 python app.py
-# → Open http://127.0.0.1:7860
+# → Open http://127.0.0.1:8000
 ```
 
 ---
