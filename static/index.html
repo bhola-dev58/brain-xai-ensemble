@@ -29,7 +29,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css?v=2.2">
+  <link rel="stylesheet" href="/css/style.css?v=2.3">
 
   <!-- Favicon: Warm Amber Brain SVG -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F97316' stroke-width='2'><path d='M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-5.04z'/><path d='M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-5.04z'/></svg>">
@@ -695,7 +695,7 @@
                       <span class="prob-pct" id="metric-confidence">0.00%</span>
                     </div>
                     <div class="progress-track">
-                      <div class="progress-fill fill--danger" id="bar-confidence" style="width:0%"></div>
+                      <div class="progress-fill fill--danger" id="bar-confidence"></div>
                     </div>
                   </div>
                   <div class="prob-item">
@@ -704,7 +704,7 @@
                       <span class="prob-pct" id="prob-meningioma-card">0.00%</span>
                     </div>
                     <div class="progress-track">
-                      <div class="progress-fill fill--orange" id="bar-meningioma-card" style="width:0%"></div>
+                      <div class="progress-fill fill--orange" id="bar-meningioma-card"></div>
                     </div>
                   </div>
                   <div class="prob-item">
@@ -713,7 +713,7 @@
                       <span class="prob-pct" id="prob-pituitary-card">0.00%</span>
                     </div>
                     <div class="progress-track">
-                      <div class="progress-fill fill--cyan" id="bar-pituitary-card" style="width:0%"></div>
+                      <div class="progress-fill fill--cyan" id="bar-pituitary-card"></div>
                     </div>
                   </div>
                   <div class="prob-item">
@@ -722,7 +722,7 @@
                       <span class="prob-pct" id="prob-notumor-card">0.00%</span>
                     </div>
                     <div class="progress-track">
-                      <div class="progress-fill fill--teal" id="bar-notumor-card" style="width:0%"></div>
+                      <div class="progress-fill fill--teal" id="bar-notumor-card"></div>
                     </div>
                   </div>
                 </div>
@@ -761,7 +761,7 @@
                     <span class="prob-pct" id="prob-glioma">0.00%</span>
                   </div>
                   <div class="progress-track">
-                    <div class="progress-fill" id="fill-glioma" style="width:0%; background:var(--clr-danger)"></div>
+                    <div class="progress-fill fill--danger" id="fill-glioma"></div>
                   </div>
                 </div>
 
@@ -771,7 +771,7 @@
                     <span class="prob-pct" id="prob-meningioma">0.00%</span>
                   </div>
                   <div class="progress-track">
-                    <div class="progress-fill" id="fill-meningioma" style="width:0%; background:var(--clr-accent)"></div>
+                    <div class="progress-fill fill--orange" id="fill-meningioma"></div>
                   </div>
                 </div>
 
@@ -781,7 +781,7 @@
                     <span class="prob-pct" id="prob-pituitary">0.00%</span>
                   </div>
                   <div class="progress-track">
-                    <div class="progress-fill" id="fill-pituitary" style="width:0%; background:var(--clr-cyan)"></div>
+                    <div class="progress-fill fill--cyan" id="fill-pituitary"></div>
                   </div>
                 </div>
 
@@ -791,7 +791,7 @@
                     <span class="prob-pct" id="prob-notumor">0.00%</span>
                   </div>
                   <div class="progress-track">
-                    <div class="progress-fill" id="fill-notumor" style="width:0%; background:var(--clr-success)"></div>
+                    <div class="progress-fill fill--teal" id="fill-notumor"></div>
                   </div>
                 </div>
               </div>
@@ -875,7 +875,7 @@
               </div>
             </div>
 
-            <div style="margin-top: 0.5rem; display: flex; gap: 0.75rem; align-items: center;">
+            <div class="report-actions-row">
               <button class="btn-primary" id="btn-generate-pdf">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Generate Clinical PDF
@@ -976,6 +976,6 @@
   </div>
 
   <!-- JavaScript: Main Application Logic -->
-  <script src="/js/app.js?v=2.2"></script>
+  <script src="/js/app.js?v=2.3"></script>
 </body>
 </html>

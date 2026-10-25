@@ -270,6 +270,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   checkHealth();
 
+  // On mobile/tablet screens, collapse sidebar initially to prioritize diagnostic workflow
+  if (window.innerWidth <= 768) {
+    setSidebarCollapsed(true);
+  }
+
 
   /* ============================================================
      5. TAB & NAV RAIL SWITCHING
@@ -347,9 +352,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function setSidebarCollapsed(collapsed) {
     state.sidebarCollapsed = collapsed;
     dom.workstation.classList.toggle('sidebar-collapsed', collapsed);
-    if (window.innerWidth <= 640) {
-      dom.sidebar.classList.toggle('mobile-open', !collapsed);
-    }
+    dom.sidebarCollapseBtn?.setAttribute('aria-expanded', String(!collapsed));
+    dom.sidebarToggleBtn?.setAttribute('aria-expanded', String(!collapsed));
   }
 
   function toggleSidebar() {
@@ -994,10 +998,12 @@ document.addEventListener('DOMContentLoaded', () => {
      ============================================================ */
   function openHelpModal() {
     dom.helpModal?.classList.add('active');
+    dom.helpModalClose?.focus();
   }
 
   function closeHelpModal() {
     dom.helpModal?.classList.remove('active');
+    dom.navRailHelp?.focus();
   }
 
   dom.helpModalClose?.addEventListener('click', closeHelpModal);
