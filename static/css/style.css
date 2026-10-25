@@ -1890,6 +1890,28 @@ a:hover {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  transition: filter var(--dur-fast) var(--ease-smooth);
+}
+
+/* Radiological Window Presets */
+.viewport-canvas.preset-filter-brain img {
+  filter: contrast(1.3) brightness(1.05);
+}
+
+.viewport-canvas.preset-filter-high-contrast img {
+  filter: contrast(1.75) brightness(0.95);
+}
+
+.viewport-canvas.preset-filter-bone img {
+  filter: contrast(2.2) brightness(1.2) grayscale(1);
+}
+
+.viewport-canvas.preset-filter-invert img {
+  filter: invert(1);
+}
+
+.viewport-canvas.preset-filter-angio img {
+  filter: contrast(1.8) brightness(1.1) saturate(1.4);
 }
 
 .viewport-placeholder {

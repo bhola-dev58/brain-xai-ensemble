@@ -741,7 +741,8 @@ def predict_tumor_logic(
     img: Optional[np.ndarray],
     analysis_id: Optional[str] = None,
     use_tta: bool = False,
-    tta_passes: int = 5
+    tta_passes: int = 5,
+    colormap: str = "jet"
 ) -> Dict[str, Any]:
     """
     Inference handler: classification, heatmap generation,
@@ -914,6 +915,18 @@ def predict_tumor_logic(
         segmentation_img = img_cropped.copy()
         tumor_percentage = 0.0
         location = "N/A"
+        heatmap_raw = None
+        heatmap_pp_raw = None
+
+        cm_map = {
+            "jet": cv2.COLORMAP_JET,
+            "turbo": getattr(cv2, "COLORMAP_TURBO", cv2.COLORMAP_JET),
+            "inferno": getattr(cv2, "COLORMAP_INFERNO", cv2.COLORMAP_JET),
+            "viridis": getattr(cv2, "COLORMAP_VIRIDIS", cv2.COLORMAP_JET),
+        }
+        cm_key = str(colormap).lower().strip()
+        cm_code = cm_map.get(cm_key, cv2.COLORMAP_JET)
+        cm_pp_code = cv2.COLORMAP_MAGMA if cm_key == "jet" else cm_code
 
         try:
             # ── Standard Grad-CAM ──────────────────────────────────────────────
@@ -925,7 +938,7 @@ def predict_tumor_logic(
             )
             gradcam_overlay = _build_overlay(
                 img_cropped, heatmap_raw,
-                colormap=cv2.COLORMAP_JET,
+                colormap=cm_code,
                 opacity=GRADCAM_OVERLAY_OPACITY
             )
 
@@ -938,7 +951,7 @@ def predict_tumor_logic(
             )
             gradcam_pp_overlay = _build_overlay(
                 img_cropped, heatmap_pp_raw,
-                colormap=cv2.COLORMAP_MAGMA,
+                colormap=cm_pp_code,
                 opacity=GRADCAM_OVERLAY_OPACITY
             )
 
@@ -968,10 +981,13 @@ def predict_tumor_logic(
             "timestamp": timestamp,
             "tta_enabled": use_tta,
             "tta_passes": tta_passes if use_tta else 1,
+            "colormap": cm_key,
             "img": img_cropped,
             "segmentation_img": segmentation_img,
             "gradcam_overlay": gradcam_overlay,
             "gradcam_pp_overlay": gradcam_pp_overlay,
+            "heatmap_raw": heatmap_raw,
+            "heatmap_pp_raw": heatmap_pp_raw,
             "class_name": class_name,
             "confidence": confidence,
             "confidence_metric": "Ensemble Softmax Probability (Uncalibrated)",

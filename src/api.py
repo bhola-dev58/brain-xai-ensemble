@@ -306,14 +306,15 @@ def get_models_info() -> dict:
 async def predict(
     file: UploadFile = File(..., description="Brain MRI image file (JPEG, PNG, or DICOM)"),
     use_tta: bool = Form(False, description="Enable 5-pass Test-Time Augmentation (TTA)"),
+    colormap: str = Form("jet", description="Colormap for XAI saliency overlay (jet, turbo, inferno, viridis)"),
     _auth: Optional[str] = Depends(require_api_key),
 ) -> JSONResponse:
     """Performs full Tri-Ensemble inference with multi-modal XAI overlays."""
     safe_name = sanitize_filename(file.filename)
-    logger.info(f"Processing prediction request: tta_enabled={use_tta}")
+    logger.info(f"Processing prediction request: tta_enabled={use_tta} colormap={colormap}")
 
     img = await _read_upload_as_numpy(file)
-    result = predict_tumor_logic(img, use_tta=use_tta)
+    result = predict_tumor_logic(img, use_tta=use_tta, colormap=colormap)
 
     if not result.get("is_valid"):
         code = result.get("code", "UNKNOWN_ERROR")
@@ -368,6 +369,14 @@ async def predict(
     gradcam_pp_b64 = _ndarray_to_base64(result["gradcam_pp_overlay"])
     seg_b64 = _ndarray_to_base64(result["segmentation_img"])
 
+    hm_raw = result.get("heatmap_raw")
+    hm_raw_b64 = _ndarray_to_base64(np.uint8(np.clip(hm_raw, 0, 1) * 255)) if hm_raw is not None else None
+
+    hm_pp_raw = result.get("heatmap_pp_raw")
+    hm_pp_raw_b64 = _ndarray_to_base64(np.uint8(np.clip(hm_pp_raw, 0, 1) * 255)) if hm_pp_raw is not None else None
+
+    img_cropped_b64 = _ndarray_to_base64(result.get("img")) if result.get("img") is not None else None
+
     pred_breakdown = {}
     for cls, prob in zip(result["classes"], result["avg_pred"]):
         pred_breakdown[cls] = round(float(prob) * 100, 4)
@@ -387,6 +396,7 @@ async def predict(
             "pipeline_version": result.get("pipeline_version"),
             "provenance": result.get("provenance"),
             "tta_enabled": result.get("tta_enabled", False),
+            "colormap": result.get("colormap", colormap),
             "class_name": result["class_name"],
             "confidence": round(result["confidence"], 2),
             "confidence_metric": result.get("confidence_metric", "Ensemble Softmax Probability (Uncalibrated)"),
@@ -403,6 +413,9 @@ async def predict(
             "gradcam_overlay_b64": gradcam_b64,
             "gradcam_pp_overlay_b64": gradcam_pp_b64,
             "segmentation_b64": seg_b64,
+            "heatmap_raw_b64": hm_raw_b64,
+            "heatmap_pp_raw_b64": hm_pp_raw_b64,
+            "img_cropped_b64": img_cropped_b64,
         },
     )
 

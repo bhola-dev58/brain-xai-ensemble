@@ -29,6 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /** @type {boolean} Whether the PACS sidebar is collapsed */
     sidebarCollapsed: false,
+
+    /** @type {string} Active XAI Colormap preset (jet, turbo, inferno, viridis) */
+    selectedColormap: 'jet',
+
+    /** @type {number} Saliency ROI Cutoff percentage (10 - 60) */
+    saliencyCutoff: 30,
   };
 
 
@@ -470,6 +476,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     resetOverlays();
+    cachedBaseImg = null;
+    cachedHmImg = null;
+    cachedHmPPImg = null;
+    updateColormapBadges(state.selectedColormap || 'jet');
 
     // Reset verdict and gauge
     dom.verdictPill.className = 'verdict-pill status--ready';
@@ -582,6 +592,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const formData = new FormData();
     formData.append('file', state.currentFile);
+    formData.append('use_tta', String(dom.toggleTta?.checked ?? false));
+    const activeColormap = dom.selectColormap ? dom.selectColormap.value : (state.selectedColormap || 'jet');
+    formData.append('colormap', activeColormap);
 
     const t0 = performance.now();
     setAnalyzeBtnLoading(true);
@@ -621,12 +634,32 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {number} clientMs  - Total client round-trip ms
    */
   function renderResults(data, clientMs) {
+    state.lastResult = data;
+    if (data.colormap) {
+      state.selectedColormap = data.colormap;
+      if (dom.selectColormap) dom.selectColormap.value = data.colormap;
+    }
+    updateColormapBadges(state.selectedColormap);
+
     renderHeatmaps(data);
     renderVerdict(data);
     renderConfidenceGauge(data);
     renderBiomarkers(data, clientMs);
     renderProbabilities(data);
     appendHistoryRow(data);
+
+    if (data.img_cropped_b64 && data.heatmap_raw_b64) {
+      loadCachedHeatmapImages(
+        data.img_cropped_b64,
+        data.heatmap_raw_b64,
+        data.heatmap_pp_raw_b64,
+        () => {
+          if (state.selectedColormap !== 'jet' || state.saliencyCutoff !== 30) {
+            recolorSaliencyOverlays();
+          }
+        }
+      );
+    }
   }
 
   /** Renders heatmap overlays onto the quad-view panels. */
@@ -903,8 +936,126 @@ document.addEventListener('DOMContentLoaded', () => {
   dom.toggleGating?.addEventListener('change', updateGatingState);
   updateGatingState();
 
+  /* ============================================================
+     XAI SALIENCY COLORMAPS & ROI CUTOFF ENGINE
+     ============================================================ */
+  const COLORMAP_LUTS = {
+    jet: Uint8Array.from(atob("AACAAACEAACIAACMAACQAACUAACYAACcAACgAACkAACoAACsAACwAAC0AAC4AAC8AADAAADEAADIAADMAADQAADUAADYAADcAADgAADkAADoAADsAADwAAD0AAD4AAD8AAD/AAT/AAj/AAz/ABD/ABT/ABj/ABz/ACD/ACT/ACj/ACz/ADD/ADT/ADj/ADz/AED/AET/AEj/AEz/AFD/AFT/AFj/AFz/AGD/AGT/AGj/AGz/AHD/AHT/AHj/AHz/AID/AIT/AIj/AIz/AJD/AJT/AJj/AJz/AKD/AKT/AKj/AKz/ALD/ALT/ALj/ALz/AMD/AMT/AMj/AMz/AND/ANT/ANj/ANz/AOD/AOT/AOj/AOz/APD/APT/APj/APz/Av/+Bv/6Cv/2Dv/yEv/uFv/qGv/mHv/iIv/eJv/aKv/WLv/SMv/ONv/KOv/GPv/CQv++Rv+6Sv+2Tv+yUv+uVv+qWv+mXv+iYv+eZv+aav+Wbv+Scv+Odv+Kev+Gfv+Cgv9+hv96iv92jv9ykv9ulv9qmv9mnv9iov9epv9aqv9Wrv9Ssv9Otv9Kuv9Gvv9Cwv8+xv86yv82zv8y0v8u1v8q2v8m3v8i4v8e5v8a6v8W7v8S8v8O9v8K+v8G/v8B//wA//gA//QA//AA/+wA/+gA/+QA/+AA/9wA/9gA/9QA/9AA/8wA/8gA/8QA/8AA/7wA/7gA/7QA/7AA/6wA/6gA/6QA/6AA/5wA/5gA/5QA/5AA/4wA/4gA/4QA/4AA/3wA/3gA/3QA/3AA/2wA/2gA/2QA/2AA/1wA/1gA/1QA/1AA/0wA/0gA/0QA/0AA/zwA/zgA/zQA/zAA/ywA/ygA/yQA/yAA/xwA/xgA/xQA/xAA/wwA/wgA/wQA/wAA/AAA+AAA9AAA8AAA7AAA6AAA5AAA4AAA3AAA2AAA1AAA0AAAzAAAyAAAxAAAwAAAvAAAuAAAtAAAsAAArAAAqAAApAAAoAAAnAAAmAAAlAAAkAAAjAAAiAAAhAAAgAAA"), c => c.charCodeAt(0)),
+    turbo: Uint8Array.from(atob("MBI7MhVDMxhKNBtRNR5YNiFfNyRmOCdtOSpzOi15Oy+APDKGPTWLPjiRPzuXPz6cQECiQUOnQUasQkmxQku1Q066RFG/RFTDRFbHRVnLRVzPRV7TRmHWRmTaRmbdRmngRmvjR27mR3HpR3PrR3buR3jwR3vyRn30RoD2RoL4RoX6Rof7RYr8RYz9RI/+Q5H+QpT/QZb/QJn/Ppv+PZ7+O6D9OqP8OKX7N6j6Nav4M633Ma/1L7L0LrTyLLfwKrnuKLzrJ77pJcDnI8PkIsXiIMffH8ndHsvaHM3YG9DVGtLSGtTQGdXNGNfKGNnIGNvFGN3CGN7AGOC9GeK7GeO5GuS2HOa0HeeyH+mvIOqsIuuqJeynJ+6kKu+hLPCeL/GbMvKYNfOUOPSRPPWOP/aKQ/eHRviESviATvl9Uvp6Vfp2WftzXfxvYfxsZf1paf1mbf5icf5fdf5cef5Zff9WgP9ThP9RiP9Oi/9Lj/9Jkv9Hlv5Emf5CnP5An/0/of09pPw8p/w6qfs5rPs4r/o3sfk2tPg2t/c1ufY1vPU0vvQ0wfM0w/E0xvA0yO80y+00zew00Oo00uk11Oc11+U12eQ22+I23eA339834d0349s45dk459c56dU569M57NE67s8678068cs68sk69Mc69cU69sM698E6+L45+bw5+ro5+7g4+7Y3/LM2/LE2/a41/aw0/qkz/qcy/qQx/qEw/p4v/pst/pks/pYr/pMq/pAp/Y0n/Yom/Icl/IQj+4Ei+34h+nsf+Xge+XUd+HIc928a9mwZ9WkY9GYX82MV8mAU8V0T8FsS71gR7VUQ7FMP61AO6k4N6EsM50kM5UcL5EUK4kMK4UEJ3z8I3T0I3DsH2jkH2DcG1jUG1DMF0jEF0C8Fzi0EzCsEyioEyCgDxSYDwyUDwSMCviECvCACuR4Ctx0CtBsBshoBrxgBrBcBqRYBpxQBpBMBoRIBnhABmw8BmA4BlQ0BkgsBjgoBiwkCiAgChQcCgQYCfgUCegQD"), c => c.charCodeAt(0)),
+    inferno: Uint8Array.from(atob("AAAEAQAFAQEGAQEIAgEKAgIMAgIOAwIQBAMSBAMUBQQXBgQZBwUbCAUdCQYfCgciCwckDAgmDQgpDgkrEAktEQowEgoyFAs0FQs3Fgs5GAw8GQw+GwxBHAxDHgxFHwxIIQxKIwxMJAxPJgxRKAtTKQtVKwtXLQtZLwpbMQpcMgpeNApfNglhOAliOQljOwlkPQllPglmQApnQgpoRApoRQppRwtqSQtqSgxrTAxrTQ1sTw1sUQ5sUg5tVA9tVQ9tVxBuWRBuWhFuXBJuXRJuXxNuYRNuYhRuZBVuZRVuZxZuaRZuahdubBhubRhubxlucRluchpudBpudRtudxxteBxteh1tfB1tfR5tfx5sgB9sgiBshCBrhSFrhyFriCJqiiJqjCNpjSNpjyRpkCVokiVokyZnlSZnlydmmCdmmihlmylknSlknypjoCpjoitioyxhpSxgpi1gqC5fqS5eqy9erTBdrjBcsDFbsTJaszJatDNZtjRYtzVXuTVWujZVvDdUvThTvzlSwDpRwTpQwztPxDxOxj1Nxz5MyD9LykBKy0FJzEJIzkNHz0RG0EVF0kZE00dD1EhC1UpB10s/2Ew+2U092k4821A73VE63lI431M34FU24VY14lc041kz5Fox5Vww5l0v514u6GAt6WEr6mMq62Qp62Yo7Gcm7Wkl7mok72wj724h8G8g8XEf8XMd8nQc83Yb83gZ9HkY9XsX9X0V9n4U9oAT94IS94QQ+IUP+IcO+IkM+YsL+YwK+Y4J+pAI+pIH+pQH+5YG+5cG+5kG+5sG+50H/J8H/KEI/KMJ/KUK/KYM/KgN/KoP/KwR/K4S/LAU/LIW/LQY+7Ya+7gd+7of+7wh+74j+sAm+sIo+sQq+sYt+ccv+cky+cs1+M03+M8699E999NA9tVD9tdG9dlJ9dtM9N1P9N9T9OFW8+Na8+Vd8uZh8uhl8upp8ext8e1x8e918fF58vJ98vSC8/WG8/aK9PiO9fmS9vqW+Pua+fyd+v2h/P+k"), c => c.charCodeAt(0)),
+    viridis: Uint8Array.from(atob("RAFURAJWRQRXRQVZRgdaRghcRgpdRgteRw1gRw5hRxBjRxFkRxNlSBRnSBZoSBdpSBhqSBpsSBttSBxuSB1vSB9wSCBxSCFzSCN0SCR1SCV2SCZ3SCh4SCl5Ryp6Ryx6Ry17Ry58Ry99RjB+RjJ+RjN/RjSARTWBRTeBRTiCRDmDRDqDRDuEQz2EQz6FQj+FQkCGQkGGQUKHQUSHQEWIQEaIP0eIP0iJPkmJPkqJPkyKPU2KPU6KPE+KPFCLO1GLO1KLOlOLOlSMOVWMOVaMOFiMOFmMN1qMN1uNNlyNNl2NNV6NNV+NNGCNNGGNM2KNM2ONMmSOMmWOMWaOMWeOMWiOMGmOMGqOL2uOL2yOLm2OLm6OLm+OLXCOLXGOLHGOLHKOLHOOK3SOK3WOKnaOKneOKniOKXmOKXqOKXuOKHyOKH2OJ36OJ3+OJ4COJoGOJoKOJoKOJYOOJYSOJYWOJIaOJIeOI4iOI4mOI4qNIouNIoyNIo2NIY6NIY+NIZCNIZGMIJKMIJKMIJOMH5SMH5WLH5aLH5eLH5iLH5mKH5qKHpuKHpyJHp2JH56JH5+IH6CIH6GIH6GHH6KHIKOGIKSGIaWFIaaFIqeFIqiEI6mDJKqDJauCJayCJq2BJ62BKK6AKa9/KrB/LLF+LbJ9LrN8L7R8MbV7MrZ6NLZ5Nbd5N7h4OLl3Orp2O7t1Pbx0P7xzQL1yQr5xRL9wRsBvSMFuSsFtTMJsTsNrUMRqUsVpVMVoVsZnWMdlWshkXMhjXsliYMpgY8tfZcteZ8xcac1bbM1abs5YcM9Xc9BWddBUd9FTetFRfNJQf9NOgdNNhNRLhtVJidVIi9ZGjtZFkNdDk9dBldhAmNg+m9k8ndk7oNo5oto3pds2qNs0qtwyrdwwsN0vst0ttd4ruN4put4ovd8mwN8lwt8jxeAhyOAgyuEfzeEd0OEc0uIb1eIa2OIZ2uMZ3eMY3+MY4uQY5eQZ5+QZ6uUa7OUb7+Uc8eUd9OYe9uYg+OYh++cj/ecl"), c => c.charCodeAt(0)),
+  };
+
+  let cachedBaseImg = null;
+  let cachedHmImg = null;
+  let cachedHmPPImg = null;
+
+  function loadCachedHeatmapImages(baseB64, hmB64, hmPPB64, onLoaded) {
+    let pending = 0;
+    const checkDone = () => {
+      pending--;
+      if (pending <= 0 && onLoaded) onLoaded();
+    };
+
+    if (baseB64) {
+      pending++;
+      cachedBaseImg = new Image();
+      cachedBaseImg.onload = checkDone;
+      cachedBaseImg.onerror = checkDone;
+      cachedBaseImg.src = `data:image/png;base64,${baseB64}`;
+    }
+    if (hmB64) {
+      pending++;
+      cachedHmImg = new Image();
+      cachedHmImg.onload = checkDone;
+      cachedHmImg.onerror = checkDone;
+      cachedHmImg.src = `data:image/png;base64,${hmB64}`;
+    }
+    if (hmPPB64) {
+      pending++;
+      cachedHmPPImg = new Image();
+      cachedHmPPImg.onload = checkDone;
+      cachedHmPPImg.onerror = checkDone;
+      cachedHmPPImg.src = `data:image/png;base64,${hmPPB64}`;
+    }
+  }
+
+  function updateColormapBadges(colormapName) {
+    const cmLabel = String(colormapName || 'jet').toUpperCase();
+    if (dom.tagGatingB) dom.tagGatingB.textContent = `Brain-Gated (${cmLabel})`;
+    if (dom.tagGatingC) dom.tagGatingC.textContent = `Multi-Focal (${cmLabel})`;
+  }
+
+  function blendHeatmapToCanvas(baseImg, hmImg, lut, threshold, targetElement) {
+    if (!baseImg || !hmImg || !targetElement) return;
+    const w = baseImg.naturalWidth || baseImg.width || 224;
+    const h = baseImg.naturalHeight || baseImg.height || 224;
+    if (w === 0 || h === 0) return;
+
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(baseImg, 0, 0, w, h);
+    const baseImgData = ctx.getImageData(0, 0, w, h);
+    const basePx = baseImgData.data;
+
+    const cHm = document.createElement('canvas');
+    cHm.width = w;
+    cHm.height = h;
+    const ctxHm = cHm.getContext('2d');
+    ctxHm.drawImage(hmImg, 0, 0, w, h);
+    const hmImgData = ctxHm.getImageData(0, 0, w, h);
+    const hmPx = hmData.data;
+
+    const opacityMax = 0.55;
+    const len = basePx.length;
+
+    for (let i = 0; i < len; i += 4) {
+      const v = hmPx[i]; // Grayscale activation intensity [0, 255]
+      if (v < threshold || v === 0) continue;
+
+      const alpha = (v / 255) * opacityMax;
+      const lutIdx = v * 3;
+      const r = lut[lutIdx];
+      const g = lut[lutIdx + 1];
+      const b = lut[lutIdx + 2];
+
+      basePx[i]     = Math.min(255, Math.round(basePx[i]     * (1 - alpha) + r * alpha));
+      basePx[i + 1] = Math.min(255, Math.round(basePx[i + 1] * (1 - alpha) + g * alpha));
+      basePx[i + 2] = Math.min(255, Math.round(basePx[i + 2] * (1 - alpha) + b * alpha));
+    }
+
+    ctx.putImageData(baseImgData, 0, 0);
+    targetElement.src = c.toDataURL('image/png');
+  }
+
+  function recolorSaliencyOverlays() {
+    if (!cachedBaseImg || !cachedHmImg || !state.lastResult) return;
+
+    const cm = state.selectedColormap || 'jet';
+    const lut = COLORMAP_LUTS[cm] || COLORMAP_LUTS.jet;
+    const cutoff = state.saliencyCutoff != null ? state.saliencyCutoff : 30;
+    const threshold = Math.round(255 * (1 - (cutoff / 100)));
+
+    if (dom.imgGradcam) {
+      blendHeatmapToCanvas(cachedBaseImg, cachedHmImg, lut, threshold, dom.imgGradcam);
+    }
+    if (cachedHmPPImg && dom.imgGradcamPP) {
+      blendHeatmapToCanvas(cachedBaseImg, cachedHmPPImg, lut, threshold, dom.imgGradcamPP);
+    }
+  }
+
+  dom.selectColormap?.addEventListener('change', e => {
+    state.selectedColormap = e.target.value;
+    updateColormapBadges(state.selectedColormap);
+    recolorSaliencyOverlays();
+  });
+
   dom.sliderSaliency?.addEventListener('input', e => {
-    if (dom.valSaliency) dom.valSaliency.textContent = `Top ${e.target.value}%`;
+    state.saliencyCutoff = parseInt(e.target.value, 10);
+    if (dom.valSaliency) dom.valSaliency.textContent = `Top ${state.saliencyCutoff}%`;
+    recolorSaliencyOverlays();
   });
 
   // Proxy clicks on full toggle row
@@ -927,10 +1078,14 @@ document.addEventListener('DOMContentLoaded', () => {
     clearPresetFilters();
 
     if (dom.selectColormap) dom.selectColormap.value = 'jet';
+    state.selectedColormap = 'jet';
     if (dom.sliderSaliency) {
       dom.sliderSaliency.value = 30;
       if (dom.valSaliency) dom.valSaliency.textContent = 'Top 30%';
     }
+    state.saliencyCutoff = 30;
+    updateColormapBadges('jet');
+    recolorSaliencyOverlays();
 
     if (dom.toggleTta)       dom.toggleTta.checked = true;
     if (dom.toggleGating)    dom.toggleGating.checked = true;
