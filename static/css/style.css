@@ -1266,7 +1266,7 @@ a:hover {
   }
 
   /* Fixed & constant position: Upload panel */
-  .panel--upload {
+  .panel.panel--upload {
     height: 100%;
     max-height: 100%;
     overflow-y: auto;
@@ -1278,7 +1278,7 @@ a:hover {
   }
 
   /* Fixed & constant position: Findings panel */
-  .panel--findings {
+  .panel.panel--findings {
     height: 100%;
     max-height: 100%;
     overflow-y: auto;
@@ -1290,7 +1290,7 @@ a:hover {
   }
 
   /* Dedicated Scrollable Card: Quad-View Saliency Viewport */
-  .panel--viewport {
+  .panel.panel--viewport {
     height: 100%;
     max-height: 100%;
     overflow-y: auto;
@@ -1302,7 +1302,7 @@ a:hover {
     gap: 0;
   }
 
-  .panel--viewport .panel-header {
+  .panel.panel--viewport .panel-header {
     position: sticky;
     top: 0;
     z-index: 10;
@@ -1315,7 +1315,7 @@ a:hover {
     border-bottom: 1px solid var(--border-subtle);
   }
 
-  .panel--viewport .quad-grid {
+  .panel.panel--viewport .quad-grid {
     flex: 1;
     min-height: min-content;
     padding: 0.75rem 1rem 1rem 1rem;
@@ -1344,14 +1344,14 @@ a:hover {
     height: auto;
     overflow: visible;
   }
-  .panel--upload,
-  .panel--findings {
+  .panel.panel--upload,
+  .panel.panel--findings {
     height: auto;
     max-height: none;
     position: static;
     overflow: visible;
   }
-  .panel--viewport {
+  .panel.panel--viewport {
     height: auto;
     max-height: none;
     position: static;
@@ -1359,13 +1359,13 @@ a:hover {
     padding: 0;
     gap: 0;
   }
-  .panel--viewport .panel-header {
+  .panel.panel--viewport .panel-header {
     padding: 0.75rem 1rem;
     border-top-left-radius: calc(var(--radius-lg) - 1px);
     border-top-right-radius: calc(var(--radius-lg) - 1px);
     border-bottom: 1px solid var(--border-subtle);
   }
-  .panel--viewport .quad-grid {
+  .panel.panel--viewport .quad-grid {
     padding: 0.75rem 1rem 1rem 1rem;
   }
 }
@@ -1411,6 +1411,29 @@ a:hover {
 
 .panel:hover {
   border-color: var(--border-medium);
+}
+
+/* Specialized Viewport Panel: zero padding so header sits 100% flush against top card border */
+.panel.panel--viewport {
+  padding: 0;
+  gap: 0;
+}
+
+.panel.panel--viewport .panel-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-card);
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  margin: 0;
+  border-top-left-radius: calc(var(--radius-lg) - 1px);
+  border-top-right-radius: calc(var(--radius-lg) - 1px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.panel.panel--viewport .quad-grid {
+  padding: 0.75rem 1rem 1rem 1rem;
 }
 
 .panel-header {
