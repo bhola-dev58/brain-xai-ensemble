@@ -32,8 +32,10 @@ The following tasks have been completed and verified against working code and pa
 - [x] **UI/UX Cleanup & Decluttering**:
   - Streamlined workstation header by removing non-functional badges and mock profile while keeping live engine telemetry and theme toggle (`static/index.html`, `static/css/style.css`).
   - Enforced strict manual CSS compliance with [`.agents/rules/uiux-designing-rule.md`](file:///home/bhola-dev58/colledge%20project/Brain_Tumor_Project/.agents/rules/uiux-designing-rule.md).
+- [x] **Theme Preference Session Persistence**:
+  - Saved dark/light mode toggle state to `localStorage` with inline anti-flash script in `static/index.html` and synchronization in `static/js/app.js`.
 - [x] **Automated Testing Suite**:
-  - Established 234 unit, integration, and security tests in `tests/` with 100% pass rate.
+  - Established 234 unit, integration, and security tests in `tests/` with 100% pass rate at historical baseline.
 - [x] **Persistent Project Memory Initialization**:
   - Created `AGENTS.md`, `PROJECT_CONTEXT.md`, `CURRENT_STATE.md`, and `TASKS.md` for task continuity.
 
@@ -41,10 +43,8 @@ The following tasks have been completed and verified against working code and pa
 
 ## 2. Pending Tasks
 
-Prioritized backlog of potential future enhancements:
+Prioritized backlog of established future enhancements. Agents MUST select from this list rather than inventing new tasks:
 
-- [ ] **Task 2.1 — Theme Preference Session Persistence**:
-  - Save dark/light mode toggle state to `localStorage` so user preference persists on page reload (`static/js/app.js`).
 - [ ] **Task 2.2 — Batch MRI Upload & Triage Queue**:
   - Add multi-file upload support and queue processing for batch study evaluation in the PACS sidebar.
 - [ ] **Task 2.3 — Multi-Frame DICOM Volumetric MPR Viewer**:

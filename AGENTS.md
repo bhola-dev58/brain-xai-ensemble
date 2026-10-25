@@ -8,11 +8,12 @@ These permanent instructions guide any AI coding agent working in this repositor
 
 Before starting any task, execute this workflow in sequence:
 
-1. **Read `CURRENT_STATE.md`** first to load the active development checkpoint, recent modifications, test statuses, and known constraints.
+1. **Read `CURRENT_STATE.md`** first to load the active development checkpoint, recent modifications, historical test baseline, and known constraints.
 2. **Consult `PROJECT_CONTEXT.md`** for established architecture, verified file paths, tech stack details, and backend/frontend patterns.
-3. **Consult `TASKS.md`** to check task progress, prerequisites, and pending work items.
-4. **Inspect only files relevant to the specific prompt**:
-   - Do NOT run full-repository tree listings or reread entire architectural documents unless specifically needed.
+3. **Consult `TASKS.md`** before proposing or starting any task. Always select from tracked pending tasks; never invent new tasks without explicit user instruction.
+4. **Targeted File Inspection Only**:
+   - Never perform a full-repository analysis, broad directory tree crawls (`ls -R`), or reread entire architectural guides for routine, localized tasks.
+   - Inspect only the specific source files directly relevant to the prompt.
    - Reuse verified architectural decisions and file paths documented in `PROJECT_CONTEXT.md`.
    - Inspect actual code only to validate specific assumptions or resolve discrepancies.
 
@@ -22,7 +23,7 @@ Before starting any task, execute this workflow in sequence:
 
 When assigned any coding or refactoring task:
 
-1. **Review Context**: Check `CURRENT_STATE.md` and `PROJECT_CONTEXT.md`.
+1. **Review Context**: Check `CURRENT_STATE.md`, `PROJECT_CONTEXT.md`, and `TASKS.md`.
 2. **Targeted Investigation**: Read only the specific source files, configurations, or tests directly touched by the requested change.
 3. **Minimal, Robust Implementation**: Implement the smallest clean, backward-compatible solution that meets the requirement without modifying unrelated components.
 4. **Follow UI/UX & CSS Policy**:
@@ -30,12 +31,12 @@ When assigned any coding or refactoring task:
    - Use standard handwritten CSS in `static/css/style.css`.
    - Never use Tailwind utility classes, Bootstrap, or inline HTML/JSX `style` attributes.
    - Leverage relevant skills under `.agents/skills/` (such as `ui-ux-pro-max`, `ui-styling`, `design-system`) for design guidance.
-5. **Targeted Test Execution**:
-   - Execute relevant unit/integration tests using `./venv/bin/pytest tests/<test_file>.py -q` or full suite `./venv/bin/pytest tests/ -q`.
-   - Always report authentic test outcomes. Never invent test results or claim unverified features are working.
-6. **Update Checkpoints**:
-   - Update `CURRENT_STATE.md` with modified files, verified test results, and next steps.
-   - Update `TASKS.md` marking completed tasks and recording any newly identified items.
+5. **Targeted Test Execution & Authentic Reporting**:
+   - Execute relevant unit/integration tests using `./venv/bin/pytest tests/<test_file>.py -q` (or full suite when cross-cutting).
+   - Always report authentic test outcomes with execution date/time. Never invent test results or treat historical test baselines as real-time proof of new, unverified edits.
+6. **Incremental Checkpoint Updates**:
+   - Update `CURRENT_STATE.md` incrementally after implementation and validation (listing modified files, verified test outcomes, and active task).
+   - Update `TASKS.md` incrementally, marking completed items and advancing the pending queue.
    - Update `PROJECT_CONTEXT.md` only when system architecture, API schemas, or major file locations change.
 7. **Git Commit & Push Policy**:
    - Commit logical units using `<type>: <short description>` format (lowercase, imperative, no trailing period, no emojis).

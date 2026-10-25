@@ -119,5 +119,6 @@ All endpoints are hosted on `http://localhost:8000`:
 
 ## 7. Testing & Verification
 
-- Test runner: `./venv/bin/pytest tests/ -q`
-- Complete suite currently contains **234 tests** covering API security, DICOM reading, ensemble uncertainty, explainability, segmentation, model failures, and report generation.
+- **Test Command**: `./venv/bin/pytest tests/ -q`
+- **Suite Scope**: 234 automated tests across API security, DICOM reading, ensemble uncertainty, explainability, segmentation, model failures, and report generation.
+- **Historical Baseline**: 234/234 passing (verified 2026-10-25). When implementing code changes, execute targeted tests (`pytest tests/<test_file>.py -q`) to establish current status.

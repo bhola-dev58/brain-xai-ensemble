@@ -57,15 +57,19 @@ All listed features have been cross-verified against the active codebase and aut
 
 ---
 
-## 3. Latest Test Verification
+## 3. Historical Test Baseline
 
-- **Command**: `./venv/bin/pytest tests/ -q`
-- **Output**:
+> [!NOTE]
+> **Historical Record**: The test outcome below was verified on **2026-10-25 at 21:36 local time**. It documents the baseline health of the codebase at that checkpoint and must **not** be presented as real-time proof of subsequent or uncommitted code changes until targeted tests are executed.
+
+- **Verification Date**: 2026-10-25 21:36:14 (local)
+- **Command Executed**: `./venv/bin/pytest tests/ -q`
+- **Recorded Output**:
   ```text
   ======================= 234 passed, 1 warning in 40.66s ========================
   ```
-- **Pass Rate**: 100% (234/234 tests passing).
-- **Test Modules Verified**:
+- **Recorded Pass Rate**: 100% (234/234 tests passing at checkpoint).
+- **Verified Test Modules**:
   - `test_api_security.py` (17 tests)
   - `test_deployment_config.py` (7 tests)
   - `test_dicom_and_api_edge_cases.py` (12 tests)
@@ -97,5 +101,7 @@ All listed features have been cross-verified against the active codebase and aut
 
 ## 5. Next Actionable Development Task
 
-- **Current Status**: Project memory initialization (`AGENTS.md`, `PROJECT_CONTEXT.md`, `CURRENT_STATE.md`, `TASKS.md`) complete.
-- **Next Task Selection**: Await user direction or proceed with pending roadmap items documented in `TASKS.md`.
+- **Pending Work Reference**: All pending work and future tasks are tracked exclusively in [`TASKS.md`](file:///home/bhola-dev58/colledge%20project/Brain_Tumor_Project/TASKS.md).
+- **Mandatory Agent Check**: Before planning or proposing any development task, the agent MUST consult [`TASKS.md`](file:///home/bhola-dev58/colledge%20project/Brain_Tumor_Project/TASKS.md) Section 2 ("Pending Tasks") and select an existing tracked item. The agent must never invent new development tasks outside `TASKS.md` without explicit user confirmation.
+- **Current Active Queue Item**: Task 2.2 — Batch MRI Upload & Triage Queue (see `TASKS.md`).
+
