@@ -318,3 +318,4 @@ class HealthMonitor:
                 HealthMonitor._is_running_globally = False
             self._is_active = False
             logger.info("[HealthMonitor] Embedded async loop shut down.")
+

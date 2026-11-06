@@ -36,6 +36,9 @@ COPY app.py .
 RUN mkdir -p models data reports/temp && \
     chown -R appuser:appgroup /app
 
+# Download and bake Phase 3 Tri-Ensemble model weights into container image
+RUN python scripts/download_models.py
+
 # Declare persistent storage mount points (SQLite db, reports, trained models)
 VOLUME ["/app/data", "/app/reports", "/app/models"]
 
@@ -56,5 +59,5 @@ ENV CUDA_VISIBLE_DEVICES=-1 \
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD python -c 'import urllib.request, sys; sys.exit(0 if urllib.request.urlopen("http://localhost:8000/api/health").getcode() == 200 else 1)'
 
-# Launch Uvicorn ASGI server binding to configured HOST and PORT
-CMD ["sh", "-c", "uvicorn src.api:app --host ${HOST:-0.0.0.0} --port ${PORT:-8000}"]
+# Ensure model artifacts exist and launch Uvicorn ASGI server
+CMD ["sh", "-c", "python scripts/download_models.py && uvicorn src.api:app --host ${HOST:-0.0.0.0} --port ${PORT:-8000}"]
