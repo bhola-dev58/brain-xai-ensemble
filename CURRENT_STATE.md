@@ -43,6 +43,14 @@ All listed features have been cross-verified against the active codebase and aut
 
 ## 2. Recently Completed Work
 
+- **HiDevs Audit Improvements (2026-11-06)**:
+  - `requirements-dev.txt`: added `httpx2>=0.28.0` and `pip-audit>=2.7.0` as dev dependencies.
+  - `pytest.ini`: added `--cov=src --cov-report=term-missing --cov-report=xml:coverage.xml` to `addopts`.
+  - `tests/test_logger.py`: **NEW** — 13 unit tests covering `src/logger.py` (100% module coverage achieved).
+  - `tests/test_database_edge_cases.py`: **NEW** — 27 unit tests covering `src/database.py` edge cases (init idempotency, FAILED status overrides, provenance serialisation, pagination, ordering).
+  - `.env.example`: **NEW** — comprehensive environment variable template documenting all 14 configurable variables with safe defaults.
+  - `pyproject.toml`: **NEW** — PEP 517 project metadata and optional dev dependency group.
+  - `.github/workflows/ci.yml`: enhanced with `--cov` coverage reporting, artifact upload, and second `security-audit` job using `pip-audit`.
 - **Commit `1963cd6`**: `style: declutter interface header and retain essential telemetry controls`
   - Removed static non-functional marketing badges (`SOTA Tri-Ensemble`, `Grad-CAM`, `PDF Clinical Reports`).
   - Removed placeholder profile badge (`Dr. Alex Johnson`).

@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "brain-tumor-xai"
+version = "3.0.0"
+description = "Clinical-grade Explainable Brain Tumor Detection using Heterogeneous Tri-Ensemble Deep Learning"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Bhola Yadav", email = "bhya23cse@gmail.com"},
+]
+keywords = [
+    "brain-tumor", "mri", "deep-learning", "explainable-ai", "grad-cam",
+    "medical-imaging", "fastapi", "tensorflow", "ensemble"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# Note: pin-exact dependencies are defined in requirements.txt for reproducibility.
+# This section lists minimum bounds only for PEP 517 metadata consumers.
+dependencies = [
+    "tensorflow>=2.21.0",
+    "numpy>=2.4.0",
+    "opencv-python>=4.13.0",
+    "fastapi>=0.136.0",
+    "uvicorn>=0.46.0",
+    "python-multipart>=0.0.27",
+    "reportlab>=4.0.0",
+    "scikit-learn>=1.3.0",
+    "pydicom>=2.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "httpx>=0.28.0",
+    "httpx2>=0.28.0",
+    "flake8>=7.0.0",
+    "pip-audit>=2.7.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/bhola-dev58/brain-xai-ensemble"
+Repository = "https://github.com/bhola-dev58/brain-xai-ensemble"
+"Live Demo" = "https://brain-tumor-xai-jf4z.onrender.com"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/venv/*", "setup.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 0
