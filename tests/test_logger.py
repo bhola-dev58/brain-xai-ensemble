@@ -172,3 +172,4 @@ class TestLogEmission:
         lgr = configure_logging()
         with caplog.at_level(logging.ERROR, logger="BrainTumorXAI"):
             lgr.error("BrainTumorXAI test error — OK")
+

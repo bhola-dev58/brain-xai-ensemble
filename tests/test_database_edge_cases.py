@@ -308,3 +308,4 @@ class TestGetAllScansOrdering:
         # Newest (last inserted) must be first
         assert ids[0] == "ANL-ORD-003"
         assert ids[-1] == "ANL-ORD-001"
+

@@ -45,6 +45,7 @@ reports/
 .pytest_cache/
 .coverage
 .coverage.*
+coverage.xml
 htmlcov/
 
 # OS-generated files

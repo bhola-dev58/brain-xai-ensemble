@@ -7,9 +7,13 @@ model artifact discovery, persistence isolation, and container configs.
 
 import os
 import tempfile
-import yaml
-import pytest
 from unittest.mock import patch
+import pytest
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 import src.config as config
 from src.database import init_db, log_scan, get_scan_by_analysis_id
@@ -131,6 +135,8 @@ class TestContainerDeploymentConfigurations:
 
     def test_docker_compose_valid_and_mounts_persistent_volumes(self):
         """docker-compose.yml is valid YAML and defines persistent volume mounts."""
+        if yaml is None:
+            pytest.skip("PyYAML is not installed")
         compose_path = os.path.join(config.BASE_DIR, "docker-compose.yml")
         assert os.path.exists(compose_path)
 
@@ -152,6 +158,8 @@ class TestContainerDeploymentConfigurations:
 
     def test_render_yaml_valid_and_specifies_disk(self):
         """render.yaml is valid YAML and specifies persistent disk."""
+        if yaml is None:
+            pytest.skip("PyYAML is not installed")
         render_path = os.path.join(config.BASE_DIR, "render.yaml")
         assert os.path.exists(render_path)
 

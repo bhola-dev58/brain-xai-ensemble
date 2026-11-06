@@ -51,18 +51,13 @@ dev = [
     "httpx2>=0.28.0",
     "flake8>=7.0.0",
     "pip-audit>=2.7.0",
+    "pyyaml>=6.0.0",
 ]
 
 [project.urls]
 Homepage = "https://github.com/bhola-dev58/brain-xai-ensemble"
 Repository = "https://github.com/bhola-dev58/brain-xai-ensemble"
 "Live Demo" = "https://brain-tumor-xai-jf4z.onrender.com"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
 
 [tool.coverage.run]
 source = ["src"]
