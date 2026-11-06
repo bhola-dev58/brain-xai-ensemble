@@ -128,19 +128,19 @@ def get_model_provenance() -> Dict[str, Any]:
         "pipeline_version": PIPELINE_VERSION,
         "models": {
             "ConvNeXtSmall": {
-                "artifact": os.path.basename(CONVNEXT_PATH) if os.path.exists(CONVNEXT_PATH) else "N/A",
+                "artifact": os.path.basename(CONVNEXT_PATH) if os.path.exists(CONVNEXT_PATH) else "UNKNOWN",
                 "sha256": _compute_file_sha256(CONVNEXT_PATH),
                 "weight": CONVNEXT_VOTE_WEIGHT,
                 "input_size": list(IMG_SIZE_CLASSIFY),
             },
             "InceptionV3": {
-                "artifact": os.path.basename(INCEPTION_PATH) if os.path.exists(INCEPTION_PATH) else "N/A",
+                "artifact": os.path.basename(INCEPTION_PATH) if os.path.exists(INCEPTION_PATH) else "UNKNOWN",
                 "sha256": _compute_file_sha256(INCEPTION_PATH),
                 "weight": INCEPTION_VOTE_WEIGHT,
                 "input_size": list(IMG_SIZE_INCEPTION),
             },
             "DenseNet121": {
-                "artifact": os.path.basename(DENSENET_PATH) if os.path.exists(DENSENET_PATH) else "N/A",
+                "artifact": os.path.basename(DENSENET_PATH) if os.path.exists(DENSENET_PATH) else "UNKNOWN",
                 "sha256": _compute_file_sha256(DENSENET_PATH),
                 "weight": DENSENET_VOTE_WEIGHT,
                 "input_size": list(IMG_SIZE_CLASSIFY),
