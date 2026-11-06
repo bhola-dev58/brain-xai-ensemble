@@ -1,13 +1,13 @@
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "brain-tumor-xai"
 version = "3.0.0"
 description = "Clinical-grade Explainable Brain Tumor Detection using Heterogeneous Tri-Ensemble Deep Learning"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "Bhola Yadav", email = "bhya23cse@gmail.com"},
