@@ -12,6 +12,7 @@ Endpoints:
 Usage:
     python -m uvicorn src.api:app --host 0.0.0.0 --port 8000 --reload
 """
+import asyncio
 import base64
 import io
 import os
@@ -19,6 +20,7 @@ import re
 import time
 import uuid
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from typing import Optional
 
 import cv2
@@ -66,13 +68,14 @@ from src.security import (
 # Application Factory, Lifespan, and Settings
 # ------------------------------------------------------------------ #
 ENABLE_DOCS = os.getenv("ENABLE_API_DOCS", "true").lower() in ("true", "1", "yes")
+ENABLE_KEEP_ALIVE = os.getenv("ENABLE_KEEP_ALIVE", "false").lower() in ("true", "1", "yes")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Manages application startup and shutdown lifecycle events with
-    operational diagnostic logging.
+    operational diagnostic logging and optional keep-alive monitor task.
     """
     ready = is_ensemble_ready()
     status_map = get_model_status()
@@ -81,7 +84,29 @@ async def lifespan(app: FastAPI):
         f"BrainTumorXAI API starting up. Host={HOST}, Port={PORT}, "
         f"Ensemble ready={ready} ({active_count}/3 models active: {status_map})"
     )
+
+    monitor_instance = None
+    monitor_task = None
+    if ENABLE_KEEP_ALIVE:
+        try:
+            from src.monitor import HealthMonitor
+            monitor_instance = HealthMonitor()
+            monitor_task = asyncio.create_task(monitor_instance.async_run_loop())
+            logger.info("Embedded keep-alive health monitor background task started.")
+        except Exception as mon_err:
+            logger.warning(f"Could not start embedded keep-alive monitor: {mon_err}")
+
     yield
+
+    if monitor_task is not None and monitor_instance is not None:
+        try:
+            monitor_instance.stop()
+            monitor_task.cancel()
+            await asyncio.gather(monitor_task, return_exceptions=True)
+            logger.info("Embedded keep-alive health monitor background task stopped.")
+        except Exception as stop_err:
+            logger.warning(f"Error stopping embedded keep-alive monitor: {stop_err}")
+
     logger.info("BrainTumorXAI API shutting down cleanly.")
 
 
@@ -252,6 +277,27 @@ async def _read_upload_as_numpy(file: UploadFile) -> np.ndarray:
 # ------------------------------------------------------------------ #
 # Public Endpoints (Liveness and Telemetry)
 # ------------------------------------------------------------------ #
+@app.get(
+    "/health",
+    summary="Lightweight Process Liveness & Readiness Probe",
+    description="Returns HTTP 200 process liveness with ready flag without invoking ML inference (Public).",
+    tags=["System"],
+)
+def root_health_check() -> dict:
+    """
+    Lightweight health check for container probes and keep-alive monitors.
+    Returns HTTP 200 immediately without executing any ML inference or model reloads.
+    """
+    ready = is_ensemble_ready()
+    return {
+        "status": "healthy" if ready else "degraded",
+        "service": "BrainTumorXAI",
+        "liveness": True,
+        "ready": ready,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 @app.get(
     "/api/health",
     summary="Health check",
