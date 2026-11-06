@@ -43,6 +43,11 @@ All listed features have been cross-verified against the active codebase and aut
 
 ## 2. Recently Completed Work
 
+- **CI Regression Fix (2026-11-06)**:
+  - Root cause from Actions job `127958931599`: `tests/test_prediction_traceability.py::TestModelAndPipelineProvenance::test_model_provenance_sanitizes_internal_file_paths` failed because missing artifact placeholder `"N/A"` contains `/`.
+  - `src/inference.py`: updated missing provenance artifact fallback from `"N/A"` to `"UNKNOWN"` for ConvNeXt, Inception, and DenseNet entries to preserve path-sanitization invariant.
+  - Validation (2026-11-06): `python -m pytest tests/test_prediction_traceability.py -q` → `15 passed`; `python -m flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics` → `0`.
+
 - **HiDevs Audit Improvements (2026-11-06)**:
   - `requirements-dev.txt`: added `httpx2>=0.28.0` and `pip-audit>=2.7.0` as dev dependencies.
   - `pytest.ini`: added `--cov=src --cov-report=term-missing --cov-report=xml:coverage.xml` to `addopts`.
@@ -112,4 +117,3 @@ All listed features have been cross-verified against the active codebase and aut
 - **Pending Work Reference**: All pending work and future tasks are tracked exclusively in [`TASKS.md`](file:///home/bhola-dev58/colledge%20project/Brain_Tumor_Project/TASKS.md).
 - **Mandatory Agent Check**: Before planning or proposing any development task, the agent MUST consult [`TASKS.md`](file:///home/bhola-dev58/colledge%20project/Brain_Tumor_Project/TASKS.md) Section 2 ("Pending Tasks") and select an existing tracked item. The agent must never invent new development tasks outside `TASKS.md` without explicit user confirmation.
 - **Current Active Queue Item**: Task 2.2 — Batch MRI Upload & Triage Queue (see `TASKS.md`).
-

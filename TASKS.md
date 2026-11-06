@@ -43,6 +43,9 @@ The following tasks have been completed and verified against working code and pa
   - Enhanced `.github/workflows/ci.yml` with coverage reporting + security-audit job.
 - [x] **Automated Testing Suite**:
   - Established 234 unit, integration, and security tests in `tests/` with 100% pass rate at historical baseline.
+- [x] **CI Regression: Provenance Artifact Path Sanitization (2026-11-06)**:
+  - Resolved failing Actions job test `test_model_provenance_sanitizes_internal_file_paths`.
+  - Updated missing model artifact fallback strings in `src/inference.py` from `"N/A"` to `"UNKNOWN"` to avoid path-separator false failures.
 - [x] **Persistent Project Memory Initialization**:
   - Created `AGENTS.md`, `PROJECT_CONTEXT.md`, `CURRENT_STATE.md`, and `TASKS.md` for task continuity.
 
