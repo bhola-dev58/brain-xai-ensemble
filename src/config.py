@@ -13,7 +13,7 @@ TEMP_REPORTS_DIR = os.getenv("TEMP_REPORTS_DIR", os.path.join(REPORTS_DIR, "temp
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 
-def _get_model_path(base_name, extensions=[".keras", ".h5"]):
+def get_model_path(base_name, extensions=(".keras", ".h5")):
     for ext in extensions:
         full_candidate = os.path.join(MODELS_DIR, f"{base_name}_full_best{ext}")
         if os.path.exists(full_candidate):
@@ -22,13 +22,15 @@ def _get_model_path(base_name, extensions=[".keras", ".h5"]):
         candidate = os.path.join(MODELS_DIR, f"{base_name}_best{ext}")
         if os.path.exists(candidate):
             return candidate
-    return os.path.join(MODELS_DIR, f"{base_name}_best.h5")
+    return os.path.join(MODELS_DIR, f"{base_name}_full_best.keras")
+
+_get_model_path = get_model_path
 
 # Model Paths (Auto-resolves Phase 3 _full_best.keras weights)
-CONVNEXT_PATH = _get_model_path("convnext")
-INCEPTION_PATH = _get_model_path("inception")
-DENSENET_PATH = _get_model_path("densenet")
-EFFNET_PATH = _get_model_path("effnet", extensions=[".keras"])
+CONVNEXT_PATH = get_model_path("convnext")
+INCEPTION_PATH = get_model_path("inception")
+DENSENET_PATH = get_model_path("densenet")
+EFFNET_PATH = get_model_path("effnet", extensions=(".keras",))
 
 # Classification & Pipeline Settings
 PIPELINE_VERSION = "3.0.0 (Tri-Ensemble)"

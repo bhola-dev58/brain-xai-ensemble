@@ -45,6 +45,7 @@ from src.inference import (
     predict_tumor_logic,
     is_ensemble_ready,
     get_model_status,
+    init_models,
 )
 from src.report_generator import generate_pdf_report
 from src.database import (
@@ -77,6 +78,12 @@ async def lifespan(app: FastAPI):
     Manages application startup and shutdown lifecycle events with
     operational diagnostic logging and optional keep-alive monitor task.
     """
+    if not is_ensemble_ready():
+        try:
+            init_models()
+        except Exception as init_err:
+            logger.warning(f"Startup model initialization note: {init_err}")
+
     ready = is_ensemble_ready()
     status_map = get_model_status()
     active_count = sum(status_map.values())

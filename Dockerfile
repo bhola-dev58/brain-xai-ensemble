@@ -37,10 +37,11 @@ RUN mkdir -p models data reports/temp && \
     chown -R appuser:appgroup /app
 
 # Download and bake Phase 3 Tri-Ensemble model weights into container image
-RUN python scripts/download_models.py
+RUN python scripts/download_models.py && \
+    chown -R appuser:appgroup /app/models
 
-# Declare persistent storage mount points (SQLite db, reports, trained models)
-VOLUME ["/app/data", "/app/reports", "/app/models"]
+# Declare persistent storage mount points (SQLite db, reports)
+VOLUME ["/app/data", "/app/reports"]
 
 # Switch to non-root user for process isolation
 USER appuser

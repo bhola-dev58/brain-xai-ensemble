@@ -21,6 +21,7 @@ tf.get_logger().setLevel('ERROR')
 import hashlib
 from src.config import (
     PIPELINE_VERSION,
+    get_model_path,
     CONVNEXT_PATH,
     INCEPTION_PATH,
     DENSENET_PATH,
@@ -124,24 +125,42 @@ def get_model_provenance() -> Dict[str, Any]:
     Returns complete architecture, artifact digest, and weighting provenance for the active ensemble.
     File paths are sanitized to basenames to prevent leaking internal server directories.
     """
+    c_path = CONVNEXT_PATH
+    if not os.path.exists(c_path) and c_path.endswith("_best.h5"):
+        alt = get_model_path("convnext")
+        if os.path.exists(alt):
+            c_path = alt
+
+    inc_path = INCEPTION_PATH
+    if not os.path.exists(inc_path) and inc_path.endswith("_best.h5"):
+        alt = get_model_path("inception")
+        if os.path.exists(alt):
+            inc_path = alt
+
+    dense_path = DENSENET_PATH
+    if not os.path.exists(dense_path) and dense_path.endswith("_best.h5"):
+        alt = get_model_path("densenet")
+        if os.path.exists(alt):
+            dense_path = alt
+
     return {
         "pipeline_version": PIPELINE_VERSION,
         "models": {
             "ConvNeXtSmall": {
-                "artifact": os.path.basename(CONVNEXT_PATH) if os.path.exists(CONVNEXT_PATH) else "UNKNOWN",
-                "sha256": _compute_file_sha256(CONVNEXT_PATH),
+                "artifact": os.path.basename(c_path) if os.path.exists(c_path) else "UNKNOWN",
+                "sha256": _compute_file_sha256(c_path),
                 "weight": CONVNEXT_VOTE_WEIGHT,
                 "input_size": list(IMG_SIZE_CLASSIFY),
             },
             "InceptionV3": {
-                "artifact": os.path.basename(INCEPTION_PATH) if os.path.exists(INCEPTION_PATH) else "UNKNOWN",
-                "sha256": _compute_file_sha256(INCEPTION_PATH),
+                "artifact": os.path.basename(inc_path) if os.path.exists(inc_path) else "UNKNOWN",
+                "sha256": _compute_file_sha256(inc_path),
                 "weight": INCEPTION_VOTE_WEIGHT,
                 "input_size": list(IMG_SIZE_INCEPTION),
             },
             "DenseNet121": {
-                "artifact": os.path.basename(DENSENET_PATH) if os.path.exists(DENSENET_PATH) else "UNKNOWN",
-                "sha256": _compute_file_sha256(DENSENET_PATH),
+                "artifact": os.path.basename(dense_path) if os.path.exists(dense_path) else "UNKNOWN",
+                "sha256": _compute_file_sha256(dense_path),
                 "weight": DENSENET_VOTE_WEIGHT,
                 "input_size": list(IMG_SIZE_CLASSIFY),
             },
@@ -163,48 +182,66 @@ def init_models(force_reload: bool = False) -> bool:
 
     logger.info("Loading Tri-Ensemble models (ConvNeXtSmall + InceptionV3 + DenseNet121)...")
 
+    c_path = CONVNEXT_PATH
+    if not os.path.exists(c_path) and c_path.endswith("_best.h5"):
+        alt = get_model_path("convnext")
+        if os.path.exists(alt):
+            c_path = alt
+
+    inc_path = INCEPTION_PATH
+    if not os.path.exists(inc_path) and inc_path.endswith("_best.h5"):
+        alt = get_model_path("inception")
+        if os.path.exists(alt):
+            inc_path = alt
+
+    dense_path = DENSENET_PATH
+    if not os.path.exists(dense_path) and dense_path.endswith("_best.h5"):
+        alt = get_model_path("densenet")
+        if os.path.exists(alt):
+            dense_path = alt
+
     # 1. ConvNeXtSmall
     if model_convnext is None or force_reload:
-        if os.path.exists(CONVNEXT_PATH):
+        if os.path.exists(c_path):
             try:
-                model_convnext = tf.keras.models.load_model(CONVNEXT_PATH, compile=False)
-                logger.info(f"Loaded ConvNeXtSmall from: {CONVNEXT_PATH}")
+                model_convnext = tf.keras.models.load_model(c_path, compile=False)
+                logger.info(f"Loaded ConvNeXtSmall from: {c_path}")
                 _grad_model_convnext = _create_grad_model(model_convnext, "convnext")
             except Exception as e:
-                logger.error(f"Failed to load ConvNeXtSmall from {CONVNEXT_PATH}: {e}")
+                logger.error(f"Failed to load ConvNeXtSmall from {c_path}: {e}")
                 model_convnext = None
                 _grad_model_convnext = None
         else:
-            logger.warning(f"ConvNeXtSmall weights file not found: {CONVNEXT_PATH}")
+            logger.warning(f"ConvNeXtSmall weights file not found: {c_path}")
             model_convnext = None
             _grad_model_convnext = None
 
     # 2. InceptionV3
     if model_inc is None or force_reload:
-        if os.path.exists(INCEPTION_PATH):
+        if os.path.exists(inc_path):
             try:
-                model_inc = tf.keras.models.load_model(INCEPTION_PATH, compile=False)
-                logger.info(f"Loaded InceptionV3 from: {INCEPTION_PATH}")
+                model_inc = tf.keras.models.load_model(inc_path, compile=False)
+                logger.info(f"Loaded InceptionV3 from: {inc_path}")
             except Exception as e:
-                logger.error(f"Failed to load InceptionV3 from {INCEPTION_PATH}: {e}")
+                logger.error(f"Failed to load InceptionV3 from {inc_path}: {e}")
                 model_inc = None
         else:
-            logger.warning(f"InceptionV3 weights file not found: {INCEPTION_PATH}")
+            logger.warning(f"InceptionV3 weights file not found: {inc_path}")
             model_inc = None
 
     # 3. DenseNet121
     if model_dense is None or force_reload:
-        if os.path.exists(DENSENET_PATH):
+        if os.path.exists(dense_path):
             try:
-                model_dense = tf.keras.models.load_model(DENSENET_PATH, compile=False)
-                logger.info(f"Loaded DenseNet121 from: {DENSENET_PATH}")
+                model_dense = tf.keras.models.load_model(dense_path, compile=False)
+                logger.info(f"Loaded DenseNet121 from: {dense_path}")
                 _grad_model_dense = _create_grad_model(model_dense, "densenet")
             except Exception as e:
-                logger.error(f"Failed to load DenseNet121 from {DENSENET_PATH}: {e}")
+                logger.error(f"Failed to load DenseNet121 from {dense_path}: {e}")
                 model_dense = None
                 _grad_model_dense = None
         else:
-            logger.warning(f"DenseNet121 weights file not found: {DENSENET_PATH}")
+            logger.warning(f"DenseNet121 weights file not found: {dense_path}")
             model_dense = None
             _grad_model_dense = None
 

@@ -10,7 +10,12 @@
 
 All listed features have been cross-verified against the active codebase and automated test suite:
 
-- [x] **Render Keep-Alive & Health Monitoring System**:
+- [x] **Automated Model Weight Provisioning & Dynamic Path Resolution**:
+  - Official GitHub Release `v3.0.0` distribution for Phase 3 weights (`convnext_full_best.keras`, `inception_full_best.keras`, `densenet_full_best.keras`).
+  - Automated downloader `scripts/download_models.py` with chunk streaming and atomic rename.
+  - Dynamic model path resolution (`src/config.py`, `src/inference.py`) ensuring models are resolved whether loaded at import time or post-boot.
+  - Startup model initialization verification inside FastAPI `lifespan` (`src/api.py`).
+  - Container volume hardening: excluded `/app/models` from Dockerfile `VOLUME` to prevent anonymous mount masking and granted non-root `appuser` permissions.
   - Lightweight process liveness probe `GET /health` with instantaneous (<1ms) response, zero inference, and component readiness detection (`src/api.py`).
   - Automated health monitor engine (`src/monitor.py`) featuring exponential backoff, retry handling, latency telemetry, single-instance lock guard, and interruptible sleep.
   - Standalone monitor CLI script (`scripts/monitor.py`) with signal traps and configurable intervals.
