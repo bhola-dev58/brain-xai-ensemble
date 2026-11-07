@@ -1,8 +1,8 @@
 # BrainTumorXAI — Current State Checkpoint
 
-**Last Updated**: 2026-10-25  
+**Last Updated**: 2026-11-07  
 **Current Branch**: `main`  
-**Overall Status**: Stable / Operational / Production-Ready Local Workstation  
+**Overall Status**: Stable / Operational / Production-Ready Local Workstation & One-Command Docker  
 
 ---
 
@@ -10,6 +10,12 @@
 
 All listed features have been cross-verified against the active codebase and automated test suite:
 
+- [x] **One-Command Docker Setup & Automated Model Provisioning**:
+  - `docker compose up --build` launches the full PACS Clinical Workstation with zero manual weight downloads.
+  - Dedicated `brain-tumor-models` volume prevents empty host directory masking and caches Phase 3 models (`convnext_full_best.keras`, `inception_full_best.keras`, `densenet_full_best.keras`).
+  - Persistent host storage mounts for `./data` (SQLite database) and `./reports` (clinical PDF reports).
+  - Standalone Docker CLI support (`docker build -t brain-tumor-xai . && docker run -d -p 8000:8000 ...`).
+  - Clear, user-friendly Docker quickstart instructions updated in `README.md`.
 - [x] **Automated Model Weight Provisioning & Low-Memory Optimization**:
   - Official GitHub Release `v3.0.0` distribution for Phase 3 weights (`convnext_full_best.keras`, `inception_full_best.keras`, `densenet_full_best.keras`).
   - Automated downloader `scripts/download_models.py` with chunk streaming and atomic rename.
@@ -87,13 +93,13 @@ All listed features have been cross-verified against the active codebase and aut
 > [!NOTE]
 > **Historical Record**: The test outcome below was verified on **2026-10-25 at 21:36 local time**. It documents the baseline health of the codebase at that checkpoint and must **not** be presented as real-time proof of subsequent or uncommitted code changes until targeted tests are executed.
 
-- **Verification Date**: 2026-10-25 21:36:14 (local)
+- **Verification Date**: 2026-11-07 15:34:23 (local)
 - **Command Executed**: `./venv/bin/pytest tests/ -q`
 - **Recorded Output**:
   ```text
-  ======================= 234 passed, 1 warning in 40.66s ========================
+  ======================= 295 passed, 1 skipped in 42.76s ========================
   ```
-- **Recorded Pass Rate**: 100% (234/234 tests passing at checkpoint).
+- **Recorded Pass Rate**: 100% (295/295 passed, 1 skipped).
 - **Verified Test Modules**:
   - `test_api_security.py` (17 tests)
   - `test_deployment_config.py` (7 tests)

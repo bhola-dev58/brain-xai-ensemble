@@ -24,9 +24,9 @@ services:
       - MAX_UPLOAD_SIZE_MB=${MAX_UPLOAD_SIZE_MB:-25}
     volumes:
       # Persistent storage mounts
-      - ./models:/app/models:ro  # Read-only mount for trained neural network artifacts
-      - ./data:/app/data         # Persistent SQLite patient case history database
-      - ./reports:/app/reports   # Persistent clinical PDF diagnostic reports
+      - brain-tumor-models:/app/models  # Dedicated volume preserving Tri-Ensemble weights
+      - ./data:/app/data                # Persistent SQLite patient case history database
+      - ./reports:/app/reports          # Persistent clinical PDF diagnostic reports
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health').getcode() == 200 else 1)"]
       interval: 30s
@@ -37,3 +37,7 @@ services:
       resources:
         limits:
           memory: 4G
+
+volumes:
+  brain-tumor-models:
+    name: brain-tumor-models

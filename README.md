@@ -174,9 +174,31 @@ brain-xai-ensemble/
 
 ## Getting Started
 
-### Prerequisites
+### Option A: One-Command Docker Setup (Recommended for Visitors)
 
-- Python 3.10 or higher
+Run the entire PACS Clinical Workstation with automated model downloading and zero environment setup:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/bhola-dev58/brain-xai-ensemble.git
+cd brain-xai-ensemble
+
+# 2. Launch with a single command (builds image, provisions models, starts server)
+docker compose up --build
+```
+
+Access the application in your browser:
+- **PACS Clinical Workstation:** [http://localhost:8000/](http://localhost:8000/)
+- **Interactive API Swagger Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Liveness & Model Health Status:** [http://localhost:8000/api/health](http://localhost:8000/api/health)
+
+---
+
+### Option B: Local Python Environment Setup
+
+#### Prerequisites
+
+- Python 3.10 to 3.12
 - Git
 
 ### 1. Clone the Repository
@@ -276,36 +298,54 @@ python3 scripts/init_models.py
 
 ### Running with Docker Compose (Recommended)
 
-Docker Compose starts the container as an unprivileged non-root user (`appuser`) and mounts persistent host directories for models, data, and reports:
+Docker Compose provides a seamless one-command setup. It automatically builds the image, provisions the Phase 3 Tri-Ensemble models, binds to port 8000, and isolates execution under an unprivileged non-root user (`appuser`):
 
 ```bash
-# Start container in detached mode with persistent volume mounts
-docker compose up -d
+# Start container (builds image, downloads models, starts service)
+docker compose up --build
 
-# Check service health and container status
+# Or run in detached (background) mode:
+docker compose up -d --build
+
+# Check service health and active container status:
 docker compose ps
 
-# Inspect logs
+# Follow live container logs:
 docker compose logs -f
 
-# Stop container safely (preserving data/ and reports/ on host)
+# Stop container safely (preserving data/ and reports/ on host):
 docker compose down
 ```
 
+**Key Highlights of the Docker Compose Setup:**
+- **Automated Model Provisioning:** The container image automatically downloads and verifies all 3 fine-tuned models (`ConvNeXtSmall`, `InceptionV3`, `DenseNet121`) from GitHub Releases v3.0.0 during build/startup.
+- **Model Volume Caching:** Model weights are stored in the dedicated `brain-tumor-models` Docker volume, avoiding redundant downloads across container restarts.
+- **Host Persistence:** SQLite patient case history (`./data/patient_history.db`) and clinical diagnostic PDF reports (`./reports/`) are mounted directly to your local host folder.
+
+---
+
 ### Running with Standalone Docker
 
-```bash
-# 1. Build the production image
-docker build -t braintumor-xai .
+If you prefer using Docker CLI directly without Compose:
 
-# 2. Run with volume mounts for persistence and non-root execution
+```bash
+# 1. Build the production image (bakes models and dependencies)
+docker build -t brain-tumor-xai .
+
+# 2. Run the container with persistent storage mounts for patient data & reports
 docker run -d \
-  --name braintumor-workstation \
+  --name brain-tumor-workstation \
   -p 8000:8000 \
-  -v "$(pwd)/models:/app/models:ro" \
   -v "$(pwd)/data:/app/data" \
   -v "$(pwd)/reports:/app/reports" \
-  braintumor-xai
+  brain-tumor-xai
+```
+
+Test inference immediately with an included baseline MRI scan:
+
+```bash
+curl -X POST http://localhost:8000/api/predict \
+  -F "file=@test_images/Tr-me_0025.jpg"
 ```
 
 ### Health Check and Monitoring

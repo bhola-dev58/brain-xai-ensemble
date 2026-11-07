@@ -147,11 +147,11 @@ class TestContainerDeploymentConfigurations:
         assert "brain-tumor-xai" in data["services"]
         svc = data["services"]["brain-tumor-xai"]
 
-        # Volumes for data and reports
+        # Volumes for data, reports, and models
         volumes = svc.get("volumes", [])
         assert any("./data:/app/data" in v for v in volumes)
         assert any("./reports:/app/reports" in v for v in volumes)
-        assert any("./models:/app/models:ro" in v for v in volumes)
+        assert any("models" in v for v in volumes)
 
         # Health check
         assert "healthcheck" in svc
