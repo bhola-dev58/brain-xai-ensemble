@@ -10,11 +10,12 @@
 
 All listed features have been cross-verified against the active codebase and automated test suite:
 
-- [x] **Automated Model Weight Provisioning & Dynamic Path Resolution**:
+- [x] **Automated Model Weight Provisioning & Low-Memory Optimization**:
   - Official GitHub Release `v3.0.0` distribution for Phase 3 weights (`convnext_full_best.keras`, `inception_full_best.keras`, `densenet_full_best.keras`).
   - Automated downloader `scripts/download_models.py` with chunk streaming and atomic rename.
-  - Dynamic model path resolution (`src/config.py`, `src/inference.py`) ensuring models are resolved whether loaded at import time or post-boot.
-  - Startup model initialization verification inside FastAPI `lifespan` (`src/api.py`).
+  - Asynchronous background model initialization in FastAPI `lifespan` allowing sub-second port binding for Render health scans.
+  - Eliminated eager model execution at import time and removed redundant ConvNeXt Grad-CAM duplicate sub-models to drastically reduce memory usage.
+  - Switched to `tensorflow-cpu` and `opencv-python-headless` with `MALLOC_ARENA_MAX=2` to eliminate GPU library overhead and prevent OOM on memory-limited containers.
   - Container volume hardening: excluded `/app/models` from Dockerfile `VOLUME` to prevent anonymous mount masking and granted non-root `appuser` permissions.
   - Lightweight process liveness probe `GET /health` with instantaneous (<1ms) response, zero inference, and component readiness detection (`src/api.py`).
   - Automated health monitor engine (`src/monitor.py`) featuring exponential backoff, retry handling, latency telemetry, single-instance lock guard, and interruptible sleep.
