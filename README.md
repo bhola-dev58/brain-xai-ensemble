@@ -281,12 +281,27 @@ curl -X POST http://localhost:8000/api/predict \
 | `DATA_DIR` | `<root>/data` | Directory storing `patient_history.db` SQLite database |
 | `REPORTS_DIR` | `<root>/reports` | Directory storing generated PDF clinical diagnostic reports |
 
-### Model Artifact Requirements
+### Model Artifact Requirements & Sources
 
-Before running in production, verify that trained weights are present in `models/`:
-- `models/convnext_full_best.keras` (or `convnext_best.h5`)
-- `models/inception_full_best.keras` (or `inception_best.h5`)
-- `models/densenet_full_best.keras` (or `densenet_best.h5`)
+The Heterogeneous Tri-Ensemble requires the three fine-tuned model weight files in the `models/` directory:
+- `models/convnext_full_best.keras` (~533 MB)
+- `models/inception_full_best.keras` (~240 MB)
+- `models/densenet_full_best.keras` (~61 MB)
+
+#### Where to Obtain the Model Weights:
+
+1. **Automated Downloader (Recommended):**
+   Run the included automated download script to pull pre-compiled weights directly into `models/`:
+   ```bash
+   python3 scripts/download_models.py
+   ```
+
+2. **From Kaggle Training Notebook (Training Outputs):**
+   Contributors can explore the full training pipeline, inspect logs, or download model checkpoints directly from the official Kaggle notebook output artifacts:
+   👉 **Kaggle Notebook & Model Weights:** [https://www.kaggle.com/code/bholadev58/braintumor-98pct-ensemble-training](https://www.kaggle.com/code/bholadev58/braintumor-98pct-ensemble-training)
+
+3. **From GitHub Releases:**
+   Download the weights directly from the [GitHub Releases v3.0.0 Assets](https://github.com/bhola-dev58/brain-xai-ensemble/releases/tag/v3.0.0) and place them into the `models/` directory.
 
 Verify model discovery and weight integrity using the verification utility:
 
