@@ -175,7 +175,7 @@ def init_models(force_reload: bool = False) -> bool:
     Does not reload if models are already loaded unless force_reload=True.
     Returns True if all required models loaded successfully, False otherwise.
     """
-    global model_convnext, model_inc, model_dense, _grad_model_dense, _grad_model_convnext
+    global model_convnext, model_inc, model_dense, _grad_model_dense
 
     if not force_reload and is_ensemble_ready():
         return True
