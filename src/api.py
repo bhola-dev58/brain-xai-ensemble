@@ -78,12 +78,6 @@ async def lifespan(app: FastAPI):
     Manages application startup and shutdown lifecycle events with
     operational diagnostic logging and optional keep-alive monitor task.
     """
-    if not is_ensemble_ready():
-        try:
-            init_models()
-        except Exception as init_err:
-            logger.warning(f"Startup model initialization note: {init_err}")
-
     ready = is_ensemble_ready()
     status_map = get_model_status()
     active_count = sum(status_map.values())
@@ -91,6 +85,17 @@ async def lifespan(app: FastAPI):
         f"BrainTumorXAI API starting up. Host={HOST}, Port={PORT}, "
         f"Ensemble ready={ready} ({active_count}/3 models active: {status_map})"
     )
+
+    init_task = None
+    if not ready:
+        async def _background_init():
+            await asyncio.sleep(0.5)
+            try:
+                await asyncio.to_thread(init_models)
+            except Exception as init_err:
+                logger.warning(f"Background model initialization note: {init_err}")
+
+        init_task = asyncio.create_task(_background_init())
 
     monitor_instance = None
     monitor_task = None

@@ -1,7 +1,7 @@
 # Core ML & Vision
-tensorflow==2.21.0
+tensorflow-cpu==2.21.0
 numpy==2.4.4
-opencv-python==4.13.0.92
+opencv-python-headless==4.13.0.92
 matplotlib==3.10.9
 
 # REST API & PACS Web Workstation

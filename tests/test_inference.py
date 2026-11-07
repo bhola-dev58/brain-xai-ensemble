@@ -17,7 +17,7 @@ import cv2
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.inference import predict_tumor_logic, is_ensemble_ready
+from src.inference import predict_tumor_logic, is_ensemble_ready, init_models
 
 
 # ------------------------------------------------------------------ #
@@ -42,6 +42,8 @@ def real_mri_scan():
 @pytest.fixture(scope="module")
 def prediction_result(real_mri_scan):
     """Runs inference once and caches result for all tests in this module."""
+    if not is_ensemble_ready():
+        init_models()
     if not is_ensemble_ready():
         pytest.skip("Tri-Ensemble model weights not available in models/ — skipping live weight inference tests.")
     return predict_tumor_logic(real_mri_scan)

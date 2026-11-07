@@ -49,9 +49,14 @@ USER appuser
 # Expose HTTP port (8000 default; overridden via $PORT in cloud environments)
 EXPOSE 8000
 
-# Runtime Environment Variables
+# Runtime Environment Variables (Optimized for low-memory container instances)
 ENV CUDA_VISIBLE_DEVICES=-1 \
     TF_CPP_MIN_LOG_LEVEL=3 \
+    TF_ENABLE_ONEDNN_OPTS=0 \
+    MALLOC_ARENA_MAX=2 \
+    TF_NUM_INTRAOP_THREADS=1 \
+    TF_NUM_INTEROP_THREADS=1 \
+    OMP_NUM_THREADS=1 \
     PYTHONUNBUFFERED=1 \
     HOST=0.0.0.0 \
     PORT=8000

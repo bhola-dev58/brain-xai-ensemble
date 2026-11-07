@@ -50,6 +50,8 @@ class TestModelAvailabilityAndFailures:
     def test_all_three_models_available(self, restore_models, dummy_image):
         """When all models are loaded, ensemble is declared ready and inference succeeds."""
         if not inference.is_ensemble_ready():
+            inference.init_models()
+        if not inference.is_ensemble_ready():
             pytest.skip("Tri-Ensemble model weights not available in models/ — requires trained weights.")
         assert inference.is_ensemble_ready() is True
         status = inference.get_model_status()
@@ -195,6 +197,8 @@ class TestModelAvailabilityAndFailures:
     # ------------------------------------------------------------------ #
     def test_health_reporting_ready_and_degraded(self, restore_models, dummy_image):
         """API /api/health distinguishes liveness from readiness, and /api/predict returns 503."""
+        if not inference.is_ensemble_ready():
+            inference.init_models()
         if not inference.is_ensemble_ready():
             pytest.skip("Tri-Ensemble model weights not available in models/ — requires trained weights.")
         client = TestClient(app)

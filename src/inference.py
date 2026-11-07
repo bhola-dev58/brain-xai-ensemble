@@ -206,15 +206,12 @@ def init_models(force_reload: bool = False) -> bool:
             try:
                 model_convnext = tf.keras.models.load_model(c_path, compile=False)
                 logger.info(f"Loaded ConvNeXtSmall from: {c_path}")
-                _grad_model_convnext = _create_grad_model(model_convnext, "convnext")
             except Exception as e:
                 logger.error(f"Failed to load ConvNeXtSmall from {c_path}: {e}")
                 model_convnext = None
-                _grad_model_convnext = None
         else:
             logger.warning(f"ConvNeXtSmall weights file not found: {c_path}")
             model_convnext = None
-            _grad_model_convnext = None
 
     # 2. InceptionV3
     if model_inc is None or force_reload:
@@ -249,12 +246,6 @@ def init_models(force_reload: bool = False) -> bool:
     loaded_count = sum(status.values())
     logger.info(f"Tri-Ensemble initialization complete: {loaded_count}/3 models active. Ready: {is_ensemble_ready()}")
     return is_ensemble_ready()
-
-
-try:
-    init_models()
-except Exception as err:
-    logger.warning(f"Initial model loading note: {err}")
 
 
 def _compute_brain_mask(img: np.ndarray) -> np.ndarray:
